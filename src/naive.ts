@@ -14,8 +14,8 @@ export function agentDefinition(step:Stage,model:string,workspace:string):AgentC
 }
 export class NaiveCrew {
   client:ReturnType<typeof createClient>;
-  constructor(key:string,public model='vetta/auto',fetcher?:typeof fetch){this.client=createClient({apiKey:key,baseUrl:'https://api.vetta.sh',...(fetcher?{fetch:fetcher}:{})});}
-  async create(step:Stage,workspace:string):Promise<AgentRef>{const agent=await this.client.agents.create(agentDefinition(step,this.model,workspace));return {id:agent.id,version:agent.current_version,step};}
+  constructor(private key:string,public model='vetta/auto',private fetcher?:typeof fetch){this.client=createClient({apiKey:key,baseUrl:'https://api.vetta.sh',...(fetcher?{fetch:fetcher}:{})});}
+  async create(step:Stage,workspace:string):Promise<AgentRef>{const client=createClient({apiKey:this.key,baseUrl:'https://api.vetta.sh',idempotencyKey:()=>`claimos-${workspace}-${step}`,...(this.fetcher?{fetch:this.fetcher}:{})});const agent=await client.agents.create(agentDefinition(step,this.model,workspace));return {id:agent.id,version:agent.current_version,step};}
   async launch(c:CaseRecord,agent:AgentRef,idempotencyKey:string,catalog:unknown){
     return this.client.sessions.create({agent_id:agent.id,agent_version:agent.version,window:'immediate',budget_micro_usd:250_000,output_schema:outputSchema,structured_output_required:true,
       metadata:{company:'claimos',case_id:c.id,step:agent.step},

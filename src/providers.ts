@@ -25,8 +25,8 @@ export function flatPrice(inspection:Json):number|null {
 }
 export class AgentMailOffice {
   client:AgentMailClient;
-  constructor(key:string){this.client=new AgentMailClient({apiKey:key,maxRetries:0});}
-  createInbox(workspace:string){return this.client.inboxes.create({displayName:'Claim OS Recovery Desk',clientId:`claimos-${workspace}`});}
+  constructor(key:string,private podId?:string){this.client=new AgentMailClient({apiKey:key,maxRetries:0});}
+  createInbox(workspace:string){const request={displayName:'Claim OS Recovery Desk',clientId:`claimos-${workspace}`};return this.podId?this.client.pods.inboxes.create(this.podId,request):this.client.inboxes.create(request);}
   send(inboxId:string,cid:string,draft:EmailDraft,draftId:string){
     return this.client.inboxes.messages.send(inboxId,{to:[draft.to],subject:`[Claim ${cid}] ${draft.subject}`,text:draft.text,trackOpens:false},{idempotencyKey:draftId,maxRetries:0});
   }

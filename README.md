@@ -27,15 +27,21 @@ Open http://127.0.0.1:4260. Configure `NAIVE_API_KEY`, `MONID_API_KEY` and `AGEN
 
 ## Operating flow
 
-Activate the company to create the managed agents and AgentMail inbox. Add a sourced property case, then run its agent. The coordinator polls real Naïve sessions and follows ready handoffs. Monid requests and email drafts wait for exact-input approval. Source text and inbound messages are treated as evidence, never as instructions.
+Activate the company to create the managed agents and AgentMail inbox. Add a sourced property case, then run its agent. The coordinator polls real Naïve sessions and follows ready handoffs. Autonomous public research permits up to 12 free TinyFish fetches from official LEEPA record pages per case. The coordinator validates the destination and current price, sends a fixed public-record request, and requires non-empty extraction results. Other Monid requests and all email drafts wait for exact-input approval. Source text and inbound messages are treated as evidence, never as instructions.
 
 No filing or payment adapter is enabled by default. An agent-produced draft is not a submitted appeal, signed authorization or collected fee. Verified revenue remains zero until supported by a payment-provider receipt.
 
-State lives in `.claimos/company.sqlite`, excluded from Git. `CLAIMOS_OPERATOR_TOKEN` can protect the local API. The server accepts loopback requests and same-origin writes.
+Configure `DATABASE_URL` to use Neon for shared cases, provider evidence, workspace settings and worker leases. Without it, local state lives in `.claimos/company.sqlite`, excluded from Git. `CLAIMOS_OPERATOR_TOKEN` can protect the local API. The server accepts loopback requests and same-origin writes.
 
 ## Hosted workspace
 
-The Vercel workspace uses a same-origin API gateway. `CLAIMOS_API_ORIGIN` selects an HTTPS backend with durable case storage; `CLAIMOS_OPERATOR_TOKEN` is required for hosted access. The gateway forwards approved operator requests and provider receipts. It never treats serverless temporary disk as a persistent case database. Provider keys belong on the execution backend, never in browser code.
+The Vercel workspace runs the same company API against Neon. `DATABASE_URL`, the three provider keys and `CLAIMOS_OPERATOR_TOKEN` belong in the project’s server environment. The API requires authentication before reading private cases or running agents. Worker leases and version checks prevent concurrent requests from replacing newer case evidence.
+
+Run `npm run worker` on a continuously running Node 24 host for coordination independent of browser activity. The local workspace includes this coordinator. Naïve sessions persist in the managed runtime; the worker reads results and dispatches ready handoffs. Vercel request handlers serve the workspace and do not provide a continuous background timer.
+
+`AGENTMAIL_POD_ID` selects a pod when using a pod-scoped AgentMail key. The company creates its inbox through that pod’s official SDK endpoint.
+
+Monid phone-call endpoints have been inspected. Calls remain unconfigured. A dedicated line, recipient consent, reviewed call instructions and a metered spending policy are required before telephony activation.
 
 ## Team interfaces
 

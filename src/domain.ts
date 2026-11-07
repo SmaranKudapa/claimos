@@ -21,11 +21,11 @@ export interface CaseInput { address:string; parcel:string; county:string; owner
 export interface ToolRequest { provider:string; endpoint:string; input:Json; }
 export interface EmailDraft { to:string; subject:string; text:string; }
 export interface StepResult { case_id:string; step:Stage; decision:'ready'|'review'|'blocked'; summary:string; sources:string[]; artifacts:{title:string;markdown:string}[]; tool_requests:ToolRequest[]; email_drafts:EmailDraft[]; }
-export interface Run { id:string;step:Stage;agentId:string;agentVersion:number;sessionId:string|null;status:string;stopReason:string|null;costMicroUsd:number;reservedMicroUsd:number;lastSeq:number;result:StepResult|null;error:string|null;requestKey:string;toolContext:string[]; }
+export interface Run { id:string;step:Stage;agentId:string;agentVersion:number;sessionId:string|null;status:string;stopReason:string|null;costMicroUsd:number;reservedMicroUsd:number;lastSeq:number;result:StepResult|null;error:string|null;requestKey:string;toolContext:string[];catalog?:Json[]; }
 export interface Receipt { id:string;provider:'Naïve'|'Monid'|'AgentMail';kind:string;at:string;data:Json; }
-export interface ToolTask { id:string;request:ToolRequest;inspection:Json|null;state:'proposed'|'submitting'|'running'|'completed'|'blocked'|'unknown';runId:string|null;receipt:Json|null; }
+export interface ToolTask { id:string;request:ToolRequest;inspection:Json|null;state:'proposed'|'submitting'|'running'|'completed'|'blocked'|'unknown';runId:string|null;receipt:Json|null;automatic?:boolean; }
 export interface DraftTask extends EmailDraft { id:string;state:'draft'|'sending'|'sent'|'unknown';messageId:string|null;threadId:string|null; }
-export interface CaseRecord { id:string;input:CaseInput;stage:Stage;status:string;auto:boolean;createdAt:string;updatedAt:string;runs:Run[];receipts:Receipt[];tools:ToolTask[];drafts:DraftTask[];artifacts:{id:string;title:string;markdown:string;sessionId:string}[];inboxId:string|null;blocker:string|null; }
+export interface CaseRecord { id:string;input:CaseInput;stage:Stage;status:string;auto:boolean;publicResearch?:boolean;createdAt:string;updatedAt:string;runs:Run[];receipts:Receipt[];tools:ToolTask[];drafts:DraftTask[];artifacts:{id:string;title:string;markdown:string;sessionId:string}[];inboxId:string|null;blocker:string|null; }
 export interface AgentRef { id:string;version:number;step:Stage; }
 export function parseInput(raw:unknown):CaseInput {
   if(!object(raw))throw new Error('A case form is required.');
