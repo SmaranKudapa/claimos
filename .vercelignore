@@ -1,8 +1,9 @@
-/*
-!/api/
-!/src/
-!/public/
-!/package.json
-!/package-lock.json
-!/tsconfig.json
-!/vercel.json
+.env
+.env.*
+.claimos
+dist
+node_modules
+.git
+.vercel
+coverage
+*.sqlite*
