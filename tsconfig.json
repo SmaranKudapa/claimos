@@ -4,5 +4,5 @@
     "strict": true, "noUncheckedIndexedAccess": true, "skipLibCheck": true,
     "outDir": "dist", "rootDir": ".", "types": ["node"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts", "api/**/*.ts"]
 }

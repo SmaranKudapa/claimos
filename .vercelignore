@@ -1,0 +1,5 @@
+.claimos
+.env
+.env.*
+test
+dist

@@ -33,6 +33,10 @@ No filing or payment adapter is enabled by default. An agent-produced draft is n
 
 State lives in `.claimos/company.sqlite`, excluded from Git. `CLAIMOS_OPERATOR_TOKEN` can protect the local API. The server accepts loopback requests and same-origin writes.
 
+## Hosted workspace
+
+The Vercel workspace uses a same-origin API gateway. `CLAIMOS_API_ORIGIN` selects an HTTPS backend with durable case storage; `CLAIMOS_OPERATOR_TOKEN` is required for hosted access. The gateway forwards approved operator requests and provider receipts. It never treats serverless temporary disk as a persistent case database. Provider keys belong on the execution backend, never in browser code.
+
 ## Team interfaces
 
 `src/domain.ts` defines the case, stage handoff, tool request, correspondence and provider receipt contracts. Specialist implementations use the shared case ID and preserve source URLs. `src/naive.ts` defines the managed-agent execution policy. `src/providers.ts` supplies Monid and AgentMail adapters. `src/company.ts` coordinates sessions, costs and approval state.
