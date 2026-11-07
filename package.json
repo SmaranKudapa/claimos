@@ -1,0 +1,27 @@
+{
+  "name": "claimos-hackathon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "tsx --env-file-if-exists=.env src/server.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "verify": "npm run typecheck && npm test",
+    "start": "node --env-file-if-exists=.env dist/src/server.js",
+    "check:provenance": "node scripts/check-provenance.mjs"
+  },
+  "dependencies": {
+    "@usenaive-sdk/managed-agents": "0.12.3",
+    "agentmail": "0.5.53"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}
