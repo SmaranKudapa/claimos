@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "taxappeal-find"
+version = "0.1.0"
+description = "Find step: ingest public property rolls, match records to owners, detect over-assessed homes, hand off to Qualify."
+requires-python = ">=3.10"
+dependencies = [
+  "pandas>=2.1",
+  "pyarrow>=14",
+  "numpy>=1.26",
+  "requests>=2.31",
+]
+
+[project.optional-dependencies]
+uploads = ["openpyxl>=3.1", "pypdf>=4"]
+dev = ["pytest>=8", "openpyxl>=3.1", "pypdf>=4"]
+
+[project.scripts]
+taxfind = "taxfind.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["taxfind*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

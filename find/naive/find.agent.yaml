@@ -1,0 +1,51 @@
+# The Find agent on Naive. Apply with:  naive agent apply -f naive/
+# Field names follow @usenaive-sdk/cli 1.0 (`agent apply` upserts by name).
+name: find
+description: >
+  Find desk. Watches state property-tax rolls, flags over-assessed homes, matches each to its owner
+  of record, gets a Zillow/Redfin second opinion on the shortlist, and posts candidates to the
+  Qualify agent's board. Never contacts property owners.
+
+# Most of the work is a Python program run with bash, so a mid-size model is plenty.
+# `naive models list` shows what your org can use.
+model: z-ai/glm-5.3-flash
+
+budget:
+  cap_usd: 30            # per period, model + data calls
+  max_task_usd: 3        # one scheduled run
+  period: month
+
+system_file: naive/find.system.md
+
+skills:
+  - taxfind-find         # pushed by setup.sh from naive/SKILL.md
+
+tools:
+  default_config:
+    permission: deny     # closed by default; only what Find needs is opened below
+  configs:
+    bash:          { enabled: true, permission: allow }
+    read:          { enabled: true, permission: allow }
+    write:         { enabled: true, permission: allow }
+    ls:            { enabled: true, permission: allow }
+    find:          { enabled: true, permission: allow }
+    fetch_file:    { enabled: true, permission: allow }   # pull the code zip when there is no git repo
+    publish_file:  { enabled: true, permission: allow }   # publish each run's candidates.csv + summary
+    board_read:    { enabled: true, permission: allow }
+    board_write:   { enabled: true, permission: allow }
+    data_search:   { enabled: true, permission: allow }
+    data_describe: { enabled: true, permission: allow }
+    data_run:      { enabled: true, permission: ask }     # paid per call; the program has its own cap too
+    ask_operator:  { enabled: true, permission: allow }   # a human decides anything irreversible
+    session_spend: { enabled: true, permission: allow }
+    web_fetch:
+      enabled: true
+      permission: allow
+      config:
+        allowed_domains: [floridarevenue.com]
+        max_content_tokens: 4000
+
+metadata:
+  desk: property_tax
+  step: find
+  hands_off_to: qualify
