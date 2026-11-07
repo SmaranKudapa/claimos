@@ -1,5 +1,8 @@
-.claimos
-.env
-.env.*
-test
-dist
+/*
+!/api/
+!/src/
+!/public/
+!/package.json
+!/package-lock.json
+!/tsconfig.json
+!/vercel.json

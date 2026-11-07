@@ -14,7 +14,7 @@ function setup(){
   const keys:string[]=[],sent:string[]=[],created:Stage[]=[];
   const session=(id='ses_fixture')=>({id,status:'idle',stop_reason:'end_turn',consumed_micro_usd:1200,structured_output:nextResult});
   const providers={
-    naive:{create:async(step:Stage)=>{created.push(step);return {id:`agt_${step}`,version:1,step};},launch:async(_c:unknown,_a:unknown,key:string)=>{keys.push(key);if(failLaunch)throw new Error('Test timeout');return {...session(),status:'running'};},session:async()=>session(),events:async()=>({data:[{id:'evt_fixture',seq:1,type:'session.idle',data:{},created_at:new Date().toISOString()}],has_more:false}),interrupt:async()=>session()},
+    naive:{create:async(step:Stage)=>{created.push(step);return {id:`agt_${step}`,version:1,step};},launch:async(_c:unknown,_a:unknown,key:string)=>{keys.push(key);if(failLaunch)throw new Error('Test timeout');return {...session(),status:'running'};},session:async()=>session(),repair:async()=>({session_id:'ses_fixture',status:'queued',accepted_seq:2}),events:async()=>({data:[{id:'evt_fixture',seq:1,type:'session.idle',data:{},created_at:new Date().toISOString()}],has_more:false}),interrupt:async()=>session()},
     monid:{discover:async()=>({items:[{provider:'fixture-search',endpoint:'/search'}],total:1}),inspect:async()=>({provider:'fixture-search',endpoint:'/search',price:{type:'PER_CALL',amount:{currency:'USD',value:.01}},input:{body:{type:'object'}}}),run:async()=>({runId:'run_fixture',status:'COMPLETED',providerResponse:{httpStatus:monidHttp}}),result:async()=>({runId:'run_fixture',status:'COMPLETED',providerResponse:{httpStatus:monidHttp}})},
     mail:{createInbox:async()=>({inboxId:'inbox_fixture',email:'fixture@agentmail.to'}),send:async(_i:unknown,_c:unknown,_d:unknown,key:string)=>{sent.push(key);return {messageId:'msg_fixture',threadId:'thread_fixture'};},messages:async()=>({messages:[]})}
   } as unknown as Providers;
@@ -60,4 +60,8 @@ test('case state and provider evidence survive reopening the workspace',async()=
 
 test('a coordinator resumes the new stage after an interrupted handoff',async()=>{
   const t=setup();await t.company.activate();const c=await t.company.create(input);c.stage='qualify';c.auto=true;c.runs.push({id:'prior',step:'find',agentId:'agt_find',agentVersion:1,sessionId:'prior-session',status:'idle',stopReason:'end_turn',costMicroUsd:1,reservedMicroUsd:0,lastSeq:0,result:result(c.id) as never,error:null,requestKey:'prior-key',toolContext:[]});t.db.save(c);await t.company.tick();const saved=t.db.get(c.id);assert.equal(saved.stage,'qualify');assert.equal(saved.runs.at(-1)?.step,'qualify');assert.equal(saved.runs.length,2);t.db.close();
+});
+
+test('one citation-format repair preserves the native session and revalidates the full handoff',async()=>{
+  const t=setup();await t.company.activate();const c=await t.company.create(input);await t.company.run(c.id);t.setResult(result(c.id,'find',{sources:['Monid receipt test-only']}));let saved=await t.company.refresh(c.id);assert.equal(saved.runs.at(-1)?.repairAttempts,1);assert.equal(saved.runs.at(-1)?.status,'queued');assert.equal(saved.runs.length,1);assert.equal(saved.runs.at(-1)?.sessionId,'ses_fixture');assert.equal(saved.artifacts.length,0);t.setResult(result(c.id));saved=await t.company.refresh(c.id);assert.equal(saved.runs.at(-1)?.result?.case_id,c.id);t.db.close();
 });

@@ -36,6 +36,7 @@ function render(c,status){
   if(!c.runs.length)runs.append(n('p','A managed agent session starts when you run this case. No simulated work is shown.'));
   for(const [index,run] of [...c.runs].reverse().entries()){
     const item=n('article','','run'),top=n('div','','run-top');top.append(n('b',`${names[run.step]} agent`),n('span',run.status,'badge'));item.append(top,n('p',run.result?.summary||run.error||'Waiting for the Naïve runtime.'),n('small',`${run.sessionId||'Session ID pending'} · agent ${run.agentId} v${run.agentVersion} · ${usd(run.costMicroUsd)}`));
+    if(run.status==='invalid'&&(run.repairAttempts||0)<1)item.append(button('Repair source citations',()=>api(`cases/${c.id}/repair`,{})));
     if(['launch_unknown','launching'].includes(run.status)&&!run.sessionId)item.append(button('Reconcile session',()=>api(`cases/${c.id}/recover`,{})));
     if(index===0)runs.append(item);else{const history=n('details','','session-history');history.append(n('summary',`${names[run.step]} · ${run.status} · ${usd(run.costMicroUsd)}`),item);runs.append(history);}
   }body.append(runs);

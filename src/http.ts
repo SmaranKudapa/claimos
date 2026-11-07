@@ -40,6 +40,7 @@ export function companyApi(resolveCompany:()=>Promise<Company>,options:{hosted:b
         if(!id)return json(res,404,{error:'Feature endpoint not found.'});
         if(parts[3]==='research'){if(input.approved!==true)throw new Error('Approve the free, official-county research policy.');return json(res,200,await company.enableResearch(id));}
         if(parts[3]==='run'){if(input.auto===true)await company.enableAuto(id);return json(res,202,await company.run(id));}
+        if(parts[3]==='repair')return json(res,200,await company.repairHandoff(id));
         if(parts[3]==='refresh')return json(res,200,await company.refresh(id));
         if(parts[3]==='recover')return json(res,200,await company.recoverLaunch(id));
         if(parts[3]==='advance')return json(res,200,await company.advance(id));

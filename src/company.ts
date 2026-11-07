@@ -4,9 +4,9 @@ import { NaiveCrew } from './naive.js';
 import { AgentMailOffice,MonidTools,flatPrice,toolSucceeded } from './providers.js';
 import { configuration,readiness } from './config.js';
 import {publicResearchRequest,successfulExtraction} from './research.js';
-import { stages,object,newCase,parseInput,parseResult,type CaseRecord,type AgentRef,type Json,type Run } from './domain.js';
+import { HandoffFormatError,stages,object,newCase,parseInput,parseResult,type CaseRecord,type AgentRef,type Json,type Run } from './domain.js';
 
-export interface Providers {naive:Pick<NaiveCrew,'create'|'launch'|'session'|'events'|'interrupt'>;monid:Pick<MonidTools,'discover'|'inspect'|'run'|'result'>;mail:Pick<AgentMailOffice,'createInbox'|'send'|'messages'|'message'>;}
+export interface Providers {naive:Pick<NaiveCrew,'create'|'launch'|'session'|'events'|'interrupt'|'repair'>;monid:Pick<MonidTools,'discover'|'inspect'|'run'|'result'>;mail:Pick<AgentMailOffice,'createInbox'|'send'|'messages'|'message'>;}
 
 export class Company {
   private locks=new Set<string>();
@@ -38,7 +38,7 @@ export class Company {
   async run(id:string){return this.locked(id,async()=>{
     const p=this.providers(),c=await this.store.get(id),agents=(await this.store.setting<AgentRef[]>('agents'))||[],agent=agents.find(a=>a.step===c.stage);
     if(!agent)throw new Error('Activate the company’s eight Naïve agents first.');
-    if(c.runs.some(r=>['launching','launch_unknown','queued','running','idle'].includes(r.status)&&!r.result))throw new Error('Refresh or reconcile the active session before starting another.');
+    if(c.runs.some(r=>['launching','launch_unknown','queued','running','idle','repair_pending'].includes(r.status)&&!r.result))throw new Error('Refresh or reconcile the active session before starting another.');
     if(c.tools.some(t=>t.state!=='completed')||c.drafts.some(d=>d.state!=='sent'))throw new Error('Resolve this case’s pending tool requests and correspondence first.');
     const budget=c.runs.reduce((s,r)=>s+r.costMicroUsd+r.reservedMicroUsd,0);if(budget+250000>2000000)throw new Error('This case has reached its $2 Naïve session budget.');
     const inbox=await this.store.setting<Json>('inbox');if(!inbox||typeof inbox.id!=='string')throw new Error('Create the AgentMail claim inbox through company activation.');c.inboxId=inbox.id;
@@ -79,11 +79,20 @@ export class Company {
             for(const draft of result.email_drafts)c.drafts.push({...draft,id:randomUUID(),state:'draft',messageId:null,threadId:null});
             c.status=result.decision==='ready'?'Step ready':result.decision==='review'?'Needs review':'Blocked';c.blocker=result.decision==='ready'?null:result.summary;
             if(result.tool_requests.length||result.email_drafts.length){c.status='Approval queue';c.blocker='Review the proposed Monid tool execution and AgentMail correspondence.';}
-          }catch(error){run.result=null;run.status='invalid';run.error=error instanceof Error?error.message:'Invalid structured result';c.status='Needs review';c.blocker=run.error;}
+          }catch(error){run.result=null;run.status='invalid';run.error=error instanceof Error?error.message:'Invalid structured result';c.status='Needs review';c.blocker=run.error;if(error instanceof HandoffFormatError&&(run.repairAttempts||0)<1)await this.repair(c,run,p,run.error);}
         }else{run.status='invalid';run.reservedMicroUsd=0;c.status='Needs review';c.blocker='Naïve did not produce a valid structured handoff.';}
       }else if(session.status==='failed'||session.status==='cancelled'){run.reservedMicroUsd=0;c.status='Needs attention';c.blocker=`Naïve session ${session.status}; no stage completion is claimed.`;}
     }
     return await this.store.save(c);
+  });}
+  private async repair(c:CaseRecord,run:Run,p:Providers,reason:string){
+    if(!run.sessionId||(run.repairAttempts||0)>=1)throw new Error('This handoff requires operator review.');
+    run.repairAttempts=1;run.status='repair_pending';c.status='Validating handoff';c.blocker='Naïve is correcting source-citation formatting.';await this.store.save(c);
+    try{const result=await p.naive.repair(run.sessionId,reason,`${run.requestKey}:source-repair`);run.status=result.status;await this.store.receipt(c,'Naïve','handoff.repair.requested',{sessionId:run.sessionId,reason});}catch{c.blocker='Refresh the native session to reconcile its citation repair.';await this.store.save(c);}
+  }
+  async repairHandoff(id:string){return this.locked(id,async()=>{
+    const c=await this.store.get(id),run=c.runs.at(-1);if(!run?.sessionId||run.status!=='invalid')throw new Error('No invalid handoff is available for repair.');const p=this.providers(),session=await p.naive.session(run.sessionId);
+    try{parseResult(session.structured_output,c,run.step);}catch(error){if(error instanceof HandoffFormatError){await this.repair(c,run,p,error.message);return c;}throw error;}throw new Error('This handoff requires operator review beyond source formatting.');
   });}
   async executeTool(id:string,taskId:string,automatic=false){return this.locked(id,async()=>{
     const c=await this.store.get(id),task=c.tools.find(t=>t.id===taskId);if(!task||task.state!=='proposed'||!task.inspection)throw new Error('This Monid request cannot be executed again.');
