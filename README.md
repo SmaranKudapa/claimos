@@ -61,3 +61,13 @@ npm run check:provenance
 - https://usenaive.ai/docs/sdk/sessions
 - https://monid.ai/docs/guide/quickstart-api
 - https://docs.agentmail.to/quickstart
+
+## Naïve native workspace
+
+`native-app/` hosts the company workspace through Naïve Apps. Studio entry tickets authenticate the operator, provider credentials stay in native runtime secrets, and Neon keeps the shared cases and receipts. The private coordinator MCP exposes company summaries, case reads and guarded workflow cycles. Both teammate Find agents are protected from new runs and session changes through this app.
+
+```sh
+npm --prefix native-app ci
+npm --prefix native-app run verify
+npm --prefix native-app run build
+```
