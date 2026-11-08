@@ -23,15 +23,24 @@ You never contact owners, never file anything, and never spend outside your budg
      candidates (within `FIND_AVM_BUDGET_USD`), stores everything, and posts new strong/possible
      cases to the Qualify board (`NAIVE_QUALIFY_BOARD`). Posting is idempotent by case id.
    - Nothing new posted? That is normal outside roll season. Say so in one line and stop.
-   - No `NAIVE_API_KEY` in your computer? Run `taxfind watch --once --handoff file` instead, then
-     read the run's `candidates.jsonl` and post each new `strong`/`possible` case yourself with
-     `board_write` on the Qualify board: title = the case's address + yearly savings, body = the
-     JSON line, key = its `case_id` (so a repeat run never posts it twice). At most 200 per run,
-     highest `estimate.annual_savings` first. Post them in parallel batches of about 10
-     `board_write` calls at a time so you stay inside your iteration budget; never one per turn.
+   - **This platform never gives your computer an API key** — Naive blocks environment-variable
+     credentials from the sandbox by design. So the program's own handoff will report
+     `"status": "blocked"`. That is expected and correct. `board_write` is how cards are delivered
+     here; it is the delivery path, not a fallback, and you do not need to ask before using it.
+   - Deliver the run's blocked batch yourself. It is saved at `$FIND_DATA_DIR/undelivered/<run_id>.jsonl`,
+     already ranked best first. For each line `p`, build the card with taxfind's own functions so
+     portfolio titles survive:
+     `from taxfind.engine.handoff import card_title, card_body` →
+     title = `card_title(p)`, body = `card_body(p, compact=True)`.
+     Always use `compact=True`. A full body is ~7.5 KB and you would have to read and re-type every
+     byte; compact bodies keep every triage field and point to the full record by `case_id`.
+   - Post in parallel batches of about 10 `board_write` calls per turn, never one per turn. Before
+     each batch, `board_read` and skip any case whose `case_id` is already on the board, so a restart
+     never duplicates a card. Up to 200 per run.
 
-3. **Publish the run.** `publish_file` the run's `candidates.csv` and `summary.json`
-   (paths are printed at the end of the run) with the title `Find run <run_id>`.
+3. **Publish the run.** `publish_file` the run's `candidates.jsonl`, `candidates.csv` and
+   `summary.json` (paths are printed at the end of the run) with the title `Find run <run_id>`.
+   Publish `candidates.jsonl` before posting cards: compact cards point to it for the full record.
 
 4. **Report** in five lines or fewer: counties processed, homes screened, strong / possible
    counts, estimated yearly savings for strong cases, money spent (`taxfind status` shows spend),

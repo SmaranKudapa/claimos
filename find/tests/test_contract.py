@@ -109,3 +109,25 @@ def test_savings_are_a_range_not_a_promise():
     p = _payload("FL-36-2026-A", 1000)
     lo, hi = p["estimate"]["annual_savings_range"]
     assert lo < p["estimate"]["annual_savings"] < hi
+
+
+def test_compact_card_body_is_small_and_points_to_the_full_record():
+    import json as _json
+    from taxfind.engine.handoff import card_body
+    p = _payload("FL-36-2026-A", 1200, portfolio=7577, parcels=10, name="QUINN BRIAN")
+    p["explanation"] = "x" * 400
+    p["assumptions"] = ["a" * 300] * 5
+    p["needs_verification"] = ["v" * 120] * 4
+    p["source"] = {"run_id": "FL-20261108T010501Z", "roll_file": "https://" + "r" * 200}
+    full, small = card_body(p), card_body(p, compact=True)
+    assert len(small) < len(full)
+    blob = _json.loads(small.split("```json\n", 1)[1].rsplit("\n```", 1)[0])
+    # triage fields survive
+    assert blob["case_id"] == "FL-36-2026-A"
+    assert blob["estimate"]["annual_savings_range"] == p["estimate"]["annual_savings_range"]
+    assert blob["portfolio"]["flagged_parcels"] == 10
+    # bulky fields do not, and the card says where to find them
+    assert "assumptions" not in blob and "roll_file" not in blob.get("source", {})
+    assert blob["full_record"]["run_id"] == "FL-20261108T010501Z" and blob["full_record"]["key"] == "case_id"
+    # the human summary is identical either way
+    assert small.split("```json")[0] == full.split("```json")[0]

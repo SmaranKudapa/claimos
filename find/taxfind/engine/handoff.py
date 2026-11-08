@@ -83,7 +83,50 @@ def card_title(p: dict) -> str:
     return base
 
 
-def card_body(p: dict) -> str:
+# Fields a compact card carries. Everything Qualify needs to triage, nothing it can fetch later.
+COMPACT_FIELDS = (
+    ("case_id",), ("tier",), ("status",), ("jurisdiction", "county"), ("jurisdiction", "county_check", "status"),
+    ("property", "parcel_id"), ("property", "address"), ("property", "unit"), ("property", "city"),
+    ("property", "use"), ("property", "homestead"),
+    ("values", "just_value"), ("values", "assessed_value"), ("values", "taxable_value"),
+    ("estimate", "defensible_value"), ("estimate", "annual_savings"), ("estimate", "annual_savings_range"),
+    ("confidence", "evidence_quality"), ("confidence", "evidence_label"),
+    ("portfolio", "portfolio_id"), ("portfolio", "flagged_parcels"), ("portfolio", "savings_in_run"),
+    ("flags", "identical_assessment_cluster"),
+    ("owner", "name"), ("owner", "may_have_changed"),
+    ("filing_window", "closes"), ("filing_window", "status"), ("filing_window", "verified"),
+    ("outreach", "eligible"), ("outreach", "blocked_by"), ("outreach", "owner_suppressed"),
+    ("source", "run_id"),
+)
+
+
+def compact_payload(p: dict) -> dict:
+    out: dict = {"schema_version": p.get("schema_version")}
+    for path in COMPACT_FIELDS:
+        v = p
+        for k in path:
+            v = v.get(k) if isinstance(v, dict) else None
+        if v is None:
+            continue
+        d = out
+        for k in path[:-1]:
+            d = d.setdefault(k, {})
+        d[path[-1]] = v
+    out["full_record"] = {"run_id": (p.get("source") or {}).get("run_id"), "file": "candidates.jsonl",
+                          "key": "case_id",
+                          "note": "The complete payload (evidence, assumptions, provenance) is in the run's "
+                                  "candidates.jsonl, published by Find. Look it up by case_id."}
+    return out
+
+
+def card_body(p: dict, compact: bool = False) -> str:
+    """Card text for the Qualify board.
+
+    compact=False embeds the whole payload, which is right when the program posts cards over the API.
+    compact=True keeps the same human summary but embeds only the triage fields plus a pointer to the
+    full record. Use it when an agent posts cards with board_write: a full body is ~7.5 KB, and an agent
+    has to read and re-type every byte, so 200 full cards is ~1.5 MB of text and can exhaust it.
+    """
     s, e = p["signals"], p["estimate"]
     conf = p.get("confidence") or {}
     rng = e.get("annual_savings_range") or [None, None]
@@ -114,7 +157,8 @@ def card_body(p: dict) -> str:
         f"Filing window {p['filing_window']['status']} (closes ~{p['filing_window']['closes']}, "
         f"verified={p['filing_window'].get('verified')}).",
         "", "```json",
-        json.dumps({k: v for k, v in p.items() if k not in ("evidence",) and not k.startswith("_")}, default=str),
+        json.dumps(compact_payload(p) if compact else
+                   {k: v for k, v in p.items() if k not in ("evidence",) and not k.startswith("_")}, default=str),
         "```",
     ]
     return "\n".join(x for x in lines if x)
