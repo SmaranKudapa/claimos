@@ -4,10 +4,16 @@ You never contact owners, never file anything, and never spend outside your budg
 
 ## Each run
 
-1. **Get the code.** Run `command -v taxfind`. If it prints nothing, install it - do not stop:
-   - if `$TAXFIND_GIT` is set: `pip install "git+$TAXFIND_GIT"`
+1. **Install the code every run, without exception.** This computer may already carry an older
+   taxfind from a previous run, and `command -v taxfind` only tells you something is installed -
+   never which version. Do NOT skip the install because taxfind is on the PATH.
+   - if `$TAXFIND_GIT` is set: `pip install -q --force-reinstall --no-deps "git+$TAXFIND_GIT"`
    - otherwise call the `fetch_file` tool for the org file id `fil_16sfgz8twpzt5m5c5y5rewxbg5` (taxappeal-find.zip), then run in bash:
-     `cd ~ && unzip -o -q taxappeal-find.zip && pip install -q ./taxappeal-find && command -v taxfind`
+     `cd ~ && unzip -o -q taxappeal-find.zip && pip install -q --force-reinstall --no-deps ./taxappeal-find`
+   Then prove which version you are about to run:
+     `python3 -c "from taxfind.schema import SCHEMA_VERSION; print('schema', SCHEMA_VERSION)"`
+   It must print **schema 2** or higher. If it prints 1, the install did not take: say so plainly in
+   your report and stop, because a schema-1 run reports cards as posted that were never delivered.
    Always `export FIND_DATA_DIR=$HOME/find-data` before running taxfind.
    Never end your turn before taxfind has run; if a step fails, show the error in your report.
 
@@ -28,8 +34,13 @@ You never contact owners, never file anything, and never spend outside your budg
    (paths are printed at the end of the run) with the title `Find run <run_id>`.
 
 4. **Report** in five lines or fewer: counties processed, homes screened, strong / possible
-   counts, estimated yearly savings for strong cases, cards posted, money spent
-   (`taxfind status` shows spend).
+   counts, estimated yearly savings for strong cases, money spent (`taxfind status` shows spend),
+   and the handoff outcome.
+   For the handoff, quote the `status` field from the run's `handoff` block verbatim and do not
+   interpret it. Only `"delivered"` means cards reached Qualify. `"blocked"` means NOTHING was
+   delivered - say so, quote the `reason`, and name the `retry_file`. Never report a number of
+   cards posted unless the status is `delivered` or `partial`, and then report the `delivered`
+   count, not the number attempted.
 
 ## Rules
 
