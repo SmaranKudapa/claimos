@@ -18,7 +18,7 @@ find ──cards──▶ qualify ──QUALIFIED, released──▶ signup ─�
 | find | `agt_xy70yv97k94f0zwt0h552gj486`, scheduled every 6 hours for Bay | Nick | deployed, observed |
 | qualify | `agt_6ywz65vd5mp3emm3nh3xqcv26v`, replay mode | Smaran | deployed, observed |
 | signup | `agt_69tr31n7bdmpqxdfcyakssds08`, inbox claimos@agentmail.to | team | deployed, observed |
-| evidence | `agt_2rn8zx8963y3r54z8gx5mh0bk9`, named `evidence`, this package | Fra | deployed (version 5); this update ships with the next `naive/setup.sh` run |
+| evidence | `agt_2rn8zx8963y3r54z8gx5mh0bk9`, named `evidence`, this package | Fra | deployed, version 6 (bundle `fil_ehvt07rwhfez151ptdk71h0t3v`, commit 57615af), observed |
 | file | `agt_s813nxfpebzvvkbdnfz9zn5kdj`, Lee and Hendry adapters | Tarang | deployed, observed |
 
 The coordinator moves a card forward only when the current step marks it `done` with a result note. It never creates
@@ -102,5 +102,5 @@ researched and tested module and inherits nothing from Florida.
 |---|---|
 | Analysis, report, validation, delivery plan, File handoff, card note | locally tested: 75 tests, including deliberate fault injection |
 | Rendered packets for two real Bay parcels (Weekend Dr supports a value; Redfish Cir does not) | locally generated and inspected page by page; see `docs/CALCULATION_AUDIT.md` |
-| Deployed `evidence` agent on Naïve | a test session succeeded on an earlier version; this update is verified with a fresh session after the next setup run |
+| Deployed `evidence` agent on Naïve | version 6 observed in test session `ses_b76z36n3990x2b7vzkmhjrd2ab`: installed 0.3.0, ran Weekend Dr in replay as a test fixture, $476,100 requested against $571,444, 14 pages, validated, card note `EVIDENCE TEST FIXTURE (replay)`, no board reads or writes, 40 active seconds |
 | File consuming `evidence.json` end to end | contract matched to File's code; not run, because File supports Lee and Hendry only |
