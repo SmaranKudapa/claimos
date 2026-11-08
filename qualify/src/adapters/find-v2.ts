@@ -89,8 +89,9 @@ export interface TranslateOptions {
    */
   sameGroupDistance?: number;
   /**
-   * Replay mode: pretend "today" is this date. Records fetched after it are dated to it so the
-   * intake check accepts them; the real retrieval date stays in provenance.sources.
+   * The date Qualify judges as of (a replay date, or today). Records fetched after it, e.g. by a
+   * few hours across time zones, are dated to it so the intake check accepts them; the real
+   * retrieval date stays in provenance.sources.
    */
   asOf?: string;
 }
@@ -183,7 +184,7 @@ export function translateRecord(r: FindRecord, opts: TranslateOptions): Translat
   // Provenance and the text the AI reviewer reads.
   let fetchedAt = isoDay(r.source?.found_at) ?? opts.asOf ?? opts.valuationDate;
   if (opts.asOf && fetchedAt > opts.asOf) {
-    notes.push(`replay: fetchedAt ${fetchedAt} dated to ${opts.asOf}`);
+    notes.push(`fetchedAt ${fetchedAt} dated to ${opts.asOf} (replay date, or a time-zone difference with Find)`);
     fetchedAt = opts.asOf;
   }
   const docs: { ref: string; kind: string; text: string }[] = [];

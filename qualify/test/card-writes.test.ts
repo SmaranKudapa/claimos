@@ -29,6 +29,20 @@ describe("cardWrites", () => {
     expect(rejected!.write).toMatchObject({ status: "done", note: "REJECTED (replay) · V_LOW_CONFIDENCE · s4" });
   });
 
+  it("labels replay per case and holds no-desk cases instead of rejecting them", () => {
+    const h = {
+      cases: [
+        { ...handoff.cases[1]!, find_case_id: "LIVE", replayed: false },
+        { ...handoff.cases[1]!, find_case_id: "OLD", replayed: true },
+        { ...handoff.cases[3]!, find_case_id: "IL", status: "REJECTED", reasonCodes: ["E_NO_DESK"], jurisdictionId: "IL-31" },
+      ],
+    };
+    const [live, old, il] = cardWrites(h, ["c1=LIVE", "c2=OLD", "c3=IL"]);
+    expect((live!.write as { note: string }).note).toMatch(/^QUALIFIED · /);
+    expect((old!.write as { note: string }).note).toMatch(/^QUALIFIED \(replay\) · /);
+    expect(il!.write).toMatchObject({ status: "blocked", note: expect.stringMatching(/^NO_DESK · no Qualify desk settings for IL yet/) });
+  });
+
   it("refuses unknown cases and malformed pairs instead of guessing", () => {
     const [unknown, bad] = cardWrites(handoff, ["crd_e=NOPE", "crd_f"]);
     expect(unknown).toMatchObject({ card_id: "crd_e", error: expect.stringContaining("leave this card untouched") });

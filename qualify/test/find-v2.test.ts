@@ -100,7 +100,7 @@ describe("translateRecord", () => {
     const { candidate, notes } = translateRecord(findRecord(), { valuationDate: "2026-01-01", asOf: "2026-08-25" });
     expect(candidate.provenance.fetchedAt).toBe("2026-08-25");
     expect(candidate.provenance.sources.find_found_at).toBe("2026-11-07T23:00:00Z");
-    expect(notes.join(" ")).toMatch(/replay/);
+    expect(notes.join(" ")).toMatch(/dated to 2026-08-25/);
   });
 });
 

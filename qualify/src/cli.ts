@@ -12,7 +12,7 @@
  *                    (exports results as dossier-shaped case records for the Claim OS UI)
  *   qualify card-notes --handoff <handoff.json> --cards <file | crd_id=case_id,...>
  *                    (one JSON line per card: the exact board_write to send, and the comment to send if the card is done)
- *   qualify find-run --find <candidates.jsonl> --template <desk template> [--case-ids <file>] [--tiers strong,possible]
+ *   qualify find-run --find <candidates.jsonl> (--templates <dir> | --template <file>) [--case-ids <file>] [--tiers strong,possible]
  *                    [--replay (each county judged inside its own filing window) | --as-of YYYY-MM-DD] [--today YYYY-MM-DD] [--suppression <file>]
  *                    [--llm naive|mock|off] [--out-dir out/find-run] [--translate-only]
  *                    (translates a Find run, one desk config per jurisdiction, runs Qualify)
@@ -22,7 +22,7 @@
  * Env: NAIVE_API_KEY (or the repo's VETTA_API_KEY), NAIVE_API_BASE_URL (or VETTA_API_BASE_URL),
  *      QUALIFY_MODEL, QUALIFY_ESCALATION_MODEL, QUALIFY_TIMEZONE. Read from qualify/.env, then the repo-root .env.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { parseArgs } from "node:util";
 import { loadDeskConfig, loadSuppression } from "./config.js";
@@ -36,7 +36,7 @@ import { qualifyAll } from "./pipeline.js";
 import { renderCase, renderTable } from "./report.js";
 import { toCaseRecord, toQualifyBeat } from "./case.js";
 import { applyReview, ReviewError, type ReviewAction } from "./review.js";
-import type { QualifyResult } from "./types.js";
+import type { DeskConfig, QualifyResult } from "./types.js";
 import { getPath, todayIn } from "./util.js";
 import { jurisdictionIdFor, parseJsonl, translateRun } from "./adapters/find-v2.js";
 import { cardWrites } from "./adapters/card-writes.js";
@@ -91,6 +91,7 @@ const { values: a } = parseArgs({
     replay: { type: "boolean" },
     tiers: { type: "string" },
     handoff: { type: "string" },
+    templates: { type: "string" },
     cards: { type: "string" },
   },
   allowPositionals: false,
@@ -241,7 +242,24 @@ function cases() {
  * case, keyed by Find's case_id, for the agent to post).
  */
 async function findRun() {
-  const template = loadDeskConfig(need(a.template, "template"));
+  // Desk templates by state: every desk.*.json in --templates <dir>, plus --template <file>.
+  const templates = new Map<string, DeskConfig>();
+  if (a.templates) {
+    for (const f of readdirSync(a.templates).filter((f) => /^desk\..+\.json$/.test(f))) {
+      try {
+        const t = loadDeskConfig(`${a.templates}/${f}`);
+        templates.set(t.jurisdiction.id, t);
+      } catch (e) {
+        console.error(`warning: skipped ${f}: ${e instanceof Error ? e.message.split("\n")[0] : e}`);
+      }
+    }
+  }
+  if (a.template) {
+    const t = loadDeskConfig(a.template);
+    templates.set(t.jurisdiction.id, t);
+  }
+  if (!templates.size) fail("--template <file> or --templates <dir> is required");
+  const fallback = [...templates.values()][0]!;
   const { records, bad } = parseJsonl(readFileSync(need(a.find, "find"), "utf8"));
   if (bad.length) console.error(`warning: skipped ${bad.length} malformed line(s) in ${a.find}: ${bad.slice(0, 5).join(", ")}`);
   let recs = records;
@@ -261,18 +279,40 @@ async function findRun() {
   const asOf = a["as-of"];
   const realToday = todayIn(process.env.QUALIFY_TIMEZONE);
   const fixedToday = a.today ?? asOf ?? realToday;
-  // --replay: each jurisdiction is replayed at a date inside its own filing window
-  // (10 days after it opens, or the last day the work still fits).
-  const batches = translateRun(recs, template, { asOf }).map((b) => {
-    if (!a.replay) return { ...b, today: fixedToday };
-    const r = b.config.routes[0]!;
-    let day = addDays(r.opens, 10);
-    const lastFeasible = addDays(r.closes, -(r.bufferDays + r.workDaysNeeded));
-    if (day > lastFeasible) day = lastFeasible < r.opens ? r.opens : lastFeasible;
-    const own = recs.filter((x) => jurisdictionIdFor(x) === b.jurisdictionId);
-    return { ...translateRun(own, template, { asOf: day })[0]!, today: day };
-  });
-  const replay = Boolean(a.replay || asOf);
+
+  // One desk template per state. A home from a state with no template is never judged by another
+  // state's rules: it runs against an unmatched config so S2 stops it with E_NO_DESK.
+  const byState = new Map<string, typeof recs>();
+  for (const r of recs) byState.set(r.jurisdiction.state, [...(byState.get(r.jurisdiction.state) ?? []), r]);
+  type Batch = ReturnType<typeof translateRun>[number] & { today: string; replayed: boolean };
+  const batches: Batch[] = [];
+  for (const [state, srs] of byState) {
+    const tpl = templates.get(state);
+    if (!tpl) {
+      console.error(`note: no desk template for ${state}; its ${srs.length} case(s) are held as E_NO_DESK`);
+      for (const b of translateRun(srs, fallback, { asOf: fixedToday })) batches.push({ ...b, config: fallback, today: fixedToday, replayed: false });
+      continue;
+    }
+    for (const b of translateRun(srs, tpl, { asOf: fixedToday })) {
+      if (!a.replay) {
+        batches.push({ ...b, today: fixedToday, replayed: Boolean(asOf) });
+        continue;
+      }
+      // --replay only where the real window can no longer be used: judge those as of a date inside
+      // their own window (10 days after it opens, or the last day the work still fits).
+      const r = b.config.routes[0]!;
+      const lastFeasible = addDays(r.closes, -(r.bufferDays + r.workDaysNeeded));
+      if (realToday >= r.opens && realToday <= lastFeasible) {
+        batches.push({ ...b, today: realToday, replayed: false });
+        continue;
+      }
+      let day = addDays(r.opens, 10);
+      if (day > lastFeasible) day = lastFeasible < r.opens ? r.opens : lastFeasible;
+      const own = srs.filter((x) => jurisdictionIdFor(x) === b.jurisdictionId);
+      batches.push({ ...translateRun(own, tpl, { asOf: day })[0]!, today: day, replayed: true });
+    }
+  }
+  const replay = batches.some((b) => b.replayed);
   const base = loadSuppression(a.suppression);
   const outDir = a["out-dir"]!;
 
@@ -290,7 +330,7 @@ async function findRun() {
   const all: QualifyResult[] = [];
   const handoff: Record<string, unknown>[] = [];
   let cost = 0;
-  if (replay) console.log(`REPLAY (real date ${realToday}): each county is judged as of a date inside its filing window. Results show what Qualify would have decided then.`);
+  if (replay) console.log(`REPLAY (real date ${realToday}): counties whose window has closed are judged as of a date inside it, marked (replay). Counties with an open window use the real date.`);
   for (const b of batches) {
     const suppression = {
       ...base,
@@ -310,7 +350,7 @@ async function findRun() {
     cost += sum.llmCostUsd;
     writeJson(`${outDir}/${b.jurisdictionId}/candidates.json`, b.candidates);
     writeJson(`${outDir}/${b.jurisdictionId}/config.json`, b.config);
-    writeJson(`${outDir}/${b.jurisdictionId}/results.json`, { runAt: new Date().toISOString(), today: b.today, replay, configVersion: b.config.version, counts: sum.counts, results: sum.results });
+    writeJson(`${outDir}/${b.jurisdictionId}/results.json`, { runAt: new Date().toISOString(), today: b.today, replay: b.replayed, configVersion: b.config.version, counts: sum.counts, results: sum.results });
     const findIdByParcel = new Map(b.candidates.map((c) => [c.parcelId, c.provenance.sources.find_case_id]));
     for (const r of sum.results) {
       all.push(r);
@@ -319,6 +359,7 @@ async function findRun() {
         caseId: r.caseId,
         jurisdictionId: r.jurisdictionId,
         judgedAsOf: b.today,
+        replayed: b.replayed,
         address: r.address,
         status: r.status,
         reasonCodes: r.reasonCodes,
@@ -335,7 +376,7 @@ async function findRun() {
         translatorNotes: b.notes.get(r.parcelId) ?? [],
       });
     }
-    console.log(`\nQualify · ${b.config.jurisdiction.name} · config ${b.config.version} · today ${b.today}${replay ? " (replay)" : ""}`);
+    console.log(`\nQualify · ${b.config.jurisdiction.name} · config ${b.config.version} · today ${b.today}${b.replayed ? " (replay)" : ""}`);
     console.log(note + (client && primary ? ` · model ${primary}` : ""));
     console.log(renderTable(sum));
   }

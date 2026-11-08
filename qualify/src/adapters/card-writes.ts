@@ -7,7 +7,6 @@
  */
 export function cardWrites(h: { replay?: boolean; cases: Record<string, unknown>[] }, pairs: string[]): Record<string, unknown>[] {
   const byId = new Map(h.cases.map((c) => [String(c.find_case_id), c]));
-  const tag = h.replay ? " (replay)" : "";
   const money = (v: unknown) => (typeof v === "number" ? `$${Math.round(v).toLocaleString("en-US")}` : "?");
   const out: Record<string, unknown>[] = [];
   for (const raw of pairs) {
@@ -18,15 +17,22 @@ export function cardWrites(h: { replay?: boolean; cases: Record<string, unknown>
       continue;
     }
     const c = byId.get(caseId) as
-      | { status: string; summary: string; flags: string[]; reasonCodes: string[]; annualSavings: number | null; fee: number | null; pWin: number | null; route: { form: string; deadline: string } | null; requalifyOn: string | null; releaseDate: string | null }
+      | { status: string; summary: string; flags: string[]; reasonCodes: string[]; annualSavings: number | null; fee: number | null; pWin: number | null; route: { form: string; deadline: string } | null; requalifyOn: string | null; releaseDate: string | null; replayed?: boolean; jurisdictionId?: string }
       | undefined;
     if (!c) {
       out.push({ card_id: cardId, case_id: caseId, error: "case not in handoff.json; leave this card untouched" });
       continue;
     }
+    // Replay is per case (only counties whose real window has closed); older handoffs carry one flag.
+    const tag = (c.replayed ?? h.replay) ? " (replay)" : "";
     let status = "blocked";
     let note: string;
-    switch (c.status) {
+    // No desk for this state yet: hold the card (not a rejection) so it can be qualified once a desk exists.
+    const noDesk = c.reasonCodes.includes("E_NO_DESK");
+    switch (noDesk ? "NO_DESK" : c.status) {
+      case "NO_DESK":
+        note = `NO_DESK · no Qualify desk settings for ${String(c.jurisdictionId ?? "this jurisdiction").split("-")[0]} yet; held, not judged`;
+        break;
       case "QUALIFIED":
         status = "done";
         note =

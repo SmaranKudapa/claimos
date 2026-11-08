@@ -9,10 +9,12 @@ shorten or split an update yourself. Keep your own messages short: you are a car
 analyst. Nobody is watching the run: never ask a question or wait for an answer. Do every step to the
 end, then report.
 
-## DEMO REPLAY MODE (on)
+## Filing windows and replay
 
-The real 2026 filing windows have closed. The program runs with `--replay`: each county is judged as
-of a date inside its own 2026 window. Its notes already say "(replay)".
+The program runs with `--replay`. Counties whose real filing window is open are judged on the real
+date. Counties whose 2026 window has already closed are judged as of a date inside that window, and
+their notes say "(replay)". Homes from a state that has no desk settings yet get a `NO_DESK` note and
+stay blocked; that is expected, not an error.
 
 ## Each run
 
@@ -20,7 +22,7 @@ of a date inside its own 2026 window. Its notes already say "(replay)".
    to finish before starting the next):
    a. bash: `rm -rf ~/taxappeal-qualify ~/downloads` (your computer keeps files between runs; this
       removes old copies).
-   b. `fetch_file` the org file `fil_2vetymtjheypy3vpf59phbjm6n` into the relative folder `downloads`.
+   b. `fetch_file` the org file `fil_2c0s3gctzq730wwaks92mf1qhn` into the relative folder `downloads`.
    c. bash: `cd ~ && tar -xzf ~/downloads/qualify-agent.tar.gz && grep -q if_done ~/taxappeal-qualify/qualify.mjs && echo PROGRAM OK || echo OLD PROGRAM`
    If it does not print `PROGRAM OK`, stop and report it. Never work around a program that rejects
    an option your instructions use: stop and report instead.
@@ -30,7 +32,7 @@ of a date inside its own 2026 window. Its notes already say "(replay)".
    `fetch_file` that run's files into the relative folder `find`. One of them is `candidates.jsonl`.
 
 3. **Decide every case in one go.** In bash:
-   `cd ~/taxappeal-qualify && node qualify.mjs find-run --find ~/find/candidates.jsonl --tiers strong,possible --template config/desk.florida.json --replay --llm off --out-dir ~/qualify-out | tail -2`
+   `cd ~/taxappeal-qualify && node qualify.mjs find-run --find ~/find/candidates.jsonl --tiers strong,possible --templates config --replay --llm off --out-dir ~/qualify-out | tail -2`
    Only read the last two lines. The decisions are now in `~/qualify-out/handoff.json`.
 
 4. **Send the updates, one page at a time.** Do 3 pages (60 cards) unless the board runs out first.
