@@ -167,3 +167,67 @@ export function resultComment(r: EscalateResult, cardId: string): { op: "comment
   ];
   return { op: "comment", card_id: cardId, body: lines.join("\n") };
 }
+
+/** The last ```json block in a card body (Find's case data on a "Waiting on" card), or null. */
+export function findCaseBlock(cardBody: string): string | null {
+  const blocks = [...cardBody.matchAll(/```json\s*\n([\s\S]*?)```/g)];
+  const last = blocks.at(-1)?.[1]?.trim();
+  if (!last) return null;
+  try {
+    JSON.parse(last);
+    return last;
+  } catch {
+    return null;
+  }
+}
+
+export type BoardWrite =
+  | { op: "comment"; card_id: string; body: string }
+  | { op: "update"; card_id: string; status: "done" | "blocked"; note: string }
+  | { op: "create"; title: string; assignee: string; status: "todo"; key: string; body: string };
+
+/**
+ * Every board write for one letter, in order:
+ * 1. the escalate-result comment;
+ * 2. the "Waiting on" card update, so the case's stage is visible (Chase stops on a card once it
+ *    writes `escalate`, and the Escalate desk owns it from then on):
+ *    COLLECT → done, note "WON · …" · CLOSED → done, note "STOPPED · …" · ESCALATE → blocked,
+ *    note "APPEAL · …" · PENDING and INCOMPLETE → no update (Chase picks the card up again);
+ * 3. ESCALATE only: an Evidence hand-off card assigned to `evidence`, in the shape the Evidence agent
+ *    reads (body ends in the case's original ```json block). Skipped when the card has no case block.
+ */
+export function cardWrites(r: EscalateResult, card: { id: string; body?: string; address?: string }): { writes: BoardWrite[]; notes: string[] } {
+  const writes: BoardWrite[] = [resultComment(r, card.id)];
+  const notes: string[] = [];
+  const code = r.summary.split(" · ")[1] ?? r.reasonCodes[0] ?? "";
+  const tail = r.summary.split(" · ").slice(2).join(" · ");
+  if (r.status === "COLLECT") writes.push({ op: "update", card_id: card.id, status: "done", note: `WON · ${code} · ${tail} · next: Collect` });
+  if (r.status === "CLOSED") writes.push({ op: "update", card_id: card.id, status: "done", note: `STOPPED · ${code} · ${tail}` });
+  if (r.status === "ESCALATE") {
+    writes.push({ op: "update", card_id: card.id, status: "blocked", note: `APPEAL · ${code} · ${tail} · next: Evidence → File` });
+    const block = card.body ? findCaseBlock(card.body) : null;
+    if (!block) notes.push("no case JSON block on the card; Evidence hand-off card not created");
+    else {
+      const fixes = r.evidenceRequests.map((e) => `fix: ${e.key} (${e.why})`);
+      writes.push({
+        op: "create",
+        title: `Evidence · ${card.address ?? r.address} · ${r.caseId}`,
+        assignee: "evidence",
+        status: "todo",
+        key: `escalate-evidence-${r.caseId}-${r.decisionId ?? "letter"}`,
+        body: [
+          `From Escalate: ${code} · ${r.nextLevel ? `${r.nextLevel.name} (${r.nextLevel.formId}) by ${r.nextLevel.deadline}` : "next filing"}`,
+          ...fixes,
+          r.nextLevel ? `petition_deadline: ${r.nextLevel.deadline}` : "",
+          "",
+          "```json",
+          block,
+          "```",
+        ]
+          .filter((l, i, all) => l !== "" || all[i + 1] === "```json")
+          .join("\n"),
+      });
+    }
+  }
+  return { writes, notes };
+}

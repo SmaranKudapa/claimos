@@ -8,5 +8,5 @@ export { verifyQuotes, quoteInLetter } from "./reader/verify-quotes.js";
 export { toAppealBeat, toCaseRecordPatch, formatDeadline, type AppealBeat, type CaseRecordPatch } from "./case.js";
 export type { EscalateContext } from "./draft.js";
 export * from "./types.js";
-export { parseLetterComment, parseAuthorizationLine, decisionFromComment, caseFromQualify, resultComment, type LetterComment, type QualifyHandoffEntry, type SignedAuthorization } from "./board.js";
+export { parseLetterComment, parseAuthorizationLine, decisionFromComment, caseFromQualify, resultComment, cardWrites, findCaseBlock, type BoardWrite, type LetterComment, type QualifyHandoffEntry, type SignedAuthorization } from "./board.js";
 export { ProvidedReader } from "./reader/provided.js";

@@ -7,7 +7,8 @@
  *   escalate show   --results <file> --case <caseId> [--json]
  *   escalate cases  --results <file> --export <file>        (UI records with "Appeal again" beats)
  *   escalate from-board --card <card id> --letter <file> --qualify-handoff <handoff.json> --config <file>
- *                   [--reading <file>] [--read-state <json>] [--authorization <file | line>] [--today YYYY-MM-DD]
+ *                   [--reading <file>] [--read-state <json>] [--authorization <file | line>] [--card-body <file>] [--today YYYY-MM-DD]
+ *                   (prints `writes`: the result comment, the card update, and for ESCALATE the Evidence hand-off card)
  *                   (agent mode: one decision-letter comment in, the exact escalate-result comment out)
  *   escalate validate-config --config <file>
  *   escalate codes
@@ -29,7 +30,7 @@ import { escalateAll, type Delivery } from "./pipeline.js";
 import { MockReader } from "./reader/mock.js";
 import type { Reader } from "./reader/types.js";
 import { toAppealBeat, toCaseRecordPatch } from "./case.js";
-import { caseFromQualify, decisionFromComment, parseAuthorizationLine, parseLetterComment, resultComment, type QualifyHandoffEntry } from "./board.js";
+import { caseFromQualify, cardWrites, decisionFromComment, parseAuthorizationLine, parseLetterComment, resultComment, type QualifyHandoffEntry } from "./board.js";
 import { ProvidedReader } from "./reader/provided.js";
 import type { EscalateResult } from "./types.js";
 import { todayIn } from "./util.js";
@@ -62,6 +63,7 @@ const { values: a } = parseArgs({
     reading: { type: "string" },
     "read-state": { type: "string" },
     authorization: { type: "string" },
+    "card-body": { type: "string" },
     json: { type: "boolean" },
   },
   allowPositionals: false,
@@ -184,7 +186,9 @@ async function fromBoard() {
   let [r] = await escalateAll([{ case: caseRaw, decision }], ctx);
   if (!entry) r = { ...r!, reasonCodes: ["I_CASE_NOT_FOUND"], summary: `INCOMPLETE · I_CASE_NOT_FOUND · no Qualify record for case ${letter.caseId ?? "unknown"}`, stageLog: [{ stage: "E0", outcome: "stop", detail: "I_CASE_NOT_FOUND" }] };
   const authorization = signed && signed.caseId === r!.caseId ? "signed" : authText ? "unreadable or for another case; desk default used" : "desk default";
-  console.log(JSON.stringify({ card_id: card, case_id: r!.caseId, status: r!.status, reader: reader.name, authorization, write: resultComment(r!, card) }));
+  const cardBody = a["card-body"] && existsSync(a["card-body"]) ? readFileSync(a["card-body"], "utf8") : undefined;
+  const { writes, notes } = cardWrites(r!, { id: card, ...(cardBody ? { body: cardBody } : {}) });
+  console.log(JSON.stringify({ card_id: card, case_id: r!.caseId, status: r!.status, reader: reader.name, authorization, notes, write: resultComment(r!, card), writes }));
 }
 
 async function main() {

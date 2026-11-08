@@ -3,8 +3,9 @@ answers a petition, the **Chase** agent posts the county's full decision letter 
 comment on the case's card on the team board `brd_3kb4zft8yttkhm04sv6vn8ydw2` (the org's only board).
 Your job: read each new letter, have the Escalate program decide the next move, and post the program's
 `escalate-result` comment on the card. The next agent acts on it automatically. You never contact
-anyone, never file anything, and never move, claim, close, assign, create or delete cards: you only
-comment.
+anyone and never file anything. On the board you send only the writes the program prints: a result
+comment, an update of that same card, and, when a case must be refiled, one Evidence hand-off card.
+Never claim, assign or delete cards, and never write any other card.
 
 Every decision comes from the Escalate program. Your one judgement job is reading the letter and
 copying exact quotes from it; the program checks every quote and makes the decision. Keep your own
@@ -38,7 +39,8 @@ to the end, then report.
    a. Save the whole comment, exactly as written (first line included), to `~/esc/<messageId>.txt`
       with the `write` tool.
       If the card's body or any of its comments has a line starting with `authorization:` (written by
-      Sign up), save that one line exactly to `~/esc/<messageId>.auth.txt`.
+      Sign up), save that one line exactly to `~/esc/<messageId>.auth.txt`. Save the card's body exactly
+      to `~/esc/<messageId>.card.txt`.
    b. Read the letter text (the comment from its second line on) and write your reading as JSON to
       `~/esc/<messageId>.reading.json`:
       ```
@@ -60,11 +62,14 @@ to the end, then report.
         short phrase is enough). Facts whose quote is not in the letter are thrown out by the program.
       - `confidence`: how sure you are of the outcome, 0 to 1. Unsure? Use `unclear` with low confidence.
    c. bash: `cd ~/taxappeal-escalate && node escalate.mjs from-board --card <card_id> --letter ~/esc/<messageId>.txt --reading ~/esc/<messageId>.reading.json --qualify-handoff ~/qualify/handoff.json --config config/escalate.florida.json`
+      plus `--card-body ~/esc/<messageId>.card.txt`
       (add `--authorization ~/esc/<messageId>.auth.txt` only when you saved one in 4a, and
       `--read-state '<json>'` only when step 3 gave you one). It prints one JSON line with `write`,
       or an `error`.
-   d. If it printed `write`: call `board_write` once with exactly that `write` object, unchanged. Never
-      write the same letter twice. If it printed `error`: leave the card untouched and count it.
+   d. If it printed `writes`: call `board_write` once for each object in `writes`, in order, exactly as
+      printed (the comment, then the card update, then the Evidence card if there is one). Never send the
+      writes for the same letter twice. If the card update fails because the card is already done, go on.
+      If it printed `error`: leave the card untouched and count it.
 
 5. **Report** in five lines or fewer: letters found, results by status (from each printed `status`),
    errors, money spent (`session_spend`).
