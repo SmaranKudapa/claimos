@@ -352,6 +352,7 @@ async function findRun() {
     writeJson(`${outDir}/${b.jurisdictionId}/config.json`, b.config);
     writeJson(`${outDir}/${b.jurisdictionId}/results.json`, { runAt: new Date().toISOString(), today: b.today, replay: b.replayed, configVersion: b.config.version, counts: sum.counts, results: sum.results });
     const findIdByParcel = new Map(b.candidates.map((c) => [c.parcelId, c.provenance.sources.find_case_id]));
+    const candByParcel = new Map(b.candidates.map((c) => [c.parcelId, c]));
     for (const r of sum.results) {
       all.push(r);
       handoff.push({
@@ -374,6 +375,12 @@ async function findRun() {
         releaseDate: r.releaseDate,
         requalifyOn: r.requalifyOn,
         translatorNotes: b.notes.get(r.parcelId) ?? [],
+        // For later steps (Escalate): the values the appeal argues, from this case's candidate.
+        parcelId: r.parcelId,
+        assessedValue: candByParcel.get(r.parcelId)?.assessment.assessedValue ?? null,
+        targetValue: r.valuation?.target ?? null,
+        taxRate: candByParcel.get(r.parcelId)?.assessment.taxRate ?? null,
+        owner: candByParcel.get(r.parcelId) ? { names: candByParcel.get(r.parcelId)!.owner.names, type: candByParcel.get(r.parcelId)!.owner.type } : null,
       });
     }
     console.log(`\nQualify · ${b.config.jurisdiction.name} · config ${b.config.version} · today ${b.today}${b.replayed ? " (replay)" : ""}`);
