@@ -80,9 +80,10 @@ A missing signature or county response becomes a recorded dependency. The next p
 ```mermaid
 flowchart TB
     Owner["Homeowner"] --> Site["Website · intake · case tracking"]
-    Records["Public assessment and sales records"] --> Find["Find + Qualify"]
+    Records["Public assessment and sales records"]
 
     subgraph Company["Naïve managed company"]
+        Find["Find + Qualify"]
         Coordinator["Coordinator · schedules · budgets"]
         Board["Shared case board · handoffs · run history"]
         Desks["Sign up · Evidence · File · Chase · Escalate · Collect"]
@@ -93,6 +94,7 @@ flowchart TB
     end
 
     Site <--> Board
+    Records --> Find
     Find --> Board
     Desks <--> Mail["AgentMail · inboxes and threads"]
     Desks --> Tools["Monid · inspected tool calls"]
