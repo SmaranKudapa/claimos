@@ -384,7 +384,7 @@ def _finish(base, run_id, started, processing, errors, rules, deadlines, items, 
                        "path": str(pdf) if pdf else str(rdir / "packet.md"), "markdown_path": str(rdir / "packet.md"),
                        "html_path": str(rdir / "packet.html"), "internal_record_path": str(rdir / "internal_review.md"),
                        "internal_record_hash": sha256_text(internal), "title": gen["doc"].title,
-                       "exhibits": [{k: e.get(k) for k in ("id", "title", "description", "date", "source", "supports", "page", "pages")} for e in gen["doc"].exhibits],
+                       "exhibits": [{k: e.get(k) for k in ("id", "title", "description", "date", "date_iso", "source", "supports", "page", "pages")} for e in gen["doc"].exhibits],
                        "redactions_applied": gen["redactions_applied"], "report_date": gen["report_date"], "synthetic": gen["synthetic"],
                        "draft": gen["doc"].draft, "release_gaps": gen["doc"].release_gaps, "omitted_sections": gen["doc"].omitted,
                        "county_facing": not gen["synthetic"], "contains_owner_contact_data": False}

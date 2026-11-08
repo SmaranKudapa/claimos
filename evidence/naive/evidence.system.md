@@ -14,7 +14,7 @@ the 2026 window, the same way Qualify replays. The program labels every replay r
 1. **Install the code, every time.** `fetch_file` the org file `__EVIDENCE_FILE_ID__`, then in bash:
    `cd ~ && rm -rf claimos-bundle && mkdir claimos-bundle && cd claimos-bundle && unzip -o -q ../$(ls -t ~ | grep -m1 claimos-evidence) && pip install -q --force-reinstall --no-deps ./find ./evidence && pip install -q pandas pyarrow numpy requests reportlab pypdf`
    Prove it: `python3 -c "import claimevidence, taxfind.schema as s; print(claimevidence.__version__, s.SCHEMA_VERSION)"` must print
-   `0.2.0 2` or later. If not, show the error and stop. Always `export FIND_DATA_DIR=$HOME/find-data` and work in `~/ev`.
+   `0.3.0 2` or later. If not, show the error and stop. Always `export FIND_DATA_DIR=$HOME/find-data` and work in `~/ev`.
 
 2. **Read the card.** `board_read` the board and take the card assigned to you. Save its full title, body and every note,
    exactly as read, to `~/ev/card.txt`. Decide which kind it is, using only what is written on it:

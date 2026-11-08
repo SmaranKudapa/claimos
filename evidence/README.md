@@ -8,7 +8,7 @@ county records and fixed code; nothing is written by a language model, and nothi
 
 | File | Who it is for |
 |---|---|
-| `packet.pdf` | The receiving authority. Identification page, summary, evidence index with page numbers, subject facts, valuation, comparable sales, witnesses, limitations and numbered exhibits. Letter size, every page numbered, bookmarks per section and exhibit. |
+| `packet.pdf` | The receiving authority. Cover page, statement of the case, evidence index with packet pages, subject facts, valuation framework, comparable sales with adjustment explanations, reconciliation, contrary evidence, witnesses where named, and lettered exhibits. Marked `DRAFT — NOT FOR SUBMISSION` until every release field is present. Layout in [the template spec](docs/TEMPLATE_SPEC.md). |
 | `packet.html`, `packet.md` | The same content for the portal and the board card. |
 | `internal_review.md` | Staff only. Intake checks, requirement status, estimates, deadlines, rules applied and every validation result. |
 | `delivery.json` | What goes to whom, by when and how, with a status that only a recorded event with proof can change. |
@@ -30,6 +30,8 @@ python -m pytest -q
 
 - [Architecture](docs/ARCHITECTURE.md): how Evidence sits in the Naïve workflow, what is deployed and what is not
 - [Requirements matrix](docs/REQUIREMENTS_MATRIX.md): every Florida and county requirement, its source, status and check
+- [Template specification](docs/TEMPLATE_SPEC.md): packet order, conditional sections, style defaults and jurisdiction overrides
+- [Calculation audit](docs/CALCULATION_AUDIT.md): the Weekend Dr and Redfish Cir figures, rechecked step by step
 - [Operating guide](docs/OPERATING_GUIDE.md): running, reviewing, approving and changing Evidence
 - [File integration](docs/FILE_INTEGRATION.md): the handoff contract File consumes
 - [Open items](docs/OPEN_ITEMS.md): what is unsupported, unverified or needs counsel

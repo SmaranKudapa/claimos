@@ -107,7 +107,7 @@ def main(argv=None) -> int:
     b.add_argument("--authorization", help="JSON file with Sign up's authorization record")
     b.add_argument("--consent", help="JSON file with the recorded contact consent")
     b.add_argument("--prior-review", help="JSON file with the reviewer's decision for an earlier packet")
-    b.add_argument("--submission", help="JSON file with petition_number, contact_phone")
+    b.add_argument("--submission", help="JSON file with petition_number, contact_phone, submitting_party")
     b.add_argument("--hearing-date", help="hearing date from the clerk's notice (YYYY-MM-DD)")
     b.add_argument("--entry-policy", choices=("full", "free_check"), default="full")
     b.add_argument("--synthetic", action="store_true", help="label the case as a synthetic test fixture")

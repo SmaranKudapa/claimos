@@ -18,7 +18,7 @@ find ──cards──▶ qualify ──QUALIFIED, released──▶ signup ─�
 | find | `agt_xy70yv97k94f0zwt0h552gj486`, scheduled every 6 hours for Bay | Nick | deployed, observed |
 | qualify | `agt_6ywz65vd5mp3emm3nh3xqcv26v`, replay mode | Smaran | deployed, observed |
 | signup | `agt_69tr31n7bdmpqxdfcyakssds08`, inbox claimos@agentmail.to | team | deployed, observed |
-| evidence | named `evidence`, this package | Fra | built and tested locally; deployed once `naive/setup.sh` is run |
+| evidence | `agt_2rn8zx8963y3r54z8gx5mh0bk9`, named `evidence`, this package | Fra | deployed (version 5); this update ships with the next `naive/setup.sh` run |
 | file | `agt_s813nxfpebzvvkbdnfz9zn5kdj`, Lee and Hendry adapters | Tarang | deployed, observed |
 
 The coordinator moves a card forward only when the current step marks it `done` with a result note. It never creates
@@ -34,12 +34,17 @@ or deletes cards. A new agent named `evidence` joins the roster automatically, s
 3. Collection loads the county roll (NAL) and sales file (SDF) from the Florida Department of Revenue, with the same
    cache Find uses, and checkpoints what it collected. A download failure is a retryable processing failure, never a
    finding on the merits.
-4. Analysis selects qualified sales before January 1, adjusts them for time, land, special features and living area,
-   reconciles at the median, and converts to just value with the county's DR-493 cost-of-sale percentage. The county's
-   measured level and the assessments of similar homes are shown as cross-checks. The requested value is the highest
-   indication, rounded to $100. The property's own sale and later sales are disclosed.
-5. The report generator builds one document model and renders it to PDF, HTML and Markdown. Exhibit numbers and
-   index page numbers are resolved by rendering, reading back where each exhibit landed, and rendering again.
+4. Analysis selects qualified sales before January 1, ranked by similarity and never by price, and records why each
+   nearby sale was excluded. It adjusts them for time (the county-wide monthly index, printed in the packet), land,
+   special features and living area, each with its formula and support, and reconciles at the median, with a weighted
+   mean as a cross-check. Market value is converted to just value once, either at the county's DR-493 cost-of-sale rate
+   or at the county's measured ratio; the request uses the higher of the two, rounded to $100. The comparables' own
+   assessment ratio and the assessments of similar homes are cross-checks and never raise or lower the request. If half
+   or more of the sales are more than three years older than the subject (an internal screen), or the subject's own
+   sale contradicts the result, no value is requested. Later sales are moved back to January 1 and compared.
+5. The report generator builds one document model and renders it to PDF, HTML and Markdown, following
+   `docs/TEMPLATE_SPEC.md`. Exhibit letters and index page ranges are resolved by rendering, reading back where each
+   exhibit landed, and rendering again until they agree.
 6. Validation recomputes the arithmetic, checks every exhibit is on the page the index gives, scans the text for
    appraisal language, outcome promises, placeholders, internal identifiers and contact data, confirms redactions
    are gone from the text layer, and checks page size, numbering, bookmarks and file size.
@@ -74,14 +79,28 @@ hash, which makes the earlier review stale. Rescheduling a hearing recomputes de
 | VAB petition, special magistrate hearing | `<County> County Value Adjustment Board` | the petitioner's evidence packet; the DR-486 petition is File's |
 | Circuit court (s. 194.171) | none | nothing; legal review only. No captions or pleadings are generated |
 
-County adapters (Bay, Hendry, Lee) carry the clerk, the property appraiser and the local procedures status. An
-unknown county gets `local_procedures: unknown` and no county-specific assumptions.
+## Jurisdictions are a separate layer
+
+```
+claimevidence/
+  jurisdictions/__init__.py      registry: state -> configuration; anything but FL is unsupported
+  jurisdictions/florida/rules.py versioned rules (effective_from / effective_to), sources, deadlines
+  jurisdictions/florida/forums.py county adapters: authorities, clerk, timezone, delivery, upload limits, DR-493
+  comps.py valuation.py          shared calculations and audit records
+  report.py render.py html.py    shared document assembly
+  validate.py                    shared presentation and substance checks
+```
+
+County adapters (Bay, Hendry, Lee) carry the clerk, the property appraiser, the timezone, delivery details and the local
+procedures status. An unknown Florida county gets `local_procedures: unknown` and no county-specific assumptions. A
+state other than Florida returns `unsupported` with no rules, deadlines or packet; a future state is added as its own
+researched and tested module and inherits nothing from Florida.
 
 ## What is locally tested and what is observed in production
 
 | Behaviour | Status |
 |---|---|
-| Analysis, report, validation, delivery plan, File handoff, card note | locally tested: 57 tests, including deliberate fault injection |
-| Rendered packet for a real Bay parcel | locally generated and inspected page by page |
-| Deployed `evidence` agent on Naïve | not observed until setup is run and a session is checked |
+| Analysis, report, validation, delivery plan, File handoff, card note | locally tested: 75 tests, including deliberate fault injection |
+| Rendered packets for two real Bay parcels (Weekend Dr supports a value; Redfish Cir does not) | locally generated and inspected page by page; see `docs/CALCULATION_AUDIT.md` |
+| Deployed `evidence` agent on Naïve | a test session succeeded on an earlier version; this update is verified with a fresh session after the next setup run |
 | File consuming `evidence.json` end to end | contract matched to File's code; not run, because File supports Lee and Hendry only |

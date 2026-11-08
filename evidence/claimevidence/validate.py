@@ -15,7 +15,7 @@ FORBIDDEN = [
     (r"\bguarantee", "promises an outcome"),
     (r"\bwill (?:win|succeed|be granted|save)\b", "predicts an outcome"),
     (r"\b(?:filed|served|exchanged|accepted|submitted) (?:on|with|to)\b", "states a delivery that generation cannot establish"),
-    (r"\bclearly\b|\bobviously\b|\bundeniabl", "overstated language"),
+    (r"\bclearly\b|\bobviously\b|\bundeniabl|\birrefutabl|\bgrossly\b|\bdramatically\b|\babundantly\b", "overstated language"),
     (r"\bdelve|\brest assured\b|\bI hope\b|\bas an AI\b|\blanguage model\b", "chat-style filler"),
     (r"!", "exclamation mark"),
     (r"[\U0001F300-\U0001FAFF☀-➿]", "emoji or pictograph"),

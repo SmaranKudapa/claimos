@@ -65,5 +65,11 @@ review of this exact packet with approval for `file_handoff`, valid authorizatio
 - The petition is never held back for the packet. The delivery plan lists `petition_dr486` as File's item with its own
   deadline; the evidence exchange is due 15 days before the hearing and is a separate delivery.
 - Bay's 2026 petition deadline was September 8, 2026 (Bay Clerk). Bay remains blocked in File until a Bay adapter exists.
-- The packet's identification page shows "Petition number: Not yet assigned" until File records the clerk's number;
-  pass it back as `submission.petition_number` so a remote-hearing upload carries it.
+- The packet's cover page shows "Pending (not yet assigned)" for the petition number until File records the clerk's
+  number. Pass it back as `submission.petition_number`, with `contact_phone` and `submitting_party`. Until all three
+  are present, and the petitioner is verified by a signed authorization, the packet is marked
+  `DRAFT — NOT FOR SUBMISSION` and its release is blocked. Adding them produces a new packet version, which needs a new
+  approval.
+- Each exhibit in `packet_meta.exhibits` carries `id`, `title`, its printed `pages` range, a display `date` and
+  `date_iso`. A packet with no supported value is titled an evidence review, and its `evidence.status` is never
+  `complete`.

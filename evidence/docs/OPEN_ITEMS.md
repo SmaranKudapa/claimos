@@ -20,7 +20,7 @@ meanwhile.
 | DR-486RMT (remote request attachment) is provisional; DOR's rule workshop is November 12, 2026 | Recorded for the operator; Evidence sends no requests. |
 | Hendry and Lee petition deadlines for 2026 | The petition deadline stays unverified and blocks filing readiness. Hendry's board opted out of remote hearings for 2026, so no remote upload is planned there. |
 | Florida legal holidays for the 15-day count | A conservative calendar (federal holidays plus the day after Thanksgiving) moves due dates earlier, never later. |
-| Font, margin, PDF-standard or AI-disclosure rules | None found. Our defaults are labelled as ours in the matrix. |
+| Font, margin, PDF-standard or AI-disclosure rules | None found. Our defaults are labelled as ours in the matrix and documented in `docs/TEMPLATE_SPEC.md`; a verified local rule would override them. |
 
 ## Not built
 
@@ -29,7 +29,9 @@ meanwhile.
 | Fetching the property record card from the property appraiser (Bay's qPublic needs a terms click-through) | Recommended, not required; the appraiser must send it after a petition is filed (s. 194.032(2)(a)). |
 | Homeowner photo and document upload through the portal | Owner documents can be passed in `homeowner_submissions` with their stored file and SHA-256; they are shown unaltered and dated. |
 | Recording deliveries and approvals in the app | Approval is a line on the card; delivery events are passed in the input. Both are bound to the packet SHA-256. |
-| Distance between properties | Location is compared by the county's neighbourhood and market-area codes, stated as a limitation. |
+| Location map and distances | The DOR roll and sales files carry no coordinates, so no map is drawn and no distance is invented. Location is compared by the county's neighbourhood and market-area codes, stated as a limitation. A county parcel GIS layer would allow a map with straight-line distances, which magistrates use (DOR 2026 VAB training, Module 4). |
+| The subject's earlier sales | The DOR sales file covers only this roll's window. MV-10 in the internal record asks a reviewer to check the property appraiser's sale history before approval; a recent purchase above the request would be contrary evidence. |
+| Property record cards for the comparable sales | Each sale's county record is summarised from the DOR files in Exhibit B. Attaching the property appraiser's own cards is recommended practice and is not built. |
 | Billed millage | Savings estimates use assumed rates and stay in the internal record only. |
 | Counties beyond Bay, Hendry and Lee | Other counties run with `local_procedures: unknown` and no cost-of-sale rate, which the validation reports. |
 | Lee in the agent sandbox | Lee's roll is large; running it in a Naïve session is untested. |

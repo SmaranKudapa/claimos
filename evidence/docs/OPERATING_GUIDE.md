@@ -38,11 +38,16 @@ never becomes `EVIDENCE COMPLETE`.
 
 Open the published `packet.pdf` and `internal_review.md` for the card. Check, at least:
 
-1. The identification page names the right property, parcel, county board and tax year.
-2. The comparable sales are genuinely similar homes. Look at the "Why each sale was used" table and the flags.
-3. Nothing in the subject facts conflicts with what the owner told us. Owner statements are labelled as unverified.
-4. The contrary evidence exhibit: a recent sale of the subject or strong later sales are reasons to stop.
-5. `internal_review.md` shows no failed validation check and lists the open items you accept.
+1. The cover page names the right property, parcel, board and assessment year. The boxed `DRAFT — NOT FOR SUBMISSION`
+   notice lists what is still missing before release (petitioner, petition number, telephone, submitting party).
+2. Section 5: the comparable sales are genuinely similar homes, and every adjustment in 5.3 has a basis you accept.
+   The card's "Reviewer, look closely" line names weak points the checks found.
+3. Section 6: the requested value follows from the Step table, and the gap breakdown adds up.
+4. Section 7: read every contrary item. A recent sale of the subject, later sales at or above the county's value, or
+   sales much older than the subject are reasons to stop.
+5. Section 3: nothing conflicts with what the owner told us. Owner statements are labelled as unverified.
+6. `internal_review.md`: no failed check, both presentation and substance passed, and the open requirements (for
+   example MV-10, the subject's earlier sales on the property appraiser's record) are ones you have checked or accept.
 
 To approve, add this line to the card, with the packet's full SHA-256 from the note, then assign the card back to `evidence`:
 
@@ -74,18 +79,21 @@ claimevidence run --input input.json --out evidence-out --data-dir $FIND_DATA_DI
 claimevidence card-note evidence-out/<cycle>/<run>/result.json
 ```
 
-Add `--submission submission.json` with `{"petition_number": "...", "contact_phone": "..."}` once the clerk assigns a
-petition number, and `--hearing-date YYYY-MM-DD` once the hearing notice arrives. Both change what the deadlines and the
-cover page say; neither is ever guessed.
+Add `--submission submission.json` with `{"petition_number": "...", "contact_phone": "...", "submitting_party": "Name, role"}`
+once the clerk assigns a petition number, and `--hearing-date YYYY-MM-DD` once the hearing notice arrives. Set
+`appeal.hearing_format` to `in_person`, `remote` or `absent` in the input to switch the delivery obligations. These change
+what the deadlines, the cover page and the release status say; none of them is ever guessed. Until all release fields
+are present the packet is marked `DRAFT — NOT FOR SUBMISSION`.
 
 ## Changing rules, counties and wording
 
-- A requirement: edit `claimevidence/rules.py`. Each rule carries its source, section, effective date, status, how it is
+- A requirement: edit `claimevidence/jurisdictions/florida/rules.py`. Each rule carries its source, section, effective date, status, how it is
   applied and which check enforces it. Regenerate the matrix with
   `claimevidence rules --matrix` and paste it under "Matrix" in `docs/REQUIREMENTS_MATRIX.md`.
-- A county's cost-of-sale rate: `COST_OF_SALE` in `rules.py`, from that county's DR-493 for the roll year.
-- A verified petition deadline: `COUNTY_DEADLINES` in `rules.py`, only from the clerk's own publication.
-- A new county: add it to `COUNTY_ADAPTERS` in `claimevidence/forums.py`; its local procedures start as `pending`.
+- A county's cost-of-sale rate: `COST_OF_SALE` in `jurisdictions/florida/rules.py`, from that county's DR-493 for the roll year.
+- A verified petition deadline: `COUNTY_DEADLINES` in the same file, only from the clerk's own publication.
+- A new county: add it to `COUNTY_ADAPTERS` in `jurisdictions/florida/forums.py`; its local procedures start as `pending`.
+- Layout and section order: `docs/TEMPLATE_SPEC.md` describes them; the code is `render.py` and `report.py`.
 - Packet wording: `claimevidence/report.py`. Keep sentences plain, cite the exhibit beside each claim, and run the tests:
   validation fails on appraisal language, outcome promises, placeholders and internal identifiers.
 
