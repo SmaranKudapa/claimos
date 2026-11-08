@@ -145,6 +145,14 @@ def validate(doc: Doc, pdf: Path | None, render_info: dict | None, base: dict, c
     leaks = [r for r in redactions if r and (r in full or r in text)]
     _check(out, "V-REDACT", "privacy", not leaks, f"{len(redactions)} redactions removed from the text layer" if not leaks else f"redacted text still present: {len(leaks)} item(s)",
            "FL-CONF-01")
+    limit = (forum.get("county") or {}).get("upload_limit_bytes")
+    if limit and render_info:
+        _check(out, "V-FMT-COUNTY-SIZE", "format", render_info["bytes"] <= limit, f"{render_info['bytes']:,} bytes against the county's {limit:,}-byte upload limit",
+               "county local procedures")
+    wit = [b for b in doc.blocks if b[0] == "table" and b[4] == "wit"]
+    gaps = [r[0] for b in wit for r in b[2] if r[1].startswith("To be added")]
+    _check(out, "V-WITNESS", "delivery", not gaps, "every witness has a name, address and subject" if not gaps else
+           f"witness address missing for {', '.join(gaps)}; the exchange needs it (R. 12D-9.020)", "FL-EVX-08", "warn")
     cover_missing = [k for k in ("petition_number", "contact_phone") if not submission.get(k)]
     _check(out, "V-FMT-COVER", "delivery", not cover_missing,
            "cover page has petition number and telephone for a remote-hearing upload" if not cover_missing else

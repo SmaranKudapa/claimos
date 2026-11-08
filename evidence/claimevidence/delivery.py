@@ -10,7 +10,8 @@ def _d(id, purpose, recipient, content, due, method, copies, required, condition
             "status": "not_sent", "events": []}
 
 
-def build(forum: dict, deadlines: dict, packet: dict | None, review: dict, submission: dict, events: list[dict], synthetic: bool = False) -> dict:
+def build(forum: dict, deadlines: dict, packet: dict | None, review: dict, submission: dict, events: list[dict], synthetic: bool = False,
+          extra_blockers: dict | None = None) -> dict:
     county = (forum.get("county") or {})
     cname = county.get("county") or "the county"
     pa = county.get("property_appraiser") or f"{cname} County Property Appraiser"
@@ -42,13 +43,18 @@ def build(forum: dict, deadlines: dict, packet: dict | None, review: dict, submi
                         {"date": up.get("date"), "time": up.get("time"), "rule": "9:00 a.m., at least two non-holiday workdays before the hearing"},
                         county.get("remote_upload_method") or "the clerk's upload system or email; not confirmed for this county", "one PDF", "mandatory",
                         conditional="appearing remotely", blockers=blockers, rule="FL-HRG-02"))
+        if county.get("remote_hearings") is False:
+            items[-1]["status"] = "not_applicable"
+            items[-1]["note"] = "this county's board opted out of remote hearings for the year"
         items.append(_d("absent_petitioner_filing", "Evidence filed with the clerk when the petitioner will not attend", clerk,
                         "This packet and every exhibit", {"date": (deadlines.get("hearing") or {}).get("date"), "rule": "before the hearing"},
-                        county.get("absent_filing_method") or "per the clerk's instructions", "two (DR-486)", "mandatory",
+                        county.get("absent_filing_method") or "per the clerk's instructions", "two (DR-486); confirm against local procedures", "mandatory",
                         conditional="petitioner not attending", rule="FL-HRG-03"))
     elif pid == "fl_informal_conference":
         items.append(_d("informal_conference_copy", "Material for an informal conference", pa, "This summary and its exhibits", {"date": None,
                         "rule": "optional; does not extend the petition deadline"}, "per the property appraiser", "one", "optional", rule="FL-INF-01"))
+    for it in items:
+        it["blockers"] += (extra_blockers or {}).get(it["id"], [])
     sha = (packet or {}).get("sha256")
     if synthetic:
         for it in items:

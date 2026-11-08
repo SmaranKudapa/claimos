@@ -57,7 +57,11 @@ review of this exact packet with approval for `file_handoff`, valid authorizatio
 
 ## Things File should know
 
-- DOR revised DR-486 to R. 11/26. Confirm the template File fetches is that revision.
+- DOR revised DR-486 to R. 11/26 (effective 2026-11-02). Confirm the template File fetches is that revision.
+- DR-486POA (R. 12/20) needs the taxpayer's signature, two witnesses and a notary. A compensated authorization without
+  them should not reach File; Sign up needs to collect all three.
+- Lee: the exchange goes to the property appraiser at vabmail@leepa.org; an Axia upload to the clerk is not the exchange.
+  Hendry opted out of remote hearings for 2026.
 - The petition is never held back for the packet. The delivery plan lists `petition_dr486` as File's item with its own
   deadline; the evidence exchange is due 15 days before the hearing and is a separate delivery.
 - Bay's 2026 petition deadline was September 8, 2026 (Bay Clerk). Bay remains blocked in File until a Bay adapter exists.

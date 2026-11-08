@@ -17,6 +17,19 @@ S194171 = "https://flsenate.gov/Laws/Statutes/2025/194.171"
 BAY_VAB = "https://www.baycoclerk.com/clerk-services/value-adjustment-board/"
 PTO2501 = "https://floridarevenue.com/property/Documents/PTO_BUL_25-02.pdf"
 PTO2601 = "https://floridarevenue.com/property/Documents/PTO_BUL_26-01.pdf"
+CERT26 = "https://floridarevenue.com/rules/pdf/Certification%20for%2012D-9.014,%20.019,%20.%20020,%20.026.pdf"
+DR486POA = "https://floridarevenue.com/property/Documents/dr486poa.pdf"
+DR486A = "https://floridarevenue.com/property/Documents/dr486a.pdf"
+DR481 = "https://floridarevenue.com/property/Documents/dr481.pdf"
+FORMS = "https://floridarevenue.com/property/Pages/Forms.aspx"
+BAY_SITE = "https://baycountyvab.com/"
+HENDRY_VAB = "https://www.hendryclerk.org/value-adjustment-board/"
+HENDRY_ORG = "https://hendry-county.s3.amazonaws.com/uploads/2026/11/05125124/Hendry-VAB-2026-O-Mtg-Agenda-Packet-V4-FINAL-FINAL_ada.pdf"
+LEE_UP = "https://www.leeclerk.org/departments/value-adjustment-board/evidence-upload-1818"
+LEE_LPP = "https://www.leeclerk.org/home/showpublisheddocument/17424/639264752250670000"
+LEE_NCI = "https://www.leeclerk.org/home/showpublisheddocument/4921/638253586171500000"
+PB_FAQ = "https://www.mypalmbeachclerk.com/about-us/frequently-asked-questions-faq/value-adjustment-board-vab-faq"
+AOSC = "https://www.circuit5.org/wp-content/uploads/2026/06/aosc26-12.pdf"
 
 VAB = ("fl_vab_value_petition",)
 ALLP = ("fl_vab_value_petition", "fl_informal_conference", "fl_circuit_court_value")
@@ -132,11 +145,57 @@ RULES: list[dict] = [
     R("FL-CC-01", "FL", "circuit_court", "A circuit court action is due within 60 days after certification for collection (or after a late board decision); the tax admitted in good faith must be paid first.",
       "mandatory", S194171, "s. 194.171(2)-(3); s. 193.122(2)", proceedings=("fl_circuit_court_value",),
       applied_as="Circuit court is legal_review_only. Claim OS does not generate court documents.", automated="F-FORUM"),
+    R("FL-EVX-08", "FL", "witness_summary", "Witness summaries give each witness's name and address and the general subject of the testimony.",
+      "mandatory", CERT26, "R. 12D-9.020(3) (formerly (5))", effective="2026-11-02",
+      applied_as="The witnesses section is a table of name, address and subject; a missing address blocks the exchange delivery.", automated="V-WITNESS"),
+    R("FL-HRG-04", "FL", "remote_request", "A remote-appearance request gives the petition number, parcel, name and a reply email, sent to the VAB address on DR-481, unless DR-486RMT was checked on the petition.",
+      "mandatory", CERT26, "R. 12D-9.026(2)(a); DR-486RMT N. 08/26 (provisional)", effective="2026-11-02",
+      applied_as="Recorded for the operator; Evidence does not send requests.", implementation="documented"),
+    R("FL-FORM-01", "FL", "petition_form", "DR-486 (R. 11/26) is signed under penalty of perjury, with no notary; whoever signs becomes the taxpayer's agent for service.",
+      "mandatory", DR486, "DR-486 Parts 3-5; R. 12D-9.018(2)", effective="R. 11/26", applied_as="File's form. Evidence never fills or signs it.",
+      implementation="not_applicable"),
+    R("FL-FORM-02", "FL", "power_of_attorney", "DR-486POA (R. 12/20) must be signed by the taxpayer with two witnesses and a notary.",
+      "mandatory", DR486POA, "DR-486POA", effective="R. 12/20", applied_as="Intake accepts a compensated authorization only with a signed document reference and checksum; Sign up must collect witnesses and notarization.",
+      automated="I11", human_review="Check the witnesses and notary on the signed document."),
+    R("FL-FORM-03", "FL", "written_authorization", "DR-486A (N. 01/17) authorizes an uncompensated representative only; no notary or witness.",
+      "mandatory", DR486A, "DR-486A", effective="N. 01/17", applied_as="Intake blocks DR-486A for compensated representation.", automated="I11"),
+    R("FL-FORM-04", "FL", "evidence_format", "DOR prescribes no form or format for the petitioner's evidence, evidence list or witness list for in-person hearings.",
+      "unknown", FORMS, "Forms page; none found", applied_as="Our template is labelled as our default.", implementation="documented"),
+    R("FL-EV-01", "FL", "evidence_signature", "No statute or rule found that requires evidence to be signed, sworn, notarized or certified.",
+      "unknown", UPPM, "none found", applied_as="The packet carries no signature block and never shows an unsigned form as signed.", automated="V-TEXT-PREPARER"),
+    R("FL-FIL-01", "FL", "filing_with_clerk", "Filing means received by the clerk during open hours; electronic filing only where the board and clerk accept it; documents filed with the board are served on all parties.",
+      "mandatory", UPPM, "R. 12D-9.016(1)-(4) (manual text partly garbled)", applied_as="Delivery statuses change only on a recorded receipt.", automated="D-EVENTS"),
+    R("FL-AI-02", "FL", "court_ai", "In circuit court, Rule 2.515 makes the signer vouch that cited authorities exist and are accurate; AI use need not be disclosed and circuits may not add AI rules (AOSC26-12).",
+      "mandatory", AOSC, "Rule 2.515(d)(2); AOSC26-12", effective="2026-06-15", proceedings=("fl_circuit_court_value",),
+      applied_as="Court work is legal review only; Evidence generates nothing for court.", automated="F-FORUM"),
+    R("BAY-PET-01", "FL:Bay", "petition_channel", "Bay's 2026 petitions go through the JustAppraised portal via baycountyvab.com, in person or by mail; $50 per petition, $5 per added parcel; the 2026 deadline was September 8, received by the clerk.",
+      "mandatory", BAY_SITE, "VAB page and FAQ; Resolution 2026-001", effective="2026-09-24", applied_as="Petition deadline configured as verified; channel and fee are File's."),
+    R("BAY-REM-01", "FL:Bay", "remote_hearings", "Bay's population is over 75,000, so remote appearance must be offered on request.", "mandatory", FS, "s. 194.032(2)(b)",
+      applied_as="The remote upload stays in Bay's delivery plan."),
+    R("BAY-EVX-01", "FL:Bay", "local_evidence_rules", "Bay publishes nothing on evidence delivery, formats, size limits, copies or remote procedures.", "unknown", BAY_VAB,
+      "VAB page; 2026 organizational packet", applied_as="Method, copies and upload limits show as unknown in the delivery plan.",
+      human_review="Confirm with the Bay clerk and property appraiser before the first exchange."),
+    R("HENDRY-REM-01", "FL:Hendry", "remote_hearings", "Hendry's 2026 board opted out of remote hearings (Resolution No. 2, August 12, 2026).", "mandatory", HENDRY_ORG,
+      "organizational packet pp. 133-134, 199", effective="2026-08-12", applied_as="The remote upload is marked not applicable for Hendry."),
+    R("HENDRY-EVX-01", "FL:Hendry", "local_evidence_rules", "Hendry publishes no county-specific evidence delivery or format rules.", "unknown", HENDRY_VAB, "VAB page",
+      applied_as="Statewide defaults only.", human_review="Confirm with the clerk before the first exchange."),
+    R("LEE-EVX-01", "FL:Lee", "exchange_channel", "Lee: send the exchange to the property appraiser at vabmail@leepa.org or 239-533-6100; uploading to the clerk does not count as the exchange.",
+      "mandatory", LEE_UP, "Evidence Upload page", effective="2026", applied_as="Configured as Lee's exchange method."),
+    R("LEE-UP-01", "FL:Lee", "upload_format", "Lee uploads are PDF only. The upload page allows 64 MB per file; the local procedures say under 60 MB. Email fallback under 10 MB.",
+      "mandatory", LEE_LPP, "LPP s. 3.E.3", effective="rev. 08/26/2026", applied_as="The stricter 60 MB limit is checked.", automated="V-FMT-COUNTY-SIZE"),
+    R("LEE-ABS-01", "FL:Lee", "absent_petitioner_local", "Lee asks a non-attending petitioner to upload, or deliver one copy at least 15 business days before; DR-486 says two copies.",
+      "unresolved", LEE_LPP, "LPP s. 3.E.2", effective="rev. 08/26/2026", applied_as="The delivery plan shows both and asks a person to confirm."),
+    R("LEE-FMT-01", "FL:Lee", "page_numbers_local", "Lee asks that every page of multipage evidence be numbered (required for remote hearings); paper evidence unbound, no staples, photos on letter pages with captions.",
+      "recommended", LEE_LPP, "LPP s. 3.E.4-5, 3.G.3(d)", effective="rev. 08/26/2026", applied_as="Every page is numbered; the packet is letter size.", automated="V-FMT-PAGENUM"),
+    R("LEE-CONF-01", "FL:Lee", "confidential_local", "Lee uses Form NCI to request that confidential material be held separately.", "mandatory", LEE_NCI, "LPP s. 3.E.7; Form NCI",
+      applied_as="No confidential material goes into the packet; an owner document needing protection is flagged for review.", implementation="documented"),
+    R("PB-EVX-01", "FL:Palm Beach", "exchange_channel_local", "Palm Beach treats an AXIA upload as delivery to the property appraiser and tells petitioners not to send evidence to the VAB.",
+      "mandatory", PB_FAQ, "FAQ s. 05", applied_as="Local to Palm Beach only; never applied to another county.", implementation="not_applicable"),
     R("CO-FMT-01", "ClaimOS", "page_format", "US Letter, 11 pt body, 8.5-9 pt tables, numbered pages with the case and version in the footer, bookmarks per section and exhibit, grayscale-safe.",
       "internal", "ClaimOS template", "-", proceedings=ALLP, applied_as="Our defaults. No Florida rule on fonts, margins or PDF standard was found.", automated="V-FMT"),
     R("CO-FMT-02", "ClaimOS", "file_size", "Keep each packet under 20 MB and 60 pages so it fits common email and portal limits.", "internal", "ClaimOS template", "-",
       proceedings=ALLP, applied_as="A larger packet fails format validation for review. County portal limits are unknown.", automated="V-FMT"),
-    R("CO-AI-01", "ClaimOS", "ai_disclosure", "No Florida VAB rule requiring disclosure of AI or software preparation was found. The packet states that software prepared it and that no appraiser, broker or attorney reviewed it.",
+    R("CO-AI-01", "ClaimOS", "ai_disclosure", "No AI-disclosure rule, guidance or order was found for VAB proceedings (DOR rules, forms, bulletins, the 2025 manual, Bay, Hendry, Lee and Palm Beach). The packet still states that software prepared it and that no appraiser, broker or attorney reviewed it.",
       "internal", "ClaimOS policy", "-", proceedings=ALLP, applied_as="Preparer line on the identification page.", automated="V-TEXT-PREPARER"),
 ]
 

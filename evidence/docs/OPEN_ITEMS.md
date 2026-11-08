@@ -15,8 +15,10 @@ meanwhile.
 
 | Item | Meanwhile |
 |---|---|
-| Bay: number of hearing copies, the property appraiser's exchange method, JustAppraised upload limits, 2026 hearing schedule | Each is shown as unknown in the delivery plan and needs a person to confirm. |
-| Hendry and Lee petition deadlines for 2026 | The petition deadline stays unverified and blocks filing readiness. |
+| Bay and Hendry: the property appraiser's exchange method, hearing copies and any upload limits; Bay's JustAppraised evidence upload and 2026 hearing schedule | Shown as unknown in the delivery plan; a person confirms before the first exchange. |
+| Lee's conflicting local numbers (64 MB vs 60 MB; one copy vs two for an absent petitioner) | The stricter size is checked; the copy count is marked unresolved. |
+| DR-486RMT (remote request attachment) is provisional; DOR's rule workshop is November 12, 2026 | Recorded for the operator; Evidence sends no requests. |
+| Hendry and Lee petition deadlines for 2026 | The petition deadline stays unverified and blocks filing readiness. Hendry's board opted out of remote hearings for 2026, so no remote upload is planned there. |
 | Florida legal holidays for the 15-day count | A conservative calendar (federal holidays plus the day after Thanksgiving) moves due dates earlier, never later. |
 | Font, margin, PDF-standard or AI-disclosure rules | None found. Our defaults are labelled as ours in the matrix. |
 

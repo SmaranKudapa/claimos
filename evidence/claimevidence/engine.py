@@ -7,6 +7,7 @@ import os
 import time
 import uuid
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
@@ -113,7 +114,7 @@ def run(inp: dict, out_root: Path | str, data_dir: Path | str | None = None, tod
     params = params or CompParams()
     out_root = Path(out_root)
     started = now()
-    today = today or dt.date.today()
+    today = today or dt.datetime.now(ZoneInfo("America/New_York")).date()
     intake = run_intake(inp, today)
     cycle = intake["cycle_id"] or f"invalid/{inp.get('case_id')}"
     key = sha256_obj({"input": inp, "method": METHOD_VERSION, "code": __version__, "params": params.__dict__,
@@ -244,9 +245,10 @@ def _generate(base, col, a, val, items, fm, inp, intake, cdir, rdir, today, cos)
     redactions = [x for x in inp.get("redactions") or [] if isinstance(x, str) and x.strip()]
     petitioner = _petitioner(inp, intake)
     synthetic = bool(inp.get("synthetic"))
-    fingerprint = sha256_obj({"subject": col["subject"], "analysis": a, "valuation": val, "items": sorted(i["evidence_id"] for i in items),
-                              "proceeding": fm.get("proceeding_id"), "submission": sub, "petitioner": petitioner, "code": __version__,
-                              "redactions": sha256_obj(sorted(redactions)), "synthetic": synthetic})
+    draft = build_report(base, col, a, val, items, fm, {"number": 0, "fingerprint": "0" * 64}, "2000-01-01", petitioner, sub, synthetic)
+    draft.resolve()
+    draft.redact(redactions)
+    fingerprint = sha256_obj({"text": draft.text(), "code": __version__})
     vfile = cdir / "versions.json"
     versions = json.loads(vfile.read_text()) if vfile.exists() else {}
     if fingerprint not in versions:
@@ -297,7 +299,8 @@ def _submission_item(cycle: str, sub: dict) -> dict:
                  "media_type": sub.get("media_type"), "local_path": sub.get("local_path") if ver == "homeowner_document_unverified" else None},
                 {"document_date": sub.get("document_date"), "condition_date": sub.get("condition_date"), "statement": sub.get("statement_text"),
                  "asserts": sub.get("asserts"), "claimed": sub.get("claimed"), "include_in_packet": bool(sub.get("include_in_packet")),
-                 "witness": sub.get("witness"), "witness_subject": sub.get("witness_subject"), "supports": sub.get("supports")},
+                 "witness": sub.get("witness"), "witness_subject": sub.get("witness_subject"), "witness_address": sub.get("witness_address"),
+                 "witness_phone": sub.get("witness_phone"), "supports": sub.get("supports")},
                 ver, ["condition or characteristics claim"], lim + ["a homeowner statement is recorded as a statement until verified"],
                 county_facing=ver in ("homeowner_document_unverified",)).as_dict()
 
@@ -373,8 +376,11 @@ def _finish(base, run_id, started, processing, errors, rules, deadlines, items, 
                        "exhibits": [{k: e[k] for k in ("id", "title", "description", "date", "source", "supports", "page")} for e in gen["doc"].exhibits],
                        "redactions_applied": gen["redactions_applied"], "report_date": gen["report_date"], "synthetic": gen["synthetic"],
                        "county_facing": not gen["synthetic"], "contains_owner_contact_data": False}
-    manifest = build_delivery(fm, deadlines or {}, packet_meta, review, (gen or {}).get("submission") or inp.get("submission") or {},
-                              inp.get("delivery_events") or [], bool(inp.get("synthetic"))) if fm.get("supported") == "packet" else None
+    witness_gaps = [c["detail"] for c in (validation or {}).get("checks", []) if c["id"] == "V-WITNESS" and c["status"] != "pass"]
+    manifest = None
+    if fm.get("supported") == "packet":
+        manifest = build_delivery(fm, deadlines or {}, packet_meta, review, (gen or {}).get("submission") or inp.get("submission") or {},
+                                  inp.get("delivery_events") or [], bool(inp.get("synthetic")), {"exchange_property_appraiser": witness_gaps})
     if manifest:
         _write(rdir / "delivery.json", json.dumps(manifest, indent=1, default=str))
     auth_state = _auth_state(inp, intake)

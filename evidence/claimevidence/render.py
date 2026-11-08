@@ -46,6 +46,7 @@ def to_pdf(doc: Doc, path: Path, footer_left: str, title: str, subject: str = ""
         "h1": ParagraphStyle("h1", fontName=SANS_B, fontSize=13, leading=16, spaceBefore=12, spaceAfter=6, keepWithNext=1),
         "exhibit": ParagraphStyle("exhibit", fontName=SANS_B, fontSize=13, leading=16, spaceAfter=8, keepWithNext=1),
         "p": ParagraphStyle("p", fontName=FONT, fontSize=BODY_PT, leading=BODY_PT * 1.32, spaceAfter=6, alignment=TA_LEFT),
+        "lead": ParagraphStyle("lead", fontName=FONT, fontSize=BODY_PT, leading=BODY_PT * 1.32, spaceAfter=6, alignment=TA_LEFT, keepWithNext=1),
         "note": ParagraphStyle("note", fontName=FONT, fontSize=10, leading=13, spaceBefore=8, borderPadding=6,
                                borderColor=colors.HexColor("#666666"), borderWidth=0.6, spaceAfter=8),
         "cell": ParagraphStyle("cell", fontName=SANS, fontSize=TABLE_PT, leading=TABLE_PT * 1.25),
@@ -92,12 +93,17 @@ def to_pdf(doc: Doc, path: Path, footer_left: str, title: str, subject: str = ""
             elif kind == "h1":
                 out.append(Anchored(_esc(b[1]), st["h1"], key="sec_" + re.sub(r"[^a-z0-9]+", "_", b[1].lower()), level=0, label=b[1]))
             elif kind == "p":
-                out.append(Paragraph(_esc(b[1]), st["p"]))
+                out.append(Paragraph(_esc(b[1]), st["lead"] if b[1].rstrip().endswith(":") else st["p"]))
             elif kind == "bullets":
                 for x in b[1]:
                     out.append(Paragraph(_esc(x), st["bullet"], bulletText="•"))
             elif kind == "table":
-                out.append(table(b[1], b[2], b[3], b[4]))
+                t = table(b[1], b[2], b[3], b[4])
+                lead = [out.pop()] if out and getattr(out[-1], "style", None) is st["lead"] else []
+                if len(b[2]) <= 12:
+                    out.append(KeepTogether(lead + [t]))
+                else:
+                    out.extend(lead + [t])
                 out.append(Spacer(1, 6))
             elif kind == "index":
                 out.append(table(INDEX_HEAD, _index_rows(doc, pages), INDEX_W, "index"))

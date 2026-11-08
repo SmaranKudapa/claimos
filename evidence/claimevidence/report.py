@@ -141,7 +141,8 @@ def homeowner_view(items: list[dict]) -> list[dict]:
                     "document_date": f.get("document_date"), "condition_date": f.get("condition_date"), "statement": f.get("statement"),
                     "claimed": f.get("claimed") or {}, "sha256": s.get("sha256"), "image_path": s.get("local_path"),
                     "county_facing": bool(i.get("county_facing")), "include_statement": bool(f.get("include_in_packet")),
-                    "witness": f.get("witness"), "witness_subject": f.get("witness_subject"), "supports": f.get("supports")})
+                    "witness": f.get("witness"), "witness_subject": f.get("witness_subject"), "witness_address": f.get("witness_address"),
+                    "witness_phone": f.get("witness_phone"), "supports": f.get("supports")})
     return out
 
 
@@ -159,7 +160,8 @@ def build(base: dict, col: dict, a: dict | None, val: dict, items: list[dict], f
     R = Doc.ref
     zipc = str(s.get("PHY_ZIPCD") or "").split(".")[0]
     addr = ", ".join(x for x in (s.get("PHY_ADDR1"), s.get("PHY_CITY")) if x) + (f", FL {zipc}" if zipc else ", FL")
-    d = Doc(("TEST FIXTURE, NOT FOR SUBMISSION. " if synthetic else "") + (forum.get("document") or "Evidence summary"), f"{ap['parcel_id']} / {year}")
+    title = (forum.get("document") or "Evidence summary") if supports else "Evidence review, not for submission"
+    d = Doc(("TEST FIXTURE, NOT FOR SUBMISSION. " if synthetic else "") + title, f"{ap['parcel_id']} / {year}")
     d.add("title", d.title)
     d.add("subtitle", f"{forum.get('authority')}, tax year {year}")
     witnesses = [o for o in owner if o.get("witness")]
@@ -174,7 +176,8 @@ def build(base: dict, col: dict, a: dict | None, val: dict, items: list[dict], f
             ("Valuation date", date_long(f"{year}-01-01")),
             ("Petition number", submission.get("petition_number") or "Not yet assigned"),
             ("Contact telephone", submission.get("contact_phone") or "To be added before submission"),
-            ("Off-site witnesses", ", ".join(w["witness"] for w in witnesses) if witnesses else "No off-site witnesses"),
+            ("Off-site witnesses", "; ".join(w["witness"] + (f", {w['witness_phone']}" if w.get("witness_phone") else "") for w in witnesses)
+             if witnesses else "No off-site witnesses"),
             ("Value challenged", f"{year} just value of {m(cv['just_value'])}"),
             ("Value requested", f"Just value of {m(val['proposed_just_value'])}" if supports else "No value is requested. The evidence does not support one."),
             ("Report date", date_long(generated_on)),
@@ -183,6 +186,8 @@ def build(base: dict, col: dict, a: dict | None, val: dict, items: list[dict], f
             ("Reviewed by", "Not reviewed at the time of generation. Review and approval are recorded separately against this version.")]
     d.add("meta", meta)
     d.add("note", "No appraiser, real estate broker or attorney prepared or reviewed this summary. It is submitted as the petitioner's evidence.")
+    if not supports:
+        d.add("note", "Not for submission. The evidence gathered does not support a lower value, so this review is kept for the case record only.")
     if synthetic:
         d.add("note", "This document is built from synthetic test records. It describes no real property and must never be sent to a county.")
     d.add("h1", "Summary")
@@ -240,8 +245,12 @@ def build(base: dict, col: dict, a: dict | None, val: dict, items: list[dict], f
                    f"land value, special features and living area. The adjusted prices are reconciled at their median. {R('adjustments')} shows each adjustment and its basis.")
         d.add("p", f"Result. The {words(len(a['selected']))} adjusted sales indicate {m(val['market_value_indication'])}. Their coefficient of dispersion is "
                    f"{a['dispersion_cod']:.1%}.")
-        if a.get("sensitivity"):
-            d.add("p", "Sensitivity. " + a["sensitivity"]["detail"][0].upper() + a["sensitivity"]["detail"][1:] + ".")
+        sens = a.get("sensitivity") or {}
+        if sens.get("without_flagged_comparables"):
+            k = sens["comparables_used"]
+            flagged = len(a["selected"]) - k
+            d.add("p", f"Sensitivity. Leaving out the {words(flagged)} sale{'s' if flagged != 1 else ''} with large adjustments, the median of the "
+                       f"remaining {words(k)} is {m(sens['without_flagged_comparables'])} ({sens['shift']:+.1%}).")
         rows = []
         if "market_less_cost_of_sale" in jvi:
             c = jvi["market_less_cost_of_sale"]
@@ -282,10 +291,10 @@ def build(base: dict, col: dict, a: dict | None, val: dict, items: list[dict], f
         d.add("p", f"Sales considered: {a['candidates_considered']:,} qualified sales of the same property use in the market area. "
                    f"{a['candidates_usable']:,} met the selection rules ({a['param_basis'] if isinstance(a.get('param_basis'), str) else 'size, age, land value and recency limits'}). "
                    f"The closest excluded sales are listed with their reasons in {R('excluded')}."
-                   + (f" Exclusions by reason: " + ", ".join(f"{k.lower()} {v:,}" for k, v in counts.items()) + "." if counts else ""))
+                   + (f" Sales failing each rule (a sale can fail more than one): " + ", ".join(f"{k.lower()} {v:,}" for k, v in counts.items()) + "." if counts else ""))
     if val.get("contradiction"):
         c = val["contradiction"]
-        d.add("h1", "Evidence against the requested value")
+        d.add("h1", "Evidence supporting the county's value")
         d.add("p", f"The property sold in {month_long(c['sale_month'])} for {m(c['sale_price'])}. At the county's measured level that implies "
                    f"{m(c['implied_just_value'])}, which supports the county's value ({R('history')}).")
     cond = [o for o in owner if o["kind"] in ("photo", "repair_estimate", "inspection") and o["county_facing"]]
@@ -299,9 +308,10 @@ def build(base: dict, col: dict, a: dict | None, val: dict, items: list[dict], f
               [3.2, 1.2, 1.2, 1.0], "cond")
     d.add("h1", "Witnesses")
     if witnesses:
-        for w in witnesses:
-            d.add("p", f"{w['witness']} may testify about {w.get('witness_subject') or 'the matters in this summary'}. "
-                       "This is a summary of expected testimony, not a statement taken from the witness.")
+        d.add("table", ["Witness", "Address", "General subject of testimony"],
+              [[w["witness"], w.get("witness_address") or "To be added before the exchange", w.get("witness_subject") or "The matters in this summary"]
+               for w in witnesses], [1.6, 2.4, 3.0], "wit")
+        d.add("p", "This is a summary of expected testimony, not a statement taken from any witness.")
     else:
         d.add("p", "No witnesses are identified as of the report date.")
     d.add("h1", "Limitations")
@@ -367,7 +377,9 @@ def _exhibits(d, base, col, a, val, files, owner, supports):
         d.add("p", f"Measured level: {val['county_level']:.4f}, the {a.get('level_source')}.")
     else:
         d.exhibit("sales", "Recorded sales considered", "Recorded sales considered", window, "Florida DOR SDF file", "Why no value is requested")
-        d.add("p", f"Source: {source_line(files['SDF'])}. {(a or {}).get('reliability_reason') or 'No reliable set of comparable sales.'}")
+        why = (a or {}).get("reliability_reason")
+        d.add("p", f"Source: {source_line(files['SDF'])}.")
+        d.add("p", f"Why no value is requested: {val['outcome_reason']}." + (f" Comparable set: {why}." if why else ""))
     peers = col.get("peers") or {}
     d.exhibit("peers", "Assessments of similar homes", "County values of similar homes in the same peer group", roll_date,
               "Florida DOR NAL file", "Uniformity, offered as support only")

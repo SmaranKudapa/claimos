@@ -194,3 +194,47 @@ def test_an_incomplete_case_still_renders_but_requests_nothing_and_stays_blocked
     assert res["validation"]["status"] == "validated_against_configured_requirements"
     assert res["readiness"]["portal_status"]["code"] == "insufficient_evidence"
     assert json.load(open(res["file_handoff"]["evidence_json"]))["status"] == "incomplete"
+
+
+def _in_county(name, **kw):
+    fp = find_payload()
+    fp["jurisdiction"] = {**fp["jurisdiction"], "county": name}
+    env = envelope(find=fp, **kw)
+    env["appeal"]["jurisdiction"]["county"] = name
+    return env
+
+
+def test_county_delivery_rules_stay_local(tmp_path, patched):
+    hendry = run(_in_county("Hendry"), tmp_path / "h", today=TODAY)
+    assert hendry["delivery"]["deliveries"]["remote_vab_upload"] == "not_applicable"
+    lee = run(_in_county("Lee"), tmp_path / "l", today=TODAY)
+    man = json.load(open(lee["delivery"]["path"]))
+    ex = next(d for d in man["deliveries"] if d["id"] == "exchange_property_appraiser")
+    assert "vabmail@leepa.org" in ex["method"] and lee["delivery"]["deliveries"]["remote_vab_upload"] == "not_sent"
+    assert any(c["id"] == "V-FMT-COUNTY-SIZE" and c["status"] == "pass" for c in lee["validation"]["checks"])
+    bay = run(_in_county("Bay"), tmp_path / "b", today=TODAY)
+    bman = json.load(open(bay["delivery"]["path"]))
+    bex = next(d for d in bman["deliveries"] if d["id"] == "exchange_property_appraiser")
+    assert "to be agreed" in bex["method"] and "not confirmed" in bex["copies"]
+    assert "PB-EVX-01" not in {r["id"] for r in bay["rules_applied"]} and "LEE-EVX-01" not in {r["id"] for r in bay["rules_applied"]}
+
+
+def test_a_witness_without_an_address_blocks_the_exchange_but_not_generation(tmp_path, patched):
+    sub = [{"id": "w1", "kind": "statement", "statement_text": "I will testify.", "witness": "Pat Owner",
+            "witness_subject": "the condition of the roof on January 1"}]
+    res = run(envelope(homeowner_submissions=sub), tmp_path, today=TODAY)
+    assert "Pat Owner" in " ".join(_pages(res)) and "To be added before the exchange" in " ".join(_pages(res))
+    assert any(c["id"] == "V-WITNESS" and c["status"] == "warn" for c in res["validation"]["checks"])
+    man = json.load(open(res["delivery"]["path"]))
+    ex = next(d for d in man["deliveries"] if d["id"] == "exchange_property_appraiser")
+    assert any("witness address" in b for b in ex["blockers"])
+    assert res["readiness"]["generation"] == "generated"
+
+
+def test_a_packet_that_requests_nothing_is_titled_not_for_submission(tmp_path, patched):
+    from .conftest import build_county
+    patched["county"] = build_county(n_sales=2)
+    res = run(envelope(), tmp_path, today=TODAY)
+    first = _pages(res)[0]
+    assert first.startswith("Evidence review, not for submission") or "Evidence review, not for submission" in first[:200]
+    assert "Not for submission." in first
