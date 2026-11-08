@@ -10,7 +10,9 @@
  *                    [--note <text>] [--candidates <file> --config <file>]   (edit needs these)
  *   qualify cases    --results <file> [--candidates <file>] [--config <file>] [--export out/cases.json]
  *                    (exports results as dossier-shaped case records for the Claim OS UI)
- *   qualify find-run --find <candidates.jsonl> --template <desk template> [--case-ids <file>]
+ *   qualify card-notes --handoff <handoff.json> --case-ids <file | id,id>
+ *                    (one JSON line per case: board status + note text for the agent to copy onto the card)
+ *   qualify find-run --find <candidates.jsonl> --template <desk template> [--case-ids <file>] [--tiers strong,possible]
  *                    [--replay (each county judged inside its own filing window) | --as-of YYYY-MM-DD] [--today YYYY-MM-DD] [--suppression <file>]
  *                    [--llm naive|mock|off] [--out-dir out/find-run] [--translate-only]
  *                    (translates a Find run, one desk config per jurisdiction, runs Qualify)
@@ -86,6 +88,8 @@ const { values: a } = parseArgs({
     "out-dir": { type: "string", default: "out/find-run" },
     "translate-only": { type: "boolean" },
     replay: { type: "boolean" },
+    tiers: { type: "string" },
+    handoff: { type: "string" },
   },
   allowPositionals: false,
 });
@@ -246,6 +250,10 @@ async function findRun() {
     const missing = [...ids].filter((id) => !records.some((r) => r.case_id === id));
     if (missing.length) console.error(`warning: ${missing.length} case id(s) not in ${a.find}: ${missing.slice(0, 3).join(", ")}`);
   }
+  if (a.tiers) {
+    const tiers = new Set(a.tiers.split(",").map((t) => t.trim()).filter(Boolean));
+    recs = recs.filter((r) => tiers.has(String(r.tier)));
+  }
   if (!recs.length) fail("no Find records to qualify");
 
   const asOf = a["as-of"];
@@ -337,8 +345,59 @@ async function findRun() {
   console.log(`Wrote ${outDir}/results.json and ${outDir}/handoff.json`);
 }
 
+/**
+ * Board notes for an agent to copy onto cards: one JSON line per case id with the card status
+ * and the note text, built from a find-run handoff.json. Keeps card text out of the agent's head.
+ */
+function cardNotes() {
+  const h = readJson(need(a.handoff, "handoff")) as { replay?: boolean; cases: Record<string, unknown>[] };
+  const src = need(a["case-ids"], "case-ids");
+  const ids = existsSync(src) ? readFileSync(src, "utf8").split(/[\r\n,]+/) : src.split(",");
+  const byId = new Map(h.cases.map((c) => [String(c.find_case_id), c]));
+  const tag = h.replay ? " (replay)" : "";
+  const money = (v: unknown) => (typeof v === "number" ? `$${Math.round(v).toLocaleString("en-US")}` : "?");
+  for (const raw of ids) {
+    const id = raw.trim();
+    if (!id) continue;
+    const c = byId.get(id) as
+      | { status: string; summary: string; flags: string[]; reasonCodes: string[]; annualSavings: number | null; fee: number | null; pWin: number | null; route: { form: string; deadline: string } | null; requalifyOn: string | null; releaseDate: string | null }
+      | undefined;
+    if (!c) {
+      console.log(JSON.stringify({ case_id: id, board_status: null, note: null, error: "not in handoff.json (not qualified this run)" }));
+      continue;
+    }
+    let status = "blocked";
+    let note = "";
+    switch (c.status) {
+      case "QUALIFIED":
+        status = "done";
+        note =
+          `QUALIFIED${tag} · ${c.summary} · savings ${money(c.annualSavings)}/yr · fee ${money(c.fee)} · P(win) ${c.pWin ?? "?"}` +
+          (c.route ? ` · ${c.route.form} due ${c.route.deadline}` : "") +
+          (c.releaseDate ? ` · released ${c.releaseDate}` : " · queued") +
+          `\n\n\`\`\`json\n${JSON.stringify(c)}\n\`\`\``;
+        break;
+      case "NEEDS_REVIEW":
+        note = `NEEDS_REVIEW${tag} · ${c.flags.join(", ")} · ${c.summary}`;
+        break;
+      case "NEXT_CYCLE":
+        note = `NEXT_CYCLE${tag} · re-qualify on ${c.requalifyOn ?? "?"} · ${c.summary}`;
+        break;
+      case "INCOMPLETE":
+        note = `INCOMPLETE${tag} · ${c.reasonCodes.join(", ")} · ${c.summary}`;
+        break;
+      default:
+        status = "done";
+        note = `REJECTED${tag} · ${c.reasonCodes.join(", ")} · ${c.summary}`;
+    }
+    console.log(JSON.stringify({ case_id: id, board_status: status, note }));
+  }
+}
+
 async function main() {
   switch (cmd) {
+    case "card-notes":
+      return cardNotes();
     case "run":
       return run();
     case "find-run":
