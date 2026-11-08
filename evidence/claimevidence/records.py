@@ -122,3 +122,31 @@ def as_int(v) -> int | None:
     except (TypeError, ValueError):
         return None
     return None if np.isnan(x) else int(round(x))
+
+
+def resolve_address(cd: CountyData, address: str, city: str | None = None, zipcode: str | None = None) -> dict:
+    import re
+    from taxfind.engine.normalize import norm_street_series
+    raw = (address or "").upper()
+    m = re.search(r"\b(\d{5})(?:-\d{4})?\b\s*$", raw)
+    zipcode = zipcode or (m.group(1) if m else None)
+    street = re.split(r",", raw)[0].strip()
+    want = norm_street_series(pd.Series([street])).iloc[0]
+    if not want:
+        return {"status": "unresolved", "reason": "no street address given", "candidates": []}
+    h = cd.homes
+    key = norm_street_series(h.PHY_ADDR1.astype("string").fillna(""))
+    hit = h[key == want]
+    if zipcode and "PHY_ZIPCD" in h.columns and len(hit) > 1:
+        z = hit.PHY_ZIPCD.astype("string").str.replace(r"\\D", "", regex=True).str[:5]
+        hit = hit[z == zipcode]
+    if city and len(hit) > 1:
+        hit = hit[hit.PHY_CITY.astype("string").str.upper().str.strip() == city.upper().strip()]
+    cands = [{"parcel_id": r.PARCEL_ID, "address": as_str(r.PHY_ADDR1), "city": as_str(r.PHY_CITY)} for r in hit.head(10).itertuples()]
+    if len(hit) == 1:
+        return {"status": "resolved", "parcel_id": hit.iloc[0].PARCEL_ID, "matched": cands[0],
+                "basis": "the owner's street address matched exactly one house or condo on the county roll"}
+    if not len(hit):
+        return {"status": "unresolved", "reason": "no house or condo on the county roll has this street address", "candidates": []}
+    return {"status": "ambiguous", "reason": f"{len(hit)} parcels share this street address (often condo units); ask the owner for the unit or parcel number",
+            "candidates": cands}

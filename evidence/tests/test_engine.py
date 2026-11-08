@@ -18,10 +18,16 @@ def test_end_to_end_signed_case_produces_a_packet_and_a_structured_result(tmp_pa
     assert res["conclusions"]["argument_support"] == "supports_reduction"
     assert res["conclusions"]["package_complete"] is True
     p = res["packet"]
-    md = open(p["path"]).read()
-    assert "not an appraisal" in md and "Requested just value" in md
-    assert "TEST OWNER" not in md and "fil_poa_test" not in md and "annual_savings" not in md
-    assert p["content_hash"] and p["contains_personal_data"] is False
+    md = open(p["markdown_path"]).read()
+    assert "Petitioner's evidence of value" in md and "Value requested" in md and "Not yet assigned" in md
+    assert "| Petitioner | TEST OWNER |" in md
+    assert "fil_poa_test" not in md and "annual" not in md.lower() and "appraisal" not in md.lower()
+    assert open(p["pdf_path"], "rb").read(5) == b"%PDF-" and p["sha256"] == p["content_hash"]
+    assert res["validation"]["status"] == "validated_against_configured_requirements"
+    rd = res["readiness"]
+    assert rd["generation"] == "generated" and rd["human_review"] == "not_reviewed" and rd["approval"] == "not_approved"
+    assert set(rd["delivery"].values()) <= {"not_sent", "not_filed"}
+    assert json.load(open(res["file_handoff"]["evidence_json"]))["status"] == "incomplete"
     for item in res["inventory"]:
         assert item["evidence_id"].startswith("ev-") and item["source"]
     assert res["review"]["human_review_required"] and res["review"]["filing_approval_required"]
@@ -37,7 +43,7 @@ def test_duplicate_events_return_the_same_result_without_reprocessing(tmp_path, 
 def test_an_interrupted_run_resumes_from_its_checkpoint(tmp_path, patched, monkeypatch):
     calls = {"n": 0}
     import claimevidence.engine as eng
-    real = eng.render_packet
+    real = eng.build_report
 
     def crash_once(*a, **k):
         calls["n"] += 1
@@ -45,7 +51,7 @@ def test_an_interrupted_run_resumes_from_its_checkpoint(tmp_path, patched, monke
             raise RuntimeError("worker killed")
         return real(*a, **k)
 
-    monkeypatch.setattr(eng, "render_packet", crash_once)
+    monkeypatch.setattr(eng, "build_report", crash_once)
     with pytest.raises(RuntimeError):
         run(envelope(), tmp_path)
     res = run(envelope(), tmp_path)
@@ -70,7 +76,8 @@ def test_a_source_outage_is_a_retryable_processing_failure_not_a_merits_finding(
 
 def test_new_evidence_makes_an_earlier_review_stale(tmp_path, patched):
     first = run(envelope(), tmp_path)
-    reviewed = {"packet_hash": first["packet"]["content_hash"], "status": "approved", "reviewed_by": "op", "reviewed_at": "2026-11-07"}
+    reviewed = {"packet_hash": first["packet"]["sha256"], "status": "approved", "reviewed_by": "op", "reviewed_at": "2026-11-07",
+                "approved_for": ["exchange_property_appraiser"]}
     same = run(envelope(prior_review=reviewed), tmp_path)
     assert same["review"]["status"] == "approved" and not same["review"]["stale"]
     sub = [{"id": "h1", "kind": "photo", "media_type": "image/jpeg", "file_ref": "fil_x", "sha256": "d" * 64,
@@ -95,7 +102,7 @@ def test_corrupt_and_wrong_type_uploads_are_rejected_and_undated_ones_are_limite
     assert by["homeowner_statement"]["verification"] == "homeowner_statement_unverified"
     cn = next(r for r in res["requirements"] if r["id"] == "CN-01")
     assert cn["status"] == "satisfied" or cn["status"] == "missing"
-    md = open(res["packet"]["path"]).read()
+    md = open(res["packet"]["markdown_path"]).read()
     assert "fil_1" not in md and "The roof leaked" not in md
 
 
@@ -105,7 +112,7 @@ def test_cases_and_parcels_are_isolated(tmp_path, patched):
     a = run(envelope(case_id="case-A", homeowner_submissions=sub), tmp_path)
     b = run(envelope(parcel="P0001", case_id="case-B"), tmp_path)
     assert a["appeal"]["cycle_id"] != b["appeal"]["cycle_id"]
-    assert "Owner A kitchen photo" not in open(b["packet"]["path"]).read()
+    assert "Owner A kitchen photo" not in open(b["packet"]["markdown_path"]).read()
     assert all(i["source"].get("file_ref") != "fil_private_A" for i in b["inventory"])
 
 
@@ -125,7 +132,7 @@ def test_a_claim_the_evidence_no_longer_supports_goes_back_to_qualify(tmp_path, 
 
 
 def test_blocked_intake_does_not_load_data_or_produce_a_packet(tmp_path, patched):
-    res = run(envelope(auth={}), tmp_path)
+    res = run(envelope(qualification={}), tmp_path)
     assert res["intake"]["status"] == "blocked" and res["packet"] is None and patched["loads"] == 0
     assert res["next_action"]["action"] == "resolve_intake_blockers"
 
@@ -143,7 +150,7 @@ def test_file_only_accepts_a_reviewed_current_packet_with_valid_authority(tmp_pa
 def test_the_coordinator_step_result_fits_the_existing_contract(tmp_path, patched):
     from claimevidence.stepresult import to_step_result
     res = run(envelope(), tmp_path)
-    sr = to_step_result(res, open(res["packet"]["path"]).read())
+    sr = to_step_result(res, open(res["packet"]["markdown_path"]).read())
     assert set(sr) == {"case_id", "step", "decision", "summary", "sources", "artifacts", "tool_requests", "email_drafts"}
     assert sr["step"] == "evidence" and sr["decision"] in ("ready", "review", "blocked")
     assert sr["tool_requests"] == [] and sr["email_drafts"] == []
@@ -151,5 +158,5 @@ def test_the_coordinator_step_result_fits_the_existing_contract(tmp_path, patche
     assert all(s.startswith("https://") for s in sr["sources"])
     assert all(len(a["markdown"]) <= 40000 and a["title"] for a in sr["artifacts"])
     assert sr["artifacts"][-1]["markdown"].startswith("```json")
-    blocked = to_step_result(run(envelope(case_id="case-X", auth={}), tmp_path), None)
+    blocked = to_step_result(run(envelope(case_id="case-X", qualification={}), tmp_path), None)
     assert blocked["decision"] == "blocked"

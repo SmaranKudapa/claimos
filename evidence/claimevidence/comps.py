@@ -152,19 +152,19 @@ def analyze(cd: CountyData, subject: pd.Series, p: CompParams | None = None) -> 
         a_land = 0.0 if condo else (land_s - float(x.land)) / level
         a_feat = (feat_s - float(getattr(x, "SPEC_FEAT_VAL", 0) or 0)) / level
         a_size = (float(subject.sqft) - float(x.sqft)) * building_rate
-        adj = {"time": a_time, "land": a_land, "special_features": a_feat, "living_area": a_size}
+        adj = {k: int(round(v)) for k, v in {"time": a_time, "land": a_land, "special_features": a_feat, "living_area": a_size}.items()}
         net = sum(adj.values())
         gross = sum(abs(v) for v in adj.values())
-        indicated = price + net
+        indicated = int(round(price)) + net
         flags = []
         if gross / price > p.gross_adjustment_flag:
             flags.append(f"gross adjustments {gross / price:.0%} of price")
         if abs(net) / price > p.net_adjustment_flag:
             flags.append(f"net adjustment {net / price:+.0%} of price")
         rec = comp_record(c, True)
-        rec.update({"adjustments": {k: int(round(v)) for k, v in adj.items()}, "net_adjustment": int(round(net)),
+        rec.update({"adjustments": adj, "net_adjustment": net,
                     "gross_adjustment_pct": round(gross / price, 4), "net_adjustment_pct": round(net / price, 4),
-                    "indicated_value": int(round(indicated)), "flags": flags})
+                    "indicated_value": indicated, "flags": flags})
         rows.append(rec)
     ind = np.array([r["indicated_value"] for r in rows], dtype=float)
     med = float(np.median(ind))

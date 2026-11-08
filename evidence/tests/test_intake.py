@@ -28,14 +28,37 @@ def test_find_record_for_another_year_is_rejected_so_cycles_never_mix():
 def test_find_record_for_another_parcel_is_rejected():
     inp = envelope()
     inp["find"] = find_payload(parcel="P0001")
-    ok, _ = _blocked(inp, "I06")
+    ok, _ = _blocked(inp, "I07")
     assert ok
 
 
-def test_missing_authorization_blocks_and_routes_to_signup():
-    ok, r = _blocked(envelope(auth={}), "I11")
-    assert ok and r["route"] in ("signup", "coordinator", "operator")
-    assert any(b["resolver"] == "signup" for b in r["blockers"])
+def test_a_case_without_a_resolved_parcel_is_blocked():
+    inp = envelope()
+    inp["property"] = {}
+    assert _blocked(inp, "I06")[0]
+
+
+def test_an_unsigned_case_can_be_prepared_but_never_filed():
+    r = run_intake(envelope(auth={}), dt.date(2026, 11, 7))
+    assert r["status"] == "accepted"
+    hold = next(b for b in r["file_blockers"] if b["code"] == "I11")
+    assert hold["resolver"] == "signup" and "194.034" in hold["message"]
+
+
+def test_a_recorded_but_invalid_authorization_blocks_and_routes_to_signup():
+    ok, r = _blocked(envelope(auth={"status": "pending", "instrument": "power_of_attorney_dr486poa"}), "I11")
+    assert ok and any(b["resolver"] == "signup" for b in r["blockers"])
+
+
+def test_an_owner_initiated_free_check_needs_no_find_or_qualify_record_but_file_does():
+    inp = envelope(qualification={}, entry_policy="free_check")
+    inp.pop("find")
+    r = run_intake(inp, dt.date(2026, 11, 7))
+    assert r["status"] == "accepted"
+    assert "I10" in {b["code"] for b in r["file_blockers"]}
+    strict = envelope(qualification={})
+    strict.pop("find")
+    assert run_intake(strict, dt.date(2026, 11, 7))["status"] == "blocked"
 
 
 def test_authorization_for_another_year_or_parcel_is_rejected():

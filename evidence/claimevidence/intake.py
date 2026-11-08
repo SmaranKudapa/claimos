@@ -46,28 +46,40 @@ def run_intake(inp: dict, today: dt.date | None = None) -> dict:
     checks.append(_check("I05", "Jurisdiction", juris.get("state") == "FL" and bool(juris.get("county_code")),
                          f"state={juris.get('state')!r} county_code={juris.get('county_code')!r}; Evidence supports Florida only",
                          "evidence", "operator"))
+    policy = inp.get("entry_policy") or "full"
     prop = inp.get("property") or {}
     find = inp.get("find") or {}
     fprop, fj = find.get("property") or {}, find.get("jurisdiction") or {}
     parcel = prop.get("parcel_id")
-    checks.append(_check("I06", "Parcel identity", bool(parcel) and parcel == fprop.get("parcel_id"),
-                         f"case parcel {parcel!r} vs Find parcel {fprop.get('parcel_id')!r}", "evidence", "coordinator"))
-    expected = f"FL-{juris.get('county_code')}-{year}-{parcel}"
-    checks.append(_check("I07", "One property, one assessment year", find.get("case_id") == expected and fj.get("tax_year") == year
-                         and str(fj.get("county_code")) == str(juris.get("county_code")),
-                         f"Find case {find.get('case_id')!r} must equal {expected!r} so another year or parcel is never mixed in",
+    checks.append(_check("I06", "Parcel identity", bool(parcel), f"parcel {parcel!r}; resolve the owner's address to exactly one parcel first",
                          "evidence", "coordinator"))
-    checks.append(_check("I08", "Find record version", (find.get("schema_version") or 0) >= 2 and find.get("tier") in ("strong", "possible"),
-                         f"schema_version={find.get('schema_version')} tier={find.get('tier')}", "evidence", "coordinator"))
-    cc = (fj.get("county_check") or {}).get("status")
-    checks.append(_check("I09", "County screen validated", cc == "validated",
-                         f"Find's county self-check is {cc!r}; Evidence re-derives value from comparable sales either way",
-                         severity="pass" if cc == "validated" else "warn"))
+    if find:
+        expected = f"FL-{juris.get('county_code')}-{year}-{parcel}"
+        checks.append(_check("I07", "One property, one assessment year", parcel == fprop.get("parcel_id") and find.get("case_id") == expected
+                             and fj.get("tax_year") == year and str(fj.get("county_code")) == str(juris.get("county_code")),
+                             f"Find case {find.get('case_id')!r} must equal {expected!r} so another year or parcel is never mixed in",
+                             "evidence", "coordinator"))
+        checks.append(_check("I08", "Find record version", (find.get("schema_version") or 0) >= 2 and find.get("tier") in ("strong", "possible"),
+                             f"schema_version={find.get('schema_version')} tier={find.get('tier')}", "evidence", "coordinator"))
+        cc = (fj.get("county_check") or {}).get("status")
+        checks.append(_check("I09", "County screen validated", cc == "validated",
+                             f"Find's county self-check is {cc!r}; Evidence re-derives value from comparable sales either way",
+                             severity="pass" if cc == "validated" else "warn"))
+    elif policy == "free_check":
+        checks.append(_check("I07", "Find record", False, "Find has not screened this parcel; Evidence works from the county's own files",
+                             "none", None, severity="warn"))
+    else:
+        checks.append(_check("I07", "Find record", False, "no Find record for this parcel and year", "evidence", "coordinator"))
     q = inp.get("qualification") or {}
     q_ok = q.get("decision") in QUALIFIED_DECISIONS and q.get("case_id") in (None, case_id) and q.get("tax_year") in (None, year)
-    checks.append(_check("I10", "Qualification decision", q_ok,
-                         f"decision={q.get('decision')!r} ref={q.get('ref')!r}; Qualify must decide to pursue this parcel and year",
-                         "evidence", "qualify"))
+    if policy == "free_check" and not q:
+        checks.append(_check("I10", "Qualification decision", False,
+                             "owner-initiated free check: no Qualify decision yet; Evidence may analyse public records, but File needs Qualify's decision",
+                             "file", "qualify", severity="warn"))
+    else:
+        checks.append(_check("I10", "Qualification decision", q_ok,
+                             f"decision={q.get('decision')!r} ref={q.get('ref')!r}; Qualify must decide to pursue this parcel and year",
+                             "evidence", "qualify"))
     a = inp.get("authorization") or {}
     inst, status = a.get("instrument"), a.get("status")
     if status == "signed" and inst in COMPENSATED_INSTRUMENTS:
@@ -90,9 +102,13 @@ def run_intake(inp: dict, today: dt.date | None = None) -> dict:
         checks.append(_check("I11", "Authorization to represent", False,
                              "internal test authorization: evidence may be prepared for testing, but this case can never be filed",
                              "file", "signup", severity="warn"))
+    elif not status and not inst:
+        checks.append(_check("I11", "Authorization to represent", False,
+                             "not signed yet. Preparing evidence from public records needs no authorization; filing does (Fla. Stat. 194.034, DR-486POA). Sign up sends the agreement and DR-486POA after Evidence.",
+                             "file", "signup", severity="warn"))
     else:
         checks.append(_check("I11", "Authorization to represent", False,
-                             f"no valid signed authorization (status={status!r}, instrument={inst!r})", "evidence", "signup"))
+                             f"the recorded authorization is not valid (status={status!r}, instrument={inst!r})", "evidence", "signup"))
     owner = find.get("owner") or {}
     if owner.get("may_have_changed"):
         checks.append(_check("I12", "Current owner", False,
@@ -117,4 +133,4 @@ def run_intake(inp: dict, today: dt.date | None = None) -> dict:
                               for c in checks if c["status"] in ("fail", "warn") and c["blocks"] == "file"],
             "route": route,
             "cycle_id": cycle_id("FL", str(juris.get("county_code")), year, parcel, atype) if (year and parcel and atype) else None,
-            "authorization_is_test": status == TEST_INSTRUMENT or inst == TEST_INSTRUMENT}
+            "authorization_is_test": status == TEST_INSTRUMENT or inst == TEST_INSTRUMENT, "policy": policy}

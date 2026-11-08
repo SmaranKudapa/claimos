@@ -24,8 +24,14 @@ def check_handoff(res: dict, current_packet_hash: str | None = None) -> dict:
     reviewed = rv.get("status") == "approved" and rv.get("reviewed_packet_hash") == p.get("content_hash")
     if not reviewed:
         problems.append("no human review of this exact packet")
+    v = res.get("validation") or {}
+    if v.get("status") != "validated_against_configured_requirements":
+        problems.append("the packet has not passed validation")
+    if "file_handoff" not in (rv.get("approved_for") or []):
+        problems.append("the reviewer has not approved this packet for File")
     if not (res.get("authorization") or {}).get("valid_for_filing"):
         problems.append("authorization is missing, invalid or test-only")
     return {"usable_by_file": not problems, "problems": problems, "cycle_id": (res.get("appeal") or {}).get("cycle_id"),
             "packet_hash": p.get("content_hash"), "packet_version": p.get("version"),
+            "evidence_json": (res.get("file_handoff") or {}).get("evidence_json"),
             "filing_approval_still_required": True}

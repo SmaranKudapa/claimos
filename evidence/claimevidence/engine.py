@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import json
 import os
 import time
@@ -13,11 +14,17 @@ from . import __version__
 from .comps import CompParams, analyze, assessment_peers, subject_sales
 from .intake import run_intake
 from .model import INPUT_SCHEMA, METHOD_VERSION, RESULT_SCHEMA, Item, SourceUnavailable, now, sha256_obj, sha256_text
-from .html import to_html
-from .packet import render_internal, render_packet
+from .delivery import build as build_delivery
+from .delivery import readiness as build_readiness
+from .filehandoff import write as write_file_handoff
+from .forums import forum as forum_for
+from .packet import render_internal
 from .records import as_int, as_str, load_county
+from .render import to_html, to_markdown, to_pdf
+from .report import build as build_report
 from .requirements import build_matrix, homeowner_tasks
-from .rules import deadlines_for, rules_for
+from .rules import cost_of_sale, deadlines_for, rules_for
+from .validate import validate
 from .valuation import conclude
 
 LOCK_STALE_SECONDS = 1200
@@ -81,8 +88,8 @@ def _subject_dict(s: pd.Series) -> dict:
     return out
 
 
-def _deadlines(inp: dict, find: dict, county: str, year: int) -> dict:
-    d = deadlines_for(county, year)
+def _deadlines(inp: dict, find: dict, county: str, year: int, today: dt.date) -> dict:
+    d = deadlines_for(county, year, (inp.get("appeal") or {}).get("hearing_date"), today)
     fw = find.get("filing_window") or {}
     pet = d["petition_filing"]
     if not pet.get("date") and fw.get("closes"):
@@ -91,10 +98,9 @@ def _deadlines(inp: dict, find: dict, county: str, year: int) -> dict:
     for k, v in (inp.get("deadlines") or {}).items():
         if k in d and isinstance(v, dict) and v.get("date") and v.get("source"):
             d[k].update({"date": v["date"], "source": v["source"], "verified": bool(v.get("verified")), "basis": v.get("basis", "supplied by coordinator")})
-    today = dt.date.today().isoformat()
     for v in d.values():
         if v.get("date"):
-            v["status"] = "passed" if v["date"] < today else "upcoming"
+            v["status"] = "passed" if v["date"] < today.isoformat() else "upcoming"
         else:
             v["status"] = "unknown"
     return d
@@ -107,6 +113,7 @@ def run(inp: dict, out_root: Path | str, data_dir: Path | str | None = None, tod
     params = params or CompParams()
     out_root = Path(out_root)
     started = now()
+    today = today or dt.date.today()
     intake = run_intake(inp, today)
     cycle = intake["cycle_id"] or f"invalid/{inp.get('case_id')}"
     key = sha256_obj({"input": inp, "method": METHOD_VERSION, "code": __version__, "params": params.__dict__})
@@ -120,12 +127,12 @@ def run(inp: dict, out_root: Path | str, data_dir: Path | str | None = None, tod
     lock = cdir / ".lock"
     owner = _lock(lock)
     try:
-        return _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params)
+        return _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params, today)
     finally:
         _unlock(lock, owner)
 
 
-def _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params):
+def _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params, today):
     rdir.mkdir(parents=True, exist_ok=True)
     run_id = "evr_" + key[:12] + "_" + uuid.uuid4().hex[:6]
     find = inp.get("find") or {}
@@ -144,11 +151,14 @@ def _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params):
                                "qualification_ref": (inp.get("qualification") or {}).get("ref"),
                                "authorization_ref": (inp.get("authorization") or {}).get("document_ref")},
             "intake": intake}
-    rules = rules_for(county, appeal.get("appeal_type"))
-    deadlines = _deadlines(inp, find, county, year) if isinstance(year, int) else {}
+    fm = forum_for(appeal.get("appeal_type"), county)
+    base["proceeding"] = {k: fm.get(k) for k in ("proceeding_id", "label", "kind", "supported", "authority", "notes")}
+    base["proceeding"]["county_adapter"] = fm.get("county")
+    rules = rules_for(county, appeal.get("appeal_type"), fm.get("proceeding_id"))
+    deadlines = _deadlines(inp, find, county, year, today) if isinstance(year, int) else {}
+    ctx = {"forum": fm, "today": today, "find": find}
     if intake["status"] == "blocked":
-        res = _finish(base, run_id, started, "completed", errors, rules, deadlines, items, None, None, [], [], None, None, inp, intake, cdir, rdir)
-        return res
+        return _finish(base, run_id, started, "completed", errors, rules, deadlines, items, None, None, [], [], None, inp, intake, cdir, rdir, ctx)
     ckpt = rdir / "collected.json"
     if ckpt.exists():
         col = json.loads(ckpt.read_text())
@@ -157,13 +167,13 @@ def _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params):
             cd = load_county(str(juris.get("county_code")).zfill(2), year, data_dir)
         except SourceUnavailable as e:
             errors.append({"stage": "collection", "kind": "source_unavailable", "detail": str(e), "retryable": True})
-            return _finish(base, run_id, started, "failed", errors, rules, deadlines, items, None, None, [], [], None, None, inp, intake, cdir, rdir)
+            return _finish(base, run_id, started, "failed", errors, rules, deadlines, items, None, None, [], [], None, inp, intake, cdir, rdir, ctx)
         subj = cd.subject(base["appeal"]["parcel_id"])
         if subj is None:
             intake["status"] = "blocked"
             intake["blockers"].append({"code": "I15", "message": "Parcel is not a house or condo on the county roll for this year", "resolver": "qualify"})
             intake["route"] = "qualify"
-            return _finish(base, run_id, started, "completed", errors, rules, deadlines, items, None, None, [], [], None, None, inp, intake, cdir, rdir)
+            return _finish(base, run_id, started, "completed", errors, rules, deadlines, items, None, None, [], [], None, inp, intake, cdir, rdir, ctx)
         a = analyze(cd, subj, params)
         col = {"subject": _subject_dict(subj), "analysis": a, "own_sales": subject_sales(cd, subj, params),
                "peers": assessment_peers(cd, subj), "files": cd.files, "level": cd.level.get(subj.DOR_UC, 0.85),
@@ -171,7 +181,9 @@ def _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params):
         _write(ckpt, json.dumps(col, default=str))
     subj = pd.Series(col["subject"])
     a = col["analysis"]
-    val = conclude(subj, a, col["peers"], col["own_sales"], find, col["level"])
+    cos = cost_of_sale(county, year, subj.get("DOR_UC"))
+    ctx["cost_of_sale"] = cos
+    val = conclude(subj, a, col["peers"], col["own_sales"], find, col["level"], cos)
     files = {f["kind"]: f for f in col["files"]}
     roll_src = {k: files["NAL"].get(k) for k in ("url", "sha256", "published", "retrieved_at", "roll_stage", "publisher")}
     sale_src = {k: files["SDF"].get(k) for k in ("url", "sha256", "published", "retrieved_at", "roll_stage", "publisher")}
@@ -208,10 +220,52 @@ def _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params):
         items.append(_submission_item(cycle, sub))
     matrix = build_matrix(appeal.get("appeal_type"), a, val, items, inp, intake, rules)
     tasks = homeowner_tasks(matrix, inp, deadlines, cycle)
-    packet = render_packet(base, col, a, val, items, matrix, rules, deadlines)
-    internal = render_internal(base, col, a, val, items, matrix, rules, deadlines, intake, tasks, inp)
-    return _finish(base, run_id, started, "completed", errors, rules, deadlines, items, a, val, matrix, tasks, packet, internal,
-                   inp, intake, cdir, rdir, col)
+    gen = _generate(base, col, a, val, items, fm, inp, intake, cdir, rdir, today, cos)
+    gen["internal"] = render_internal(base, col, a, val, items, matrix, rules, deadlines, intake, tasks, inp)
+    return _finish(base, run_id, started, "completed", errors, rules, deadlines, items, a, val, matrix, tasks, gen,
+                   inp, intake, cdir, rdir, ctx)
+
+
+def _petitioner(inp: dict, intake: dict) -> str:
+    auth = inp.get("authorization") or {}
+    if auth.get("status") == "signed" and auth.get("signer_name") and not intake.get("authorization_is_test") \
+            and not any(b["code"] == "I11" for b in intake["blockers"]):
+        return auth.get("owner_name") or auth["signer_name"]
+    if ((inp.get("find") or {}).get("outreach") or {}).get("owner_suppressed"):
+        return "Withheld until the owner's authorization is reviewed"
+    return "Not yet confirmed"
+
+
+def _generate(base, col, a, val, items, fm, inp, intake, cdir, rdir, today, cos) -> dict:
+    sub = inp.get("submission") or {}
+    redactions = [x for x in inp.get("redactions") or [] if isinstance(x, str) and x.strip()]
+    petitioner = _petitioner(inp, intake)
+    synthetic = bool(inp.get("synthetic"))
+    fingerprint = sha256_obj({"subject": col["subject"], "analysis": a, "valuation": val, "items": sorted(i["evidence_id"] for i in items),
+                              "proceeding": fm.get("proceeding_id"), "submission": sub, "petitioner": petitioner, "code": __version__,
+                              "redactions": sha256_obj(sorted(redactions)), "synthetic": synthetic})
+    vfile = cdir / "versions.json"
+    versions = json.loads(vfile.read_text()) if vfile.exists() else {}
+    if fingerprint not in versions:
+        versions[fingerprint] = {"version": len(versions) + 1, "report_date": today.isoformat(), "first_run": rdir.name}
+        _write(vfile, json.dumps(versions, indent=1))
+    version = versions[fingerprint]["version"]
+    report_date = versions[fingerprint]["report_date"]
+    doc = build_report(base, col, a, val, items, fm, {"number": version, "fingerprint": fingerprint}, report_date, petitioner, sub, synthetic)
+    unresolved = doc.resolve()
+    redacted = doc.redact(redactions)
+    pdf, info = rdir / "packet.pdf", None
+    try:
+        info = to_pdf(doc, pdf, f"Version {version} / fingerprint {fingerprint[:12]}", doc.title, base["appeal"]["cycle_id"])
+    except ImportError:
+        pdf = None
+    validation = validate(doc, pdf, info, base, col, a, val, fm, sub, redactions, unresolved, cos)
+    md = to_markdown(doc)
+    _write(rdir / "packet.md", md)
+    _write(rdir / "packet.html", to_html(doc, doc.title))
+    sha = hashlib.sha256(pdf.read_bytes()).hexdigest() if pdf else sha256_text(md)
+    return {"doc": doc, "pdf": pdf, "render": info, "validation": validation, "markdown": md, "sha256": sha, "version": version,
+            "fingerprint": fingerprint, "redactions_applied": redacted, "submission": sub, "synthetic": synthetic, "report_date": report_date}
 
 
 ALLOWED_UPLOADS = {"image/jpeg", "image/png", "image/heic", "application/pdf"}
@@ -237,17 +291,31 @@ def _submission_item(cycle: str, sub: dict) -> dict:
     return Item(_eid(cycle, f"homeowner_{kind}", sub.get("id") or sha256_obj(sub)[:16]), f"homeowner_{kind}",
                 sub.get("description") or f"Homeowner {kind}", "homeowner_upload" if kind != "statement" else "homeowner_statement",
                 {"file_ref": sub.get("file_ref"), "sha256": sub.get("sha256"), "uploaded_at": sub.get("uploaded_at"),
-                 "media_type": sub.get("media_type")},
-                {"document_date": sub.get("document_date"), "statement": sub.get("statement_text"), "asserts": sub.get("asserts")},
+                 "media_type": sub.get("media_type"), "local_path": sub.get("local_path") if ver == "homeowner_document_unverified" else None},
+                {"document_date": sub.get("document_date"), "condition_date": sub.get("condition_date"), "statement": sub.get("statement_text"),
+                 "asserts": sub.get("asserts"), "claimed": sub.get("claimed"), "include_in_packet": bool(sub.get("include_in_packet")),
+                 "witness": sub.get("witness"), "witness_subject": sub.get("witness_subject"), "supports": sub.get("supports")},
                 ver, ["condition or characteristics claim"], lim + ["a homeowner statement is recorded as a statement until verified"],
                 county_facing=ver in ("homeowner_document_unverified",)).as_dict()
 
 
-def _finish(base, run_id, started, processing, errors, rules, deadlines, items, a, val, matrix, tasks, packet, internal,
-            inp, intake, cdir, rdir, col=None):
+def _auth_state(inp: dict, intake: dict) -> str:
+    auth = inp.get("authorization") or {}
+    if intake.get("authorization_is_test"):
+        return "test_only"
+    if any(b["code"] == "I11" for b in intake["blockers"]):
+        return "invalid"
+    if auth.get("status") == "signed":
+        return "valid_for_filing"
+    return "not_signed"
+
+
+def _finish(base, run_id, started, processing, errors, rules, deadlines, items, a, val, matrix, tasks, gen,
+            inp, intake, cdir, rdir, ctx, col=None):
     outcome = (val or {}).get("outcome") or "not_analyzed"
     required_missing = [r for r in matrix if r["required"] and r["status"] != "satisfied"]
     package_complete = processing == "completed" and intake["status"] == "accepted" and val is not None and not required_missing
+    validation = (gen or {}).get("validation")
     reasons = []
     if processing != "completed":
         reasons.append("processing did not complete; this is not a finding on the merits")
@@ -258,41 +326,60 @@ def _finish(base, run_id, started, processing, errors, rules, deadlines, items, 
         reasons += [f"required evidence missing: {r['requirement']}" for r in required_missing]
     if outcome != "supports_reduction":
         reasons.append(f"argument outcome is {outcome}")
+    if validation and validation["status"] != "validated_against_configured_requirements":
+        reasons.append("packet failed validation: " + "; ".join(c["detail"] for c in validation["checks"] if c["status"] == "fail")[:400])
+    if gen and not gen.get("pdf"):
+        reasons.append("no PDF was rendered")
     vf = (val or {}).get("versus_find") or {}
     if vf.get("material_change") and outcome == "supports_reduction":
         reasons.append(f"the supported value {vf.get('evidence_proposed_value'):,} differs materially from the value Qualify relied on "
                        f"({vf.get('find_defensible_value'):,}); Qualify must re-confirm the decision")
     pet = (deadlines or {}).get("petition_filing") or {}
     if pet.get("status") == "passed":
-        reasons.append(f"petition deadline {pet.get('date')} has passed; a late petition needs a good-cause request")
+        reasons.append(f"petition deadline {pet.get('date')} has passed; a late petition needs a written good-cause request (R. 12D-9.015(14))")
     elif not pet.get("verified"):
         reasons.append("petition deadline is not verified from the county's own publication")
     ready = processing == "completed" and package_complete and outcome == "supports_reduction" and not reasons
     prior = inp.get("prior_review") or {}
-    packet_hash = sha256_text(packet) if packet else None
-    review = {"human_review_required": True, "filing_approval_required": True, "status": "pending",
+    packet_hash = (gen or {}).get("sha256")
+    review = {"human_review_required": True, "filing_approval_required": True, "status": "pending", "approved_for": [],
               "reviewed_packet_hash": None, "reviewed_by": None, "reviewed_at": None, "stale": False, "supersedes": None}
     if prior.get("packet_hash"):
-        if prior["packet_hash"] == packet_hash:
+        if prior["packet_hash"] == packet_hash and prior.get("reviewed_by"):
             review.update({"status": prior.get("status", "pending"), "reviewed_packet_hash": packet_hash,
-                           "reviewed_by": prior.get("reviewed_by"), "reviewed_at": prior.get("reviewed_at")})
-        else:
+                           "reviewed_by": prior.get("reviewed_by"), "reviewed_at": prior.get("reviewed_at"),
+                           "approved_for": list(prior.get("approved_for") or []) if prior.get("status") == "approved" else []})
+        elif prior["packet_hash"] != packet_hash:
             review.update({"stale": True, "supersedes": prior["packet_hash"],
                            "stale_reason": "the evidence changed after the last review; the earlier review does not cover this packet"})
     packet_meta = None
-    if packet:
-        version = len([p for p in cdir.glob("*/packet.md")]) + (0 if (rdir / "packet.md").exists() else 1)
-        _write(rdir / "packet.md", packet)
+    fm = ctx["forum"]
+    if gen:
+        internal = gen["internal"] + "\n## Packet validation\n\n| Check | Status | Detail |\n|---|---|---|\n" + "\n".join(
+            f"| {c['id']} | {c['status']} | {str(c['detail']).replace('|', '/')} |" for c in gen["validation"]["checks"]) + "\n"
         _write(rdir / "internal_review.md", internal)
-        _write(rdir / "packet.html", to_html(packet, f"Evidence of value {base['appeal']['cycle_id']}"))
-        packet_meta = {"version": version, "content_hash": packet_hash, "format": "text/markdown", "path": str(rdir / "packet.md"),
-                       "internal_record_path": str(rdir / "internal_review.md"), "internal_record_hash": sha256_text(internal),
-                       "html_path": str(rdir / "packet.html"),
-                       "county_facing": True, "contains_personal_data": False}
+        pdf = gen.get("pdf")
+        packet_meta = {"version": gen["version"], "sha256": packet_hash, "content_hash": packet_hash, "fingerprint": gen["fingerprint"],
+                       "format": "application/pdf" if pdf else "text/markdown", "pdf_path": str(pdf) if pdf else None,
+                       "pages": (gen.get("render") or {}).get("pages"), "bytes": (gen.get("render") or {}).get("bytes"),
+                       "path": str(pdf) if pdf else str(rdir / "packet.md"), "markdown_path": str(rdir / "packet.md"),
+                       "html_path": str(rdir / "packet.html"), "internal_record_path": str(rdir / "internal_review.md"),
+                       "internal_record_hash": sha256_text(internal), "title": gen["doc"].title,
+                       "exhibits": [{k: e[k] for k in ("id", "title", "description", "date", "source", "supports", "page")} for e in gen["doc"].exhibits],
+                       "redactions_applied": gen["redactions_applied"], "report_date": gen["report_date"], "synthetic": gen["synthetic"],
+                       "county_facing": not gen["synthetic"], "contains_owner_contact_data": False}
+    manifest = build_delivery(fm, deadlines or {}, packet_meta, review, (gen or {}).get("submission") or inp.get("submission") or {},
+                              inp.get("delivery_events") or [], bool(inp.get("synthetic"))) if fm.get("supported") == "packet" else None
+    if manifest:
+        _write(rdir / "delivery.json", json.dumps(manifest, indent=1, default=str))
+    auth_state = _auth_state(inp, intake)
+    rd = build_readiness(processing, intake, val, bool(gen), validation, review, {"state": auth_state}, tasks, manifest, package_complete)
     if processing == "failed":
         nxt = {"actor": "coordinator", "action": "retry_evidence", "reason": "; ".join(e["detail"] for e in errors)[:300]}
     elif intake["status"] == "blocked":
         nxt = {"actor": intake.get("route") or "operator", "action": "resolve_intake_blockers", "reason": reasons[0] if reasons else ""}
+    elif fm.get("supported") == "legal_review_only":
+        nxt = {"actor": "operator", "action": "refer_to_counsel", "reason": fm.get("notes")}
     elif outcome in ("does_not_support", "contradicted"):
         nxt = {"actor": "qualify", "action": "requalify", "reason": val["outcome_reason"]}
     elif outcome == "insufficient_evidence":
@@ -301,8 +388,10 @@ def _finish(base, run_id, started, processing, errors, rules, deadlines, items, 
         nxt = {"actor": "qualify", "action": "requalify", "reason": "the evidence analysis changed the value Qualify relied on; the original Qualify result is preserved"}
     elif tasks and any(t["blocking"] for t in tasks):
         nxt = {"actor": "homeowner", "action": "provide_requested_evidence", "reason": "required items are missing"}
+    elif validation and validation["status"] != "validated_against_configured_requirements":
+        nxt = {"actor": "operator", "action": "fix_packet_validation", "reason": reasons[0] if reasons else "validation failed"}
     elif ready:
-        nxt = {"actor": "operator", "action": "review_packet_then_hand_to_file", "reason": "packet complete and supports a reduction; human review and filing approval are still required"}
+        nxt = {"actor": "operator", "action": "review_packet_then_hand_to_file", "reason": "packet generated and validated; a person must review and approve this exact version"}
     else:
         nxt = {"actor": "operator", "action": "review_packet", "reason": reasons[0] if reasons else "review required"}
     res = {**base,
@@ -318,9 +407,13 @@ def _finish(base, run_id, started, processing, errors, rules, deadlines, items, 
                            "filing_readiness": "ready_for_human_review" if ready else "not_ready", "not_ready_reasons": reasons},
            "deadlines": deadlines,
            "authorization": {"status": (inp.get("authorization") or {}).get("status"), "instrument": (inp.get("authorization") or {}).get("instrument"),
-                             "document_ref": (inp.get("authorization") or {}).get("document_ref"),
-                             "valid_for_filing": not intake.get("authorization_is_test") and not any(b["code"] == "I11" for b in intake["blockers"])},
-           "packet": packet_meta, "review": review, "next_action": nxt}
+                             "document_ref": (inp.get("authorization") or {}).get("document_ref"), "state": auth_state,
+                             "valid_for_filing": auth_state == "valid_for_filing"},
+           "packet": packet_meta, "validation": validation, "readiness": rd,
+           "delivery": {"path": str(rdir / "delivery.json"), "deliveries": {d["id"]: d["status"] for d in manifest["deliveries"]}} if manifest else None,
+           "review": review, "next_action": nxt, "synthetic": bool(inp.get("synthetic"))}
+    if gen:
+        res["file_handoff"] = write_file_handoff(res, rdir, gen.get("pdf"), ctx.get("find") or {}, deadlines or {}, inp.get("verifications") or [])
     _write(rdir / "result.json", json.dumps(res, indent=1, default=str))
     _write(cdir / "current.json", json.dumps({"result": str(rdir / "result.json"), "packet_hash": packet_hash, "run_id": run_id,
                                               "at": now()}, indent=1))

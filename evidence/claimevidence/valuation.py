@@ -13,7 +13,8 @@ def round_value(v: float) -> int:
     return int(ROUND_TO * round(v / ROUND_TO))
 
 
-def conclude(subject, analysis: dict, peers: dict, own_sales: list[dict], find_payload: dict | None, level: float) -> dict:
+def conclude(subject, analysis: dict, peers: dict, own_sales: list[dict], find_payload: dict | None, level: float,
+             cost_of_sale: dict | None = None) -> dict:
     jv = float(subject.JV)
     av_sd = float(subject.AV_SD) if subject.get("AV_SD") == subject.get("AV_SD") and subject.get("AV_SD") is not None else jv
     av_nsd = float(subject.AV_NSD) if subject.get("AV_NSD") == subject.get("AV_NSD") and subject.get("AV_NSD") is not None else jv
@@ -26,6 +27,12 @@ def conclude(subject, analysis: dict, peers: dict, own_sales: list[dict], find_p
     ind = analysis.get("indication")
     market = float(ind["market_value"]) if ind else None
     indications = {}
+    if market is not None and cost_of_sale:
+        rate = float(cost_of_sale["rate"])
+        indications["market_less_cost_of_sale"] = {"value": as_int(market * (1 - rate)),
+                                                    "formula": f"market value indication {as_int(market):,} x (1 - {rate:.0%} cost of sale)",
+                                                    "basis": f"the county's DR-493 eighth-criterion adjustment of {rate:.0%} to recorded sale prices ({cost_of_sale['section']})",
+                                                    "source": cost_of_sale["source"], "rule": cost_of_sale.get("rule")}
     if market is not None:
         indications["market_at_county_level"] = {"value": as_int(market * level),
                                                   "formula": f"market value indication {as_int(market):,} x county level {level:.4f}",
@@ -55,7 +62,9 @@ def conclude(subject, analysis: dict, peers: dict, own_sales: list[dict], find_p
     else:
         outcome, why = "supports_reduction", f"the supported value {proposed:,} is {reduction / jv:.1%} below the county's {as_int(jv):,}"
     out = {"method_version": "fl-value/1", "county_values": county, "market_value_indication": as_int(market) if market else None,
-           "county_level": round(level, 4), "just_value_indications": indications,
+           "county_level": round(level, 4), "cost_of_sale": ({"rate": cost_of_sale["rate"], "source": cost_of_sale["source"],
+                                                               "section": cost_of_sale["section"]} if cost_of_sale else None),
+           "just_value_indications": indications,
            "proposed_just_value": proposed if outcome == "supports_reduction" else None,
            "proposed_rule": "the higher (more conservative) of the available just value indications, rounded to the nearest $100",
            "outcome": outcome, "outcome_reason": why, "contradiction": contradiction}

@@ -1,76 +1,74 @@
 from __future__ import annotations
 
-import html
-import re
+import html as H
+from pathlib import Path
+
+
+def _esc(t) -> str:
+    return H.escape(str(t), quote=False)
+
+
+INDEX_HEAD = ["Exhibit", "Description", "Date", "Source", "Page", "Supports"]
+
+
+def _index_rows(doc, pages):
+    return [[e["id"], e["description"], e["date"], e["source"], str((pages or {}).get(e["key"], "-")), e["supports"]] for e in doc.exhibits]
+
 
 CSS = """
-@page { size: Letter; margin: 0.7in 0.6in 0.8in; @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 9pt system-ui, sans-serif; color: #555; } }
-:root { color-scheme: light; }
-body { font: 10.5pt/1.45 Georgia, 'Times New Roman', serif; color: #111; background: #fff; max-width: 8.5in; margin: 0 auto; padding: 24px; }
-h1 { font: 600 18pt/1.25 system-ui, sans-serif; margin: 0 0 6px; }
-h2 { font: 600 12.5pt/1.3 system-ui, sans-serif; margin: 22px 0 8px; padding-top: 6px; border-top: 1.5px solid #222; }
-h2.exhibit { break-before: page; }
-p, li { margin: 4px 0; overflow-wrap: anywhere; }
-a { overflow-wrap: anywhere; word-break: break-all; }
-blockquote { margin: 10px 0; padding: 8px 12px; border-left: 4px solid #b45309; background: #fff7ed; font: 9.5pt/1.4 system-ui, sans-serif; }
-table { border-collapse: collapse; width: 100%; margin: 8px 0; font: 8.5pt/1.3 system-ui, sans-serif; }
-th, td { border: 1px solid #bbb; padding: 3px 5px; text-align: left; vertical-align: top; }
-th { background: #f1f1f1; }
-td:not(:first-child) { font-variant-numeric: tabular-nums; }
-code { font: 8.5pt ui-monospace, Menlo, monospace; }
-em { color: #555; }
-.foot { margin-top: 18px; font: 8.5pt system-ui, sans-serif; color: #555; }
-@media print { body { padding: 0; } a { color: inherit; text-decoration: none; } }
+@page { size: Letter; margin: 0.9in 1in 0.85in 1in; @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 8pt Helvetica, Arial, sans-serif; } }
+body { font-family: "Times New Roman", Times, serif; font-size: 11pt; line-height: 1.35; color: #111; max-width: 7.2in; margin: 0 auto; padding: 16px; }
+h1.t { font: bold 17pt Helvetica, Arial, sans-serif; margin: 0 0 4px; }
+.sub { font: 10pt Helvetica, Arial, sans-serif; color: #333; margin-bottom: 12px; }
+h2 { font: bold 13pt Helvetica, Arial, sans-serif; margin: 18px 0 6px; }
+h2.ex { break-before: page; }
+table { border-collapse: collapse; width: 100%; margin: 4px 0 10px; font: 8.5pt Helvetica, Arial, sans-serif; }
+thead { display: table-header-group; }
+th, td { border: 0.5pt solid #808080; padding: 2px 4px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+th { background: #e6e6e6; }
+.note { border: 0.6pt solid #666; padding: 6px 8px; font-size: 10pt; }
+.pb { break-after: page; }
+img { max-width: 100%; }
+@media screen { body { background: #fff; } .wrap { overflow-x: auto; } }
 """
 
 
-def _inline(t: str) -> str:
-    t = html.escape(t)
-    t = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", t)
-    t = re.sub(r"(?<![\w*])_(.+?)_(?![\w*])", r"<em>\1</em>", t)
-    t = re.sub(r"`(.+?)`", r"<code>\1</code>", t)
-    t = re.sub(r"(https://[^\s<]+)", r'<a href="\1">\1</a>', t)
-    return t
+def to_html(doc: Doc, title: str, pages: dict | None = None) -> str:
+    out = [f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>"
+           f"<title>{_esc(title)}</title><style>{CSS}</style></head><body>"]
+
+    def tab(head, rows):
+        r = ["<div class='wrap'><table><thead><tr>" + "".join(f"<th>{_esc(h)}</th>" for h in head) + "</tr></thead><tbody>"]
+        r += ["<tr>" + "".join(f"<td>{_esc(c)}</td>" for c in row) + "</tr>" for row in rows]
+        return "".join(r) + "</tbody></table></div>"
+
+    for b in doc.blocks:
+        k = b[0]
+        if k == "title":
+            out.append(f"<h1 class='t'>{_esc(b[1])}</h1>")
+        elif k == "subtitle":
+            out.append(f"<div class='sub'>{_esc(b[1])}</div>")
+        elif k == "meta":
+            out.append(tab(["Item", "Detail"], [[a, v] for a, v in b[1]]))
+        elif k == "note":
+            out.append(f"<p class='note'>{_esc(b[1])}</p>")
+        elif k == "h1":
+            out.append(f"<h2>{_esc(b[1])}</h2>")
+        elif k == "p":
+            out.append(f"<p>{_esc(b[1])}</p>")
+        elif k == "bullets":
+            out.append("<ul>" + "".join(f"<li>{_esc(x)}</li>" for x in b[1]) + "</ul>")
+        elif k == "table":
+            out.append(tab(b[1], b[2]))
+        elif k == "index":
+            out.append(tab(INDEX_HEAD, _index_rows(doc, pages or {e["key"]: e.get("page") or "-" for e in doc.exhibits})))
+        elif k == "pagebreak":
+            out.append("<div class='pb'></div>")
+        elif k == "exhibit":
+            out.append(f"<h2 class='ex' id='{_esc(b[1])}'>{_esc(b[2])}: {_esc(b[3])}</h2>")
+        elif k == "image":
+            out.append(f"<figure><img src='{_esc(Path(b[1]).name)}' alt='{_esc(b[2])}'><figcaption>{_esc(b[2])}</figcaption></figure>")
+    out.append("</body></html>")
+    return "\n".join(out)
 
 
-def to_html(md: str, title: str) -> str:
-    out, lines, i = [], md.splitlines(), 0
-    while i < len(lines):
-        ln = lines[i]
-        if ln.startswith("# "):
-            out.append(f"<h1>{_inline(ln[2:])}</h1>")
-        elif ln.startswith("## "):
-            cls = ' class="exhibit"' if ln[3:].startswith("Exhibit") else ""
-            out.append(f"<h2{cls}>{_inline(ln[3:])}</h2>")
-        elif ln.startswith("> "):
-            buf = []
-            while i < len(lines) and lines[i].startswith("> "):
-                buf.append(lines[i][2:])
-                i += 1
-            out.append(f"<blockquote>{_inline(' '.join(buf))}</blockquote>")
-            continue
-        elif ln.startswith("|"):
-            rows = []
-            while i < len(lines) and lines[i].startswith("|"):
-                rows.append(lines[i])
-                i += 1
-            cells = [[c.strip() for c in r.strip().strip("|").split("|")] for r in rows if not re.match(r"^\|[\s\-:|]+\|$", r)]
-            if cells:
-                head, body = cells[0], cells[1:]
-                out.append("<table><thead><tr>" + "".join(f"<th>{_inline(c)}</th>" for c in head) + "</tr></thead><tbody>"
-                           + "".join("<tr>" + "".join(f"<td>{_inline(c)}</td>" for c in r) + "</tr>" for r in body) + "</tbody></table>")
-            continue
-        elif ln.startswith("- "):
-            buf = []
-            while i < len(lines) and lines[i].startswith("- "):
-                buf.append(f"<li>{_inline(lines[i][2:])}</li>")
-                i += 1
-            out.append("<ul>" + "".join(buf) + "</ul>")
-            continue
-        elif ln.strip().startswith("_") and ln.strip().endswith("_"):
-            out.append(f'<p class="foot">{_inline(ln.strip()[1:-1])}</p>')
-        elif ln.strip():
-            out.append(f"<p>{_inline(ln)}</p>")
-        i += 1
-    return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-            f"<title>{html.escape(title)}</title><style>{CSS}</style></head><body>" + "\n".join(out) + "</body></html>\n")
