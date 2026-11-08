@@ -1,0 +1,31 @@
+{
+  "name": "taxappeal-escalate",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ClaimOS Escalate step (\"Appeal again\"): reads the county's decision and decides the next move, fully automatically",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "escalate": "dist/src/cli.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "escalate": "tsx src/cli.ts",
+    "sample-data": "tsx scripts/make-samples.ts",
+    "demo": "node -e \"require('fs').rmSync('out/demo-results.json',{force:true})\" && tsx scripts/make-samples.ts && tsx src/cli.ts run --cases data/cases.sample.json --decisions data/decisions.sample.json --config config/escalate.placeholder.json --today 2026-11-05 --llm mock --out out/demo-results.json --audit out/demo-audit.jsonl && tsx src/cli.ts cases --results out/demo-results.json --export out/demo-cases.json",
+    "verify": "npm run typecheck && npm test && npm run demo"
+  },
+  "dependencies": {
+    "@usenaive-sdk/managed-agents": "^0.12.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

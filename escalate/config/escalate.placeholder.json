@@ -1,0 +1,50 @@
+{
+  "_note": "PLACEHOLDER escalate config. Every level, deadline, fee and multiplier here is made up so the pipeline runs. Replace with the chosen county's real appeal ladder before using results.",
+  "version": "escalate-placeholder-2026.1",
+  "jurisdictionId": "placeholder",
+  "ladder": [
+    { "id": "review", "order": 1, "name": "Assessor review request", "formId": "FORM-REVIEW",
+      "deadline": { "type": "days_after_decision", "days": 30 },
+      "filingFee": 0, "workDaysNeeded": 5, "bufferDays": 2, "fastTrackDays": 2, "pWinMultiplier": 1.0,
+      "hearing": false, "requiresLicensedRep": false, "valueCanIncrease": false },
+    { "id": "appeal", "order": 2, "name": "Formal appeal", "formId": "FORM-APPEAL",
+      "deadline": { "type": "days_after_decision", "days": 45 },
+      "filingFee": 40, "workDaysNeeded": 10, "bufferDays": 3, "fastTrackDays": 3, "pWinMultiplier": 0.9,
+      "hearing": true, "requiresLicensedRep": false, "valueCanIncrease": false },
+    { "id": "board", "order": 3, "name": "Appeals board hearing", "formId": "FORM-BOARD",
+      "deadline": { "type": "days_after_decision", "days": 30 },
+      "filingFee": 75, "workDaysNeeded": 10, "bufferDays": 3, "fastTrackDays": 3, "pWinMultiplier": 0.8,
+      "hearing": true, "requiresLicensedRep": false, "valueCanIncrease": true },
+    { "id": "court", "order": 4, "name": "Court review", "formId": "FORM-COURT",
+      "deadline": { "type": "days_after_decision", "days": 60 },
+      "filingFee": 300, "workDaysNeeded": 20, "bufferDays": 5, "fastTrackDays": 10, "pWinMultiplier": 0.6,
+      "hearing": true, "requiresLicensedRep": true, "valueCanIncrease": true }
+  ],
+  "economics": {
+    "feePct": 0.3, "persistenceCycles": 1,
+    "costs": { "evidenceRefresh": 5, "hearingPrep": 15, "llm": 0.05 },
+    "defaultPWin": 0.3, "pWinCap": 0.85, "pWinFloor": 0.15,
+    "minExpectedValue": 25, "minRemainingGapPct": 0.03, "minRemainingAnnualSavings": 150
+  },
+  "denialReasons": {
+    "comps_rejected":        { "pWinMultiplier": 0.8, "evidence": ["fresh_comps"] },
+    "insufficient_evidence": { "pWinMultiplier": 1.0, "evidence": ["owner_photos", "condition_report"] },
+    "value_supported":       { "pWinMultiplier": 0.6, "evidence": [] },
+    "condition_not_shown":   { "pWinMultiplier": 0.9, "evidence": ["owner_photos", "repair_estimates"] },
+    "other":                 { "pWinMultiplier": 0.7, "evidence": [] }
+  },
+  "proceduralReasons": {
+    "missing_form":          { "curable": true,  "refileWithinDays": 15 },
+    "missing_signature":     { "curable": true,  "refileWithinDays": 15 },
+    "missing_authorization": { "curable": true,  "refileWithinDays": 15 },
+    "late_filing":           { "curable": false },
+    "other":                 { "curable": false }
+  },
+  "reader": {
+    "model": null, "escalationModel": null, "promptVersion": "escalate-read@1",
+    "minReadConfidence": 0.7, "maxReadAttempts": 3, "retryAfterDays": 1,
+    "clarifyMaxDays": 7, "notFinalRecheckDays": 7, "maxCostPerCaseUsd": 0.10,
+    "priceUsdPerMTokIn": 1.0, "priceUsdPerMTokOut": 3.0
+  },
+  "budget": { "maxFilingFeesPerDayUsd": 500 }
+}

@@ -1,0 +1,172 @@
+[
+  {
+    "deliveredFor": "case_placeholder_PH-0001",
+    "decisionId": "D-0001",
+    "caseId": "case_placeholder_PH-0001",
+    "level": "review",
+    "receivedOn": "2026-10-31",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0001\nDecision date: 2026-10-28\n\nAfter review, the request is granted in full. The assessed value is reduced to $420,000.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0002",
+    "decisionId": "D-0002",
+    "caseId": "case_placeholder_PH-0002",
+    "level": "review",
+    "receivedOn": "2026-10-31",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0002\nDecision date: 2026-10-28\n\nThe request is granted in part. The assessed value is reduced to $470,000.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0003",
+    "decisionId": "D-0003",
+    "caseId": "case_placeholder_PH-0003",
+    "level": "review",
+    "receivedOn": "2026-10-31",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0003\nDecision date: 2026-10-28\n\nThe request is granted in part. The assessed value is reduced to $470,000.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0004",
+    "decisionId": "D-0004",
+    "caseId": "case_placeholder_PH-0004",
+    "level": "review",
+    "receivedOn": "2026-10-31",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0004\nDecision date: 2026-10-28\n\nThe request is granted in part. The assessed value is reduced to $470,000.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0005",
+    "decisionId": "D-0005",
+    "caseId": "case_placeholder_PH-0005",
+    "level": "review",
+    "receivedOn": "2026-10-31",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0005\nDecision date: 2026-10-28\n\nThe request is denied. The board found that the comparable sales submitted were not comparable to the subject property. The assessed value of $500,000 is sustained. You may appeal to the Formal Appeal level by 2026-12-12.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0006",
+    "decisionId": "D-0006",
+    "caseId": "case_placeholder_PH-0006",
+    "level": "review",
+    "receivedOn": "2026-10-31",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0006\nDecision date: 2026-10-28\n\nThe request is denied. The board finds the market evidence supports the assessed value.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0007",
+    "decisionId": "D-0007",
+    "caseId": "case_placeholder_PH-0007",
+    "level": "board",
+    "receivedOn": "2026-10-31",
+    "channel": "mail",
+    "text": "Placeholder Appeals Board\nNotice of Decision\nParcel: PH-0007\nDecision date: 2026-10-28\n\nThe appeal is denied. The board found insufficient evidence to change the value.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0008",
+    "decisionId": "D-0008",
+    "caseId": "case_placeholder_PH-0008",
+    "level": "review",
+    "receivedOn": "2026-09-04",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0008\nDecision date: 2026-09-01\n\nThe request is denied.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0009",
+    "decisionId": "D-0009",
+    "caseId": "case_placeholder_PH-0009",
+    "level": "review",
+    "receivedOn": "2026-10-01",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0009\nDecision date: 2026-09-27\n\nThe request is denied. The board found insufficient evidence to change the value.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0010",
+    "decisionId": "D-0010",
+    "caseId": "case_placeholder_PH-0010",
+    "level": "review",
+    "receivedOn": "2026-11-02",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0010\n\nA hearing has been scheduled for 2026-11-20. No decision has been made on your request yet.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0011",
+    "decisionId": "D-0011",
+    "caseId": "case_placeholder_PH-0011",
+    "level": "review",
+    "receivedOn": "2026-11-03",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0011\nDecision date: 2026-11-01\n\nYour request is dismissed because the form was not signed by the owner or an authorized agent.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0012",
+    "decisionId": "D-0012",
+    "caseId": "case_placeholder_PH-0012",
+    "level": "review",
+    "receivedOn": "2026-11-03",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0012\nDecision date: 2026-11-01\n\nYour request is dismissed because it was filed after the filing deadline.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0013",
+    "decisionId": "D-0013",
+    "caseId": "case_placeholder_PH-0013",
+    "level": "review",
+    "receivedOn": "2026-11-04",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0013\n\nWe have received your correspondence regarding this parcel. Further information will follow under separate cover.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0014",
+    "decisionId": "D-0014",
+    "caseId": "case_placeholder_PH-0014",
+    "level": "review",
+    "receivedOn": "2026-10-24",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0014\n\nWe have received your correspondence regarding this parcel. Further information will follow under separate cover.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0015",
+    "decisionId": "D-0015",
+    "caseId": "case_placeholder_PH-0015",
+    "level": "review",
+    "receivedOn": "2026-10-31",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0015\nDecision date: 2026-10-28\n\nThe request is denied. The board found insufficient evidence to change the value.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0016",
+    "decisionId": "D-0016",
+    "caseId": "case_placeholder_PH-0016",
+    "level": "appeal",
+    "receivedOn": "2026-10-31",
+    "channel": "mail",
+    "text": "Placeholder Appeals Panel\nNotice of Decision\nParcel: PH-0016\nDecision date: 2026-10-28\n\nThe appeal is denied. The board found insufficient evidence to change the value.\nThis notice is synthetic sample data.",
+    "attachments": []
+  },
+  {
+    "deliveredFor": "case_placeholder_PH-0017",
+    "decisionId": "D-0017",
+    "caseId": "case_placeholder_PH-0099",
+    "level": "review",
+    "receivedOn": "2026-10-31",
+    "channel": "mail",
+    "text": "Placeholder County Assessment Board\nNotice of Decision\nParcel: PH-0099\nDecision date: 2026-10-28\n\nThe request is granted in full. The assessed value is reduced to $420,000.\nThis notice is synthetic sample data.",
+    "attachments": []
+  }
+]

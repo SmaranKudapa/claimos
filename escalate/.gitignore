@@ -1,0 +1,8 @@
+node_modules/
+dist/
+out/
+.cache/
+.env
+# The repo-root .gitignore ignores .env*; keep the blank template tracked.
+!.env.example
+dist-agent/

@@ -1,0 +1,713 @@
+[
+  {
+    "caseId": "case_placeholder_PH-0001",
+    "parcelId": "PH-0001",
+    "jurisdictionId": "placeholder",
+    "address": "101 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 1"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0002",
+    "parcelId": "PH-0002",
+    "jurisdictionId": "placeholder",
+    "address": "102 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 2"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ]
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0003",
+    "parcelId": "PH-0003",
+    "jurisdictionId": "placeholder",
+    "address": "103 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 3"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0004",
+    "parcelId": "PH-0004",
+    "jurisdictionId": "placeholder",
+    "address": "104 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 4"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 2000
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0005",
+    "parcelId": "PH-0005",
+    "jurisdictionId": "placeholder",
+    "address": "105 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 5"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0006",
+    "parcelId": "PH-0006",
+    "jurisdictionId": "placeholder",
+    "address": "106 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 6"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 300000,
+    "targetValue": 285000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0007",
+    "parcelId": "PH-0007",
+    "jurisdictionId": "placeholder",
+    "address": "107 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 7"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "board",
+    "filings": [
+      {
+        "level": "board",
+        "filedOn": "2026-09-20",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0008",
+    "parcelId": "PH-0008",
+    "jurisdictionId": "placeholder",
+    "address": "108 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 8"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0009",
+    "parcelId": "PH-0009",
+    "jurisdictionId": "placeholder",
+    "address": "109 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 9"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0010",
+    "parcelId": "PH-0010",
+    "jurisdictionId": "placeholder",
+    "address": "110 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 10"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0011",
+    "parcelId": "PH-0011",
+    "jurisdictionId": "placeholder",
+    "address": "111 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 11"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0012",
+    "parcelId": "PH-0012",
+    "jurisdictionId": "placeholder",
+    "address": "112 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 12"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0013",
+    "parcelId": "PH-0013",
+    "jurisdictionId": "placeholder",
+    "address": "113 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 13"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0014",
+    "parcelId": "PH-0014",
+    "jurisdictionId": "placeholder",
+    "address": "114 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 14"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": [
+      {
+        "decisionId": "D-0014",
+        "attempts": 1,
+        "firstPendingOn": "2026-10-25"
+      }
+    ]
+  },
+  {
+    "caseId": "case_placeholder_PH-0015",
+    "parcelId": "PH-0015",
+    "jurisdictionId": "placeholder",
+    "address": "115 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 15"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "review"
+      ]
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0016",
+    "parcelId": "PH-0016",
+    "jurisdictionId": "placeholder",
+    "address": "116 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 16"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "appeal",
+    "filings": [
+      {
+        "level": "appeal",
+        "filedOn": "2026-10-01",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  },
+  {
+    "caseId": "case_placeholder_PH-0017",
+    "parcelId": "PH-0017",
+    "jurisdictionId": "placeholder",
+    "address": "117 Placeholder Lane, Sampletown",
+    "owner": {
+      "names": [
+        "Sample Owner 17"
+      ],
+      "type": "individual",
+      "contactChannel": "email"
+    },
+    "assessedValue": 500000,
+    "targetValue": 420000,
+    "taxRate": 0.02,
+    "qualify": {
+      "pWin": 0.6,
+      "confidence": 0.7,
+      "annualSavings": 1600
+    },
+    "currentLevel": "review",
+    "filings": [
+      {
+        "level": "review",
+        "filedOn": "2026-09-15",
+        "claimedValue": 420000
+      }
+    ],
+    "authorization": {
+      "signedOn": "2026-09-01",
+      "feePct": 0.3,
+      "scope": [
+        "all_levels"
+      ],
+      "escalation": {
+        "appealPartialIfRemainingAnnualAbove": 500,
+        "acceptReopenRisk": false
+      }
+    },
+    "priorDecisions": [],
+    "readAttempts": []
+  }
+]
