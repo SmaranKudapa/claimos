@@ -62,7 +62,7 @@ def test_payload_contract(roll, params):
     pair = {k: RollFile("Test", "99", "final", k, ROLL_YEAR, f"https://x/{k}.zip", 1, "2026-10-01") for k in ("NAL", "SDF")}
     pl = florida.build_payloads(fl, evidence(r, aux["comps"], fl, params), pair, "run1", today=dt.date(2026, 11, 5))
     p = next(x for x in pl if x["property"]["parcel_id"] == "P00000")
-    assert p["case_id"] == "FL-99-2026-P00000" and p["schema_version"] == 1
+    assert p["case_id"] == "FL-99-2026-P00000" and p["schema_version"] == 2
     assert p["owner"]["flagged_parcels_in_run"] >= 1 and p["owner"]["type"] == "company"
     assert p["filing_window"]["status"] == "closed" and p["filing_window"]["closes"] == "2026-09-09"
     c = next(x for x in pl if x["property"]["parcel_id"] == "C00000")

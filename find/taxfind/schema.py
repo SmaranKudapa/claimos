@@ -1,4 +1,4 @@
-"""The Find -> Qualify handoff contract (schema version 1).
+"""The Find -> Qualify handoff contract (schema version 2).
 
 One candidate = one property that might be over-assessed, with everything the next desks need:
 who owns it (Sign up), how much is at stake and how strong the signals are (Qualify), which
@@ -6,16 +6,56 @@ neighbors and sales back it up (Evidence), and when the filing window closes (Fi
 """
 from __future__ import annotations
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 CANDIDATE_JSON_SCHEMA = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "FindCandidate",
     "type": "object",
-    "required": ["schema_version", "case_id", "desk", "jurisdiction", "property", "values",
-                 "signals", "estimate", "tier", "owner", "filing_window", "source"],
+    "required": ["schema_version", "case_id", "desk", "status", "jurisdiction", "property", "values",
+                 "signals", "estimate", "confidence", "explanation", "assumptions", "needs_verification",
+                 "tier", "owner", "portfolio", "outreach", "filing_window", "source"],
     "properties": {
         "schema_version": {"const": SCHEMA_VERSION},
+        "status": {"enum": ["candidate"], "description": "Find only ever emits 'candidate'. Qualify owns every status after this."},
+        "confidence": {
+            "type": "object",
+            "description": "How well-evidenced the case is, independent of how large the estimate is. Ranking uses this ahead of the dollar figure so a big speculative number cannot outrank a smaller well-supported one.",
+            "properties": {"evidence_quality": {"type": "number", "description": "0..1"},
+                           "evidence_label": {"enum": ["thin", "moderate", "strong"]},
+                           "components": {"type": "object"}},
+        },
+        "explanation": {"type": "string", "description": "Plain-language account of why this property was flagged, which data supports it, and how the estimate was derived."},
+        "assumptions": {"type": "array", "items": {"type": "string"}, "description": "Every assumption baked into the estimate. Read these before quoting a savings figure to anyone."},
+        "warnings": {"type": "array", "items": {"type": "string"}},
+        "needs_verification": {"type": "array", "items": {"type": "string"}, "description": "Checks Qualify or Evidence must perform. Find cannot do these from public roll data."},
+        "flags": {
+            "type": "object",
+            "properties": {"identical_assessment_cluster": {"type": ["integer", "null"], "description": "N>1 means N separate parcels share this owner, peer group and an identical county value. A real pattern (e.g. a tract of identical rental houses), NOT duplicate records."}},
+        },
+        "portfolio": {
+            "type": "object",
+            "description": "Owner grouping. Parcel-level records are always preserved; this is an overlay so Qualify can act on an owner once instead of N times.",
+            "properties": {
+                "portfolio_id": {"type": "string"}, "owner_name": {"type": "string"},
+                "owner_name_as_recorded": {"type": "string", "description": "Exactly as the roll spells it; never overwritten by normalisation."},
+                "match_basis": {"type": "string"}, "match_confidence": {"type": "string"},
+                "match_caveat": {"type": "string"}, "scope": {"enum": ["county", "state"]},
+                "parcels_in_county": {"type": "integer", "description": "All parcels this owner holds in the county."},
+                "flagged_parcels": {"type": "integer", "description": "The subset Find flagged. Always <= parcels_in_county."},
+                "savings_in_run": {"type": "number", "description": "Sum over flagged outreach-tier parcels only. Each parcel contributes once."},
+                "counties": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+        "outreach": {
+            "type": "object",
+            "description": "Outreach eligibility is deliberately separate from candidate quality and from contact verification. Find always emits eligible=false.",
+            "properties": {"eligible": {"const": False}, "reason": {"type": "string"},
+                           "blocked_by": {"type": "array", "items": {"type": "string"}},
+                           "contact_channels_available": {"type": "array", "items": {"type": "string"}},
+                           "contact_provenance": {"type": "string"},
+                           "suppression_checked": {"type": "boolean"}},
+        },
         "case_id": {"type": "string", "description": "Stable id: <STATE>-<county code>-<tax year>-<parcel id>. Same property and year -> same id."},
         "desk": {"const": "property_tax"},
         "jurisdiction": {
@@ -73,6 +113,8 @@ CANDIDATE_JSON_SCHEMA = {
                 "taxable_cut_school": {"type": "number", "description": "cut in school taxable value (school levies use the school assessed value, which has no 10% non-homestead cap)"},
                 "annual_savings": {"type": "number", "description": "school cut x school millage + non-school cut x other millage; never more than the taxable value left after exemptions"},
                 "millage": {"type": "number"}, "millage_source": {"type": "string"},
+                "annual_savings_range": {"type": "array", "description": "[low, high] from the plausible Florida millage band. The point estimate is not a promise."},
+                "millage_band": {"type": "array"}, "is_estimate": {"const": True},
             },
         },
         "tier": {"enum": ["strong", "possible", "review", "cap_absorbs", "new_build"],
@@ -98,7 +140,9 @@ CANDIDATE_JSON_SCHEMA = {
         "filing_window": {
             "type": "object",
             "properties": {"opens": {"type": "string"}, "closes": {"type": "string"},
-                           "status": {"enum": ["upcoming", "open", "closed"]}, "basis": {"type": "string"}},
+                           "status": {"enum": ["upcoming", "open", "closed"]}, "basis": {"type": "string"},
+                           "verified": {"type": "boolean", "description": "False until the deadline has been read from that county's own VAB page and recorded. A statewide estimate can be wrong by weeks."},
+                           "source": {"type": ["string", "null"]}},
         },
         "source": {"type": "object", "properties": {"roll_file": {"type": "string"}, "sales_file": {"type": "string"},
                                                     "run_id": {"type": "string"}, "found_at": {"type": "string"}}},

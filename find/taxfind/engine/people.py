@@ -17,6 +17,22 @@ import pandas as pd
 from .normalize import norm_name_series, norm_street_series, owner_type_series, split_unit, unit_from_legal, unit_of
 
 
+# Fla. Stat. 119.071(4)(d) exempts the home address of a long list of people — police, judges,
+# prosecutors, firefighters, code officers, victims of domestic violence and others, usually
+# extending to spouses and children. Under 119.071(4)(d)4.a. the property appraiser removes the
+# NAME while the parcel address may legitimately stay public, so the signature of a suppressed
+# owner in a public roll is a blank or placeholder owner name against a real address.
+#
+# DOR states its public files exclude exempt owners, but the 2026 NAL user guide documents no
+# confidentiality flag and does not say how suppression is applied. Until that is confirmed in
+# writing we fail CLOSED: an owner name we cannot read is treated as do-not-contact, never as a
+# data-quality defect to be backfilled from another source.
+SUPPRESSED_NAME_TOKENS = {
+    "", "CONFIDENTIAL", "EXEMPT", "NOT AVAILABLE", "NOT AVAIL", "N/A", "NA", "NONE", "NO NAME",
+    "WITHHELD", "RESTRICTED", "PRIVATE", "REDACTED", "UNKNOWN", "OWNER", "CURRENT OWNER",
+    "CONFIDENTIAL RECORD", "PER FS 119.071", "SEE DEED",
+}
+
 STATE_CODES = {
     "ALABAMA": "AL", "ALASKA": "AK", "ARIZONA": "AZ", "ARKANSAS": "AR", "CALIFORNIA": "CA", "COLORADO": "CO",
     "CONNECTICUT": "CT", "DELAWARE": "DE", "DISTRICT OF COLUMBIA": "DC", "FLORIDA": "FL", "GEORGIA": "GA",
@@ -34,9 +50,13 @@ def _clean(s: pd.Series) -> pd.Series:
     return s.astype("string").fillna("").str.strip()
 
 
-def attach_owners(df: pd.DataFrame, home_state: str = "FL") -> pd.DataFrame:
-    """Adds owner_id, owner_name, owner_type, mailing fields, absentee/out_of_state, parcels_in_county."""
-    out = df.copy()
+def attach_owners(df: pd.DataFrame, home_state: str = "FL", copy: bool = True) -> pd.DataFrame:
+    """Adds owner_id, owner_name, owner_type, mailing fields, absentee/out_of_state, parcels_in_county.
+
+    copy=False mutates and returns the frame passed in. A county roll is close to a gigabyte, so the
+    pipeline, which discards its reference anyway, passes False rather than paying for a duplicate.
+    """
+    out = df.copy() if copy else df
     name = _clean(out.get("OWN_NAME", pd.Series("", index=out.index)))
     a1 = _clean(out.get("OWN_ADDR1", pd.Series("", index=out.index)))
     a2 = _clean(out.get("OWN_ADDR2", pd.Series("", index=out.index)))
@@ -69,6 +89,15 @@ def attach_owners(df: pd.DataFrame, home_state: str = "FL") -> pd.DataFrame:
     out["absentee"] = ((situs.map(smap) + "|" + sz) != (na + "|" + nz)) & (na != "")
     out["out_of_state"] = (st != "") & (st != home_state.upper())
     out["parcels_in_county"] = out.groupby("owner_id")["owner_id"].transform("size").astype(int)
+
+    # Confidential-owner suppression (see SUPPRESSED_NAME_TOKENS). Fail closed.
+    bare = name.str.upper().str.replace(r"[^A-Z0-9/ ]", "", regex=True).str.strip()
+    out["owner_suppressed"] = bare.isin(SUPPRESSED_NAME_TOKENS) | (bare == "")
+    out["owner_suppression_reason"] = ""
+    out.loc[out["owner_suppressed"], "owner_suppression_reason"] = (
+        "Owner name is blank or a placeholder in the public roll. Under Fla. Stat. 119.071(4)(d) this is "
+        "what a confidential-address exemption looks like, so this parcel is treated as do-not-contact. "
+        "Do not attempt to identify the owner from another source.")
 
     # unit number for condos: the roll's own field, else the owner's mailing address when it is the
     # same street (owner lives there), else the legal description ("... CONDO UNIT 1105 ...")

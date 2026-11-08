@@ -100,7 +100,7 @@ def run(settings: Settings, state: str = "FL", counties: list[str] | str = "all"
     if handoff == "board":
         summary["handoff"] = post_cards(store, naive, settings.naive_board, settings.naive_qualify_agent,
                                         settings.handoff_max_cards, include_closed=settings.handoff_include_closed,
-                                        where="last_seen_run=?", params=(run_id,))
+                                        where="last_seen_run=?", params=(run_id,), run_tag=run_id)
     tiers: dict[str, int] = {}
     for c in summary["counties"]:
         for k, v in c["tiers"].items():
@@ -111,6 +111,13 @@ def run(settings: Settings, state: str = "FL", counties: list[str] | str = "all"
                          "outreach_owners": sum(c.get("outreach_owners", 0) for c in summary["counties"]),
                          "seconds": round(time.time() - t0, 1)}
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=1, default=str))
-    store.finish_run(run_id, "ok" if not summary["errors"] else ("partial" if summary["counties"] else "failed"),
-                     summary["totals"])
+    status = "ok" if not summary["errors"] else ("partial" if summary["counties"] else "failed")
+    ho = summary.get("handoff") or {}
+    if ho.get("status") in ("blocked", "partial"):
+        # A run that screened perfectly but failed to deliver its cards has NOT succeeded.
+        status = "handoff_blocked" if status == "ok" else status
+        summary["totals"]["handoff_status"] = ho.get("status")
+        summary["totals"]["handoff_reason"] = ho.get("reason")
+    store.finish_run(run_id, status, summary["totals"])
+    summary["status"] = status
     return summary

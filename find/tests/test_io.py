@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 import zipfile
 
 import pandas as pd
@@ -12,6 +13,19 @@ from taxfind.engine.ingest import safe_extract
 from taxfind.engine.naive import NaiveClient
 from taxfind.engine.store import Store
 from taxfind.engine.uploads import ParcelMatcher, map_headers, parse_and_match
+
+
+class FakeBoard(NaiveClient):
+    """A live client whose board acknowledges every card with a real id."""
+
+    def __init__(self, ack=True, **kw):
+        super().__init__("k_test", **kw)
+        self.ack, self.calls = ack, []
+
+    def _call(self, method, path, query=None, body=None, idem=None):
+        self.calls.append({"method": method, "path": path, "body": body, "idem": idem})
+        return {"id": f"crd_{len(self.calls):04d}"} if self.ack else {"ok": True}
+
 
 
 def payload(parcel="P1", tier="strong", savings=900.0, address="100 PALM ST", zip_="33900", unit=None, use="single_family",
@@ -161,11 +175,44 @@ def test_files_and_cards_dry_run(tmp_path):
     s.upsert_candidates(pl, "r1")
     outbox = tmp_path / "outbox.jsonl"
     c = NaiveClient(None, outbox=outbox)
-    res = post_cards(s, c, board="agt_qualify", assignee=None, max_cards=10)
-    assert res["posted"] == 1 and res["live"] is False
-    sent = [json.loads(line) for line in outbox.read_text().splitlines()]
-    assert sent[0]["path"] == "/v1/boards/agt_qualify/cards" and sent[0]["body"]["key"] == "FL-99-2026-A"
+    # No API key: the board is never called. This must NOT be reported as a delivery.
+    res = post_cards(s, c, board="agt_qualify", assignee=None, max_cards=10, run_tag="r1")
+    assert res["status"] == "blocked" and res["blocked_by"] == "credentials"
+    assert res["posted"] == 0 and res["delivered"] == 0 and res["live"] is False
+    assert res["undelivered"] == 1
+    kept = [json.loads(line) for line in Path(res["retry_file"]).read_text().splitlines()]
+    assert [k["case_id"] for k in kept] == ["FL-99-2026-A"]
+    # and nothing was marked handed off, so a later run with a key still has work to do
+    assert s.db.execute("SELECT COUNT(*) FROM candidates WHERE handoff_ref IS NOT NULL").fetchone()[0] == 0
     assert "~$1,200/yr" in card_title(pl[0])
+
+
+def test_cards_are_delivered_when_a_key_is_present(tmp_path):
+    s = Store(tmp_path / "db.sqlite")
+    s.upsert_candidates([payload("A", savings=1200)], "r1")
+    c = FakeBoard()
+    res = post_cards(s, c, "agt_qualify", None, 10, run_tag="r1")
+    assert res["status"] == "delivered" and res["delivered"] == 1 and res["errors"] == []
+    assert c.calls[0]["path"] == "/v1/boards/agt_qualify/cards"
+    assert c.calls[0]["body"]["key"] == "FL-99-2026-A"
+    assert s.db.execute("SELECT handoff_ref FROM candidates").fetchone()[0].startswith("crd_")
+    # idempotent: a second pass has nothing left to send
+    assert post_cards(s, FakeBoard(), "agt_qualify", None, 10, run_tag="r1")["status"] == "empty"
+
+
+def test_unacknowledged_card_is_not_counted_as_delivered(tmp_path):
+    s = Store(tmp_path / "db.sqlite")
+    s.upsert_candidates([payload("A", savings=1200)], "r1")
+    res = post_cards(s, FakeBoard(ack=False), "agt_qualify", None, 10, run_tag="r1")
+    assert res["status"] == "blocked" and res["delivered"] == 0 and res["undelivered"] == 1
+    assert s.db.execute("SELECT COUNT(*) FROM candidates WHERE handoff_ref IS NOT NULL").fetchone()[0] == 0
+
+
+def test_no_board_configured_is_blocked_not_skipped(tmp_path):
+    s = Store(tmp_path / "db.sqlite")
+    s.upsert_candidates([payload("A", savings=1200)], "r1")
+    res = post_cards(s, FakeBoard(), None, None, 10)
+    assert res["status"] == "blocked" and res["blocked_by"] == "config" and res["posted"] == 0
 
 
 def test_store_upsert_is_idempotent(tmp_path):
@@ -205,8 +252,8 @@ def test_weak_county_cards_are_held(tmp_path):
     p_weak["jurisdiction"]["county"] = "Weakville"
     s = Store(tmp_path / "db.sqlite")
     s.upsert_candidates([p_ok, p_weak], "r1")
-    res = post_cards(s, NaiveClient(None, outbox=tmp_path / "o.jsonl"), "agt_q", None, 10)
-    assert res["posted"] == 1 and res["held_weak_county"] == 1 and res["held_counties"] == ["Weakville"]
+    res = post_cards(s, FakeBoard(), "agt_q", None, 10, run_tag="r1")
+    assert res["delivered"] == 1 and res["held_weak_county"] == 1 and res["held_counties"] == ["Weakville"]
 
 
 def test_matcher_rejects_wrong_house_number_direction_and_zip():
@@ -261,8 +308,8 @@ def test_closed_window_cards_are_held_unless_asked(tmp_path):
     s = Store(tmp_path / "db.sqlite")
     s.upsert_candidates([p], "r1")
     c = NaiveClient(None, outbox=tmp_path / "o.jsonl")
-    assert post_cards(s, c, "agt_q", None, 10)["held_window_closed"] == 1
-    assert post_cards(s, c, "agt_q", None, 10, include_closed=True)["posted"] == 1
+    assert post_cards(s, c, "agt_q", None, 10, run_tag="r1")["held_window_closed"] == 1
+    assert post_cards(s, FakeBoard(), "agt_q", None, 10, include_closed=True, run_tag="r1")["delivered"] == 1
 
 
 def test_disputed_result_survives_a_rerun_without_lookups(tmp_path):

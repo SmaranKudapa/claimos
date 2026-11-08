@@ -81,16 +81,36 @@ def latest_pairs(files: list[RollFile], year: int | None = None) -> dict[str, di
     return best
 
 
-def _read_csv(path: Path, num: list[str], strs: list[str]) -> pd.DataFrame:
-    wanted = set(num) | set(strs)
-    df = pd.read_csv(path, usecols=lambda c: c in wanted, dtype="string", low_memory=False)
+# Text columns dominate a county roll: 24 of the NAL's 43 columns are strings, and as Python
+# objects they cost ~28 MB each on a big county (Lee: 946 MB for the frame). Arrow-backed strings
+# store the same data as contiguous buffers and cut that by roughly 3x, which is the difference
+# between fitting in the agent sandbox and being OOM-killed. Falls back silently if pyarrow is absent.
+try:
+    import pyarrow  # noqa: F401
+    STR_DTYPE = "string[pyarrow]"
+except ImportError:  # pragma: no cover
+    STR_DTYPE = "string"
+
+
+def _shrink(df: pd.DataFrame, num: list[str], strs: list[str]) -> pd.DataFrame:
+    """Numeric columns to plain float64 (nullable dtypes turn NaN comparisons into NA, not False);
+    text columns to Arrow-backed strings. Applied on both the parse and the parquet-cache paths so
+    a warm run is no heavier than a cold one."""
     for c in num:
         if c in df.columns:
-            df[c] = pd.to_numeric(df[c], errors="coerce")
+            df[c] = pd.to_numeric(df[c], errors="coerce").astype("float64")
     for c in strs:
-        if c not in df.columns:
-            df[c] = pd.Series(pd.NA, index=df.index, dtype="string")
+        if c in df.columns:
+            df[c] = df[c].astype(STR_DTYPE)
+        else:
+            df[c] = pd.Series(pd.NA, index=df.index, dtype=STR_DTYPE)
     return df
+
+
+def _read_csv(path: Path, num: list[str], strs: list[str]) -> pd.DataFrame:
+    wanted = set(num) | set(strs)
+    df = pd.read_csv(path, usecols=lambda c: c in wanted, dtype=STR_DTYPE, low_memory=False)
+    return _shrink(df, num, strs)
 
 
 def load_pair(cache: HttpCache, pair: dict[str, RollFile], work: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
@@ -112,9 +132,7 @@ def load_pair(cache: HttpCache, pair: dict[str, RollFile], work: Path) -> tuple[
             df.to_parquet(pq, index=False)
             for p in csvs:
                 p.unlink(missing_ok=True)
-        for c in num:   # plain float64: nullable dtypes turn NaN comparisons into NA instead of False
-            if c in df.columns:
-                df[c] = pd.to_numeric(df[c], errors="coerce").astype("float64")
+        df = _shrink(df, num, strs)
         out[kind] = df
         meta[kind] = {"url": rf.url, "sha256": got.meta["sha256"], "changed": got.changed, "modified": rf.modified}
     return out["NAL"], out["SDF"], meta
