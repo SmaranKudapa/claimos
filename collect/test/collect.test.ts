@@ -140,3 +140,13 @@ describe("board hookup", () => {
     expect(cardWrites(paid, "crd_c")[1]).toMatchObject({ status: "done", note: expect.stringMatching(/^PAID · \$480/) });
   });
 });
+
+describe("payment links", () => {
+  it("an unpaid invoice without a link keeps asking for one; with a link it stops", async () => {
+    const s = samples.find((x) => x.n === 11)!; // invoice issued, waiting for payment
+    const r = await collect(s.case, null, ctx());
+    expect(r.paymentRequest).toMatchObject({ amountCents: 48000, reference: "PH-INV-1" });
+    const linked = { ...s.case, invoice: { ...(s.case.invoice as object), paymentLink: { url: "https://pay.example/x" } } };
+    expect((await collect(linked, null, ctx())).paymentRequest).toBeNull();
+  });
+});

@@ -151,6 +151,17 @@ function invoiceStage(d: Draft): void {
   stop(d, "K4", "V_INVOICE_ISSUED", `${number} for $${amount}, due ${d.invoice.dueOn}`);
 }
 
+/** An unpaid invoice without a payment link keeps asking for one (e.g. Stripe was connected later). */
+function linkRequest(d: Draft): CollectResult["paymentRequest"] {
+  const inv = d.invoice!;
+  return {
+    amountCents: Math.round(inv.amount * 100),
+    currency: d.ctx.config.fee.currency,
+    description: `Claim OS success fee, property tax appeal: ${d.c.address} (case ${d.c.caseId}), invoice ${inv.number}`,
+    reference: inv.number,
+  };
+}
+
 function finish(d: Draft, inputHash: string): CollectResult {
   let status = statusFor(d.codes);
   if (!status) {
@@ -173,7 +184,7 @@ function finish(d: Draft, inputHash: string): CollectResult {
     savings: d.savings,
     fee: d.fee,
     invoice: status === "CLOSED" && lead !== "C_WRITTEN_OFF" ? null : d.invoice,
-    paymentRequest: lead === "V_INVOICE_ISSUED" ? d.paymentRequest : null,
+    paymentRequest: lead === "V_INVOICE_ISSUED" ? d.paymentRequest : (status === "INVOICED" || status === "WAITING") && d.invoice && !d.invoice.paid && !d.invoice.paymentLink ? linkRequest(d) : null,
     requeueOn: status === "WAITING" || status === "INVOICED" ? d.requeueOn : null,
     ownerMessage: ownerMessage(d.c, status, lead, { reading: d.reading, savings: d.savings, fee: d.fee, invoice: d.invoice }),
     stageLog: d.log,

@@ -27,7 +27,8 @@ Nobody is watching the run: never ask a question or wait for an answer. Do every
    `brd_3kb4zft8yttkhm04sv6vn8ydw2` with status `todo` and with status `blocked` (limit 50 each) and add
    cards whose title starts with `Collect ·`. Open each by `card_id`. Skip a card whose latest
    `collect-result` comment says `check again <date>` with that date still in the future, unless a
-   `tax-bill` comment was added after it. At most 10 cards per run. None? Report "Collect: nothing to do".
+   `tax-bill` comment was added after it, or its invoice still has no payment link (its latest
+   `payment-link ·` comment says `unavailable`, or there is none) and you have the `payments_request` tool. At most 10 cards per run. None? Report "Collect: nothing to do".
 
 4. **For each card, in order:**
    a. Save the card's body exactly to `~/col/<card_id>.card.txt` with the `write` tool.
@@ -48,7 +49,7 @@ Nobody is watching the run: never ask a question or wait for an answer. Do every
       `--payment-link <url>` (from the latest `payment-link ·` comment, if any), `--paid-on <date> --payment-ref <id>`.
    f. It prints one JSON line with `writes`, or an `error`. For `writes`: `board_write` each object once,
       in order, exactly as printed. For `error`: leave the card untouched.
-   g. If the line has a non-null `paymentRequest` (a new invoice): if you have the `payments_request`
+   g. If the line has a non-null `paymentRequest` (a new invoice, or one that still has no link): if you have the `payments_request`
       tool, create one payment link for exactly that `amountCents`, `currency` and `description`, with the
       `reference` as its reference, then comment on the card
       `payment-link · <reference> · <the link URL> · <the link id>`. If you don't have the tool or it
