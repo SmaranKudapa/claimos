@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "claimos-file"
-version = "0.1.4"
+version = "0.1.6"
 description = "File desk: validated handoffs, official petition drafts, receipt ledger and notice deadlines."
 requires-python = ">=3.9"
 dependencies = ["pypdf>=6.21,<7"]

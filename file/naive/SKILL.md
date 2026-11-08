@@ -36,3 +36,7 @@ Use taxfile record-notice when the actual notice arrives. The response date must
 ## Practice cases
 
 A complete, open-window bundle may reach operator review. Missing Evidence, unsigned authority, wrong parcel/year, changed file bytes, unsupported route, closed window or unverified fee/deadline remains blocked. Duplicate receipts must not create duplicate submissions. A receipt without a notice has no verified response deadline. Synthetic tests are never reported as real customer work.
+
+## Find schema 2
+
+Read the bundled docs/HANDOFF.md for both supported candidate versions. Preserve the original candidate, parcel identity, confidence, assumptions, warnings, portfolio and outreach restrictions. Resolve every needs_verification string through matching Evidence verifications with hashed artifacts. Ingestion is not filing eligibility; unsupported counties, closed windows and suppressed owners remain blocked.

@@ -25,7 +25,7 @@ def sample_pdf(path, lines):
     writer.write(path)
 
 
-def exercise(out, template=None):
+def exercise(out, template=None, schema_version=1):
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     if template:
@@ -40,6 +40,8 @@ def exercise(out, template=None):
     response_due = (today + timedelta(days=45)).isoformat()
     cid, parcel = "SYNTHETIC-LEE-" + str(today.year) + "-001", "SYNTHETIC-LEE-001"
     c = {"schema_version": 1, "desk": "property_tax", "case_id": cid, "jurisdiction": {"state": "FL", "county": "Lee", "county_code": "46", "tax_year": today.year}, "property": {"parcel_id": parcel, "address": "100 Example Way, Test City, FL 00000", "use": "single_family"}, "owner": {"name": "SYNTHETIC TEST OWNER - DO NOT FILE", "mailing_address": {"street": "100 Example Way", "city": "Test City", "state": "FL", "zip": "00000"}}, "tier": "strong", "filing_window": {"status": "open", "closes": deadline}, "source": {"run_id": "SYNTHETIC-VERIFICATION-ONLY", "found_at": today.isoformat(), "note": "Invented property, ownership, authority and deadlines for tests. Never submit."}}
+    if schema_version == 2:
+        c.update(schema_version=2, status="candidate", values={}, signals={}, estimate={"annual_savings": 1500, "annual_savings_range": [1000, 2000], "is_estimate": True}, confidence={"evidence_quality": 0.8, "evidence_label": "strong"}, explanation="Synthetic comparable analysis only.", assumptions=["Synthetic millage assumption."], warnings=["Synthetic portfolio grouping."], needs_verification=["Inspect the synthetic property record card."], portfolio={"portfolio_id": "SYNTHETIC-OWNER", "flagged_parcels": 2, "savings_in_run": 3000}, outreach={"eligible": False, "owner_suppressed": False, "blocked_by": ["qualify_not_run"]})
     match = {"case_id": cid, "tax_year": today.year}
     artifact = {}
     for kind, lines in {"authorization": ["Synthetic authorization fixture; no legal authorization or actual signature.", "Owner: SYNTHETIC TEST OWNER. Representation fixture: owner."], "evidence": ["Synthetic assessment: 500000; synthetic comparable estimate: 400000.", "Invented comparables: EXAMPLE-A, EXAMPLE-B. Not a valuation opinion."]}.items():
@@ -48,6 +50,8 @@ def exercise(out, template=None):
         artifact[kind] = {"path": path.name, "sha256": digest(path.read_bytes())}
     source = "https://www.leeclerk.org/departments/value-adjustment-board-vab/filing-a-petition"
     envelope = {"candidate": c, "qualification": {**match, "status": "eligible", "route": "vab_value_appeal"}, "authorization": {**match, "status": "signed", "signer_name": "SYNTHETIC TEST OWNER", "representation_mode": "owner", "artifact": artifact["authorization"]}, "evidence": {**match, "status": "complete", "artifact": artifact["evidence"]}, "filing": {**match, "instructions_url": source, "deadline_source_url": source, "deadline": deadline, "deadline_verified": True, "method": "online", "fee_usd": 50, "fee_verified": True}, "test_notice": "SYNTHETIC TEST ONLY: flags exercise validation; no real qualification, signature, deadline or fee verification occurred."}
+    if schema_version == 2:
+        envelope["evidence"]["verifications"] = [{"check": c["needs_verification"][0], "status": "verified", "artifact": artifact["evidence"]}]
     handoff = sample / "case-handoff.json"
     handoff.write_text(json.dumps(envelope, indent=2))
     manifest, case_dir = prepare(handoff, out / "prepared", template)
@@ -67,7 +71,9 @@ def exercise(out, template=None):
         if annotation.get("/T") in ("Mailing Address", "Parcel ID and Pyshical Address"):
             assert int(annotation.get("/Ff", 0)) & 4096
     assert "00000" in fields["Mailing Address"]["/V"]
-    assert len(manifest["artifacts"]) == 2
+    assert len(manifest["artifacts"]) == (3 if schema_version == 2 else 2)
+    assert manifest["candidate"] == c
+    assert json.loads((case_dir / "candidate.json").read_text()) == c
     for a in manifest["artifacts"]:
         assert digest(Path(a["path"]).read_bytes()) == a["sha256"]
     results = [{"check": "complete sample, official PDF fields and attachment hashes", "passed": True}]
@@ -117,7 +123,7 @@ def exercise(out, template=None):
     except ValueError as error:
         assert "receipt already exists" in str(error)
     results.append({"check": "duplicate preparation prevented", "passed": True})
-    report = {"verification_only": True, "disclaimer": "All cases, authorization, receipt and notice are synthetic. No filing, message, payment or teammate-agent action occurred.", "case_id": cid, "checks": results, "passed": len(results), "form_source": FORM_URL, "form_revision": manifest["petition"]["revision"], "case_directory": str(case_dir), "handoff": str(handoff)}
+    report = {"verification_only": True, "candidate_schema_version": schema_version, "disclaimer": "All cases, authorization, receipt and notice are synthetic. No filing, message, payment or teammate-agent action occurred.", "case_id": cid, "checks": results, "passed": len(results), "form_source": FORM_URL, "form_revision": manifest["petition"]["revision"], "case_directory": str(case_dir), "handoff": str(handoff)}
     (out / "verification-report.json").write_text(json.dumps(report, indent=2))
     return report
 
@@ -126,5 +132,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", required=True)
     parser.add_argument("--template")
+    parser.add_argument("--schema-version", type=int, choices=(1, 2), default=1)
     args = parser.parse_args()
-    print(json.dumps(exercise(args.out, args.template), indent=2))
+    print(json.dumps(exercise(args.out, args.template, args.schema_version), indent=2))

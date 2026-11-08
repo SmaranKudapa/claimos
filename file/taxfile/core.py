@@ -48,8 +48,22 @@ def load_handoff(path):
     if not isinstance(data, dict):
         raise ValueError("The handoff must be an object.")
     candidate = data.get("candidate", data)
-    if not isinstance(candidate, dict) or candidate.get("schema_version") != 1 or candidate.get("desk") != "property_tax":
-        raise ValueError("Expected Nick's FindCandidate schema version 1.")
+    if not isinstance(candidate, dict) or type(candidate.get("schema_version")) is not int or candidate.get("schema_version") not in (1, 2) or candidate.get("desk") != "property_tax":
+        raise ValueError("Expected FindCandidate schema version 1 or 2; unknown versions require a reviewed adapter.")
+    if candidate["schema_version"] == 2:
+        if candidate.get("status") != "candidate":
+            raise ValueError("Preserve Find status candidate; supply later decisions separately in the handoff.")
+        for key in ("values", "signals", "estimate", "confidence", "portfolio", "outreach", "filing_window"):
+            if not isinstance(candidate.get(key), dict):
+                raise ValueError("Invalid Find v2 object: " + key)
+        for key in ("assumptions", "needs_verification", "warnings"):
+            value = candidate.get(key, [] if key == "warnings" else None)
+            if not isinstance(value, list) or any(not isinstance(item, str) or not item.strip() for item in value):
+                raise ValueError("Invalid Find v2 list: " + key)
+        if not isinstance(candidate.get("explanation"), str) or not candidate["explanation"].strip():
+            raise ValueError("Find v2 requires its original explanation.")
+        if candidate["outreach"].get("eligible") is not False:
+            raise ValueError("Find v2 cannot authorize outreach; preserve outreach.eligible=false.")
     for key in ("case_id", "jurisdiction", "property", "owner", "source"):
         if not candidate.get(key):
             raise ValueError("Missing candidate field: " + key)
@@ -147,6 +161,24 @@ def assess(envelope, candidate, root, today=None):
         holds.append("Compensated unlicensed representation requires the taxpayer-signed petition or an appropriately reviewed power of attorney.")
     if candidate["owner"].get("may_have_changed") and authorization.get("current_owner_verified") is not True:
         holds.append("Ownership may have changed after the roll; verify the current authorized owner.")
+    if candidate.get("schema_version") == 2:
+        outreach = candidate["outreach"]
+        if outreach.get("owner_suppressed") or "confidential_owner_suppressed" in outreach.get("blocked_by", []):
+            holds.append("Find marked the owner suppressed; authorized human review is required before filing.")
+        evidence = envelope.get("evidence") or {}
+        valid_evidence = isinstance(evidence, dict) and evidence.get("case_id") == cid and evidence.get("tax_year") == jurisdiction.get("tax_year") and evidence.get("status") == "complete"
+        resolutions = evidence.get("verifications", []) if valid_evidence else []
+        if not isinstance(resolutions, list):
+            resolutions = []
+        for index, check in enumerate(candidate["needs_verification"]):
+            matching = [row for row in resolutions if isinstance(row, dict) and row.get("check") == check and row.get("status") == "verified"]
+            if len(matching) != 1:
+                holds.append("Unresolved Find verification: " + check)
+                continue
+            try:
+                artifacts.append({"kind": "verification-" + str(index + 1), **local_artifact(matching[0].get("artifact"), root)})
+            except ValueError as error:
+                holds.append("Find verification " + check + ": " + str(error))
     return county, holds, artifacts
 
 
@@ -159,6 +191,15 @@ def fetch_form(path):
         raise ValueError("Official form response is not a bounded PDF.")
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_bytes(content)
+
+
+def petition_property_address(prop, state):
+    street = str(prop.get("address", ""))
+    unit = str(prop.get("unit") or "").strip()
+    if unit and not re.search(r"(?:#|\bunit\s+|\bapt\s+)\s*" + re.escape(unit) + r"(?![A-Za-z0-9])", street, re.IGNORECASE):
+        street += " #" + unit
+    locality = " ".join(str(value) for value in (prop.get("city"), state, prop.get("zip")) if value and not re.search(r"(?<![A-Za-z0-9])" + re.escape(str(value)) + r"(?![A-Za-z0-9])", street, re.IGNORECASE))
+    return "\n".join(value for value in (str(prop["parcel_id"]), street, locality) if value)
 
 
 def prepare(input_path, output_root, template):
@@ -178,7 +219,7 @@ def prepare(input_path, output_root, template):
     owner, prop = candidate["owner"], candidate["property"]
     mailing = owner.get("mailing_address", {})
     address = "\n".join(str(value) for value in mailing.values() if value) if isinstance(mailing, dict) else str(mailing)
-    data = {"Tax Payer Name": str(owner.get("name", "")), "Mailing Address": address, "Parcel ID and Pyshical Address": str(prop.get("parcel_id", "")) + "\n" + str(prop.get("address", "")), "Real property Value": "/Yes", "Decrease": "/Yes"}
+    data = {"Tax Payer Name": str(owner.get("name", "")), "Mailing Address": address, "Parcel ID and Pyshical Address": petition_property_address(prop, candidate["jurisdiction"].get("state")), "Real property Value": "/Yes", "Decrease": "/Yes"}
     if prop.get("use") == "single_family":
         data["Res 1-4 units"] = "/Yes"
     if isinstance(envelope.get("filing"), dict) and envelope["filing"].get("representative_name"):
@@ -203,14 +244,15 @@ def prepare(input_path, output_root, template):
     writer.write(pdf)
     form_text = "\n".join(page.extract_text() or "" for page in reader.pages)
     revision = re.search(r"R\.\s*(\d{2}/\d{2})", form_text)
-    manifest = {"schema_version": 1, "step": "file", "case_id": candidate["case_id"], "status": "blocked" if holds else "ready_for_operator_review", "submitted": False, "jurisdiction": candidate["jurisdiction"], "property": prop, "holds": holds, "artifacts": artifacts, "petition": {"path": str(pdf), "sha256": digest(pdf.read_bytes()), "source_url": FORM_URL, "template_sha256": digest(Path(template).read_bytes()), "revision": revision.group(1) if revision else "unverified"}, "routing": ROUTES.get(county), "filing": envelope.get("filing", {}), "response_deadline": None, "input_sha256": digest(canonical(envelope)), "prepared_at": datetime.now(timezone.utc).isoformat()}
+    manifest = {"schema_version": 1, "step": "file", "case_id": candidate["case_id"], "candidate": candidate, "candidate_schema_version": candidate["schema_version"], "status": "blocked" if holds else "ready_for_operator_review", "submitted": False, "jurisdiction": candidate["jurisdiction"], "property": prop, "holds": holds, "artifacts": artifacts, "petition": {"path": str(pdf), "sha256": digest(pdf.read_bytes()), "source_url": FORM_URL, "template_sha256": digest(Path(template).read_bytes()), "revision": revision.group(1) if revision else "unverified"}, "routing": ROUTES.get(county), "filing": envelope.get("filing", {}), "response_deadline": None, "input_sha256": digest(canonical(envelope)), "prepared_at": datetime.now(timezone.utc).isoformat()}
     if not revision:
         manifest["holds"].append("Official form revision could not be verified.")
         manifest["status"] = "blocked"
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
     (out / "petition-data.json").write_text(json.dumps(data, indent=2))
+    (out / "candidate.json").write_text(json.dumps(candidate, indent=2))
     items = "".join("<li>" + html.escape(item) + "</li>" for item in manifest["holds"])
-    (out / "review.html").write_text('<!doctype html><meta charset="utf-8"><title>File · review</title><main style="font:16px system-ui;max-width:850px;margin:50px auto;line-height:1.7"><h1>File · ' + html.escape(candidate["case_id"]) + '</h1><p><strong>Unsigned preparation copy. Check the latest manifest and receipt ledger for filing status.</strong></p><p>Status: ' + manifest["status"] + '</p><ul>' + items + '</ul><p>Tax year: ' + html.escape(str(candidate["jurisdiction"].get("tax_year"))) + '</p><p><a href="DRAFT-DR-486.pdf">Open the filled draft</a></p><p>Signatures, clerk petition number and received date remain for the authorized parties.</p></main>')
+    (out / "review.html").write_text('<!doctype html><meta charset="utf-8"><title>File · review</title><main style="font:16px system-ui;max-width:850px;margin:50px auto;line-height:1.7"><h1>File · ' + html.escape(candidate["case_id"]) + '</h1><p><strong>Unsigned preparation copy. Check the latest manifest and receipt ledger for filing status.</strong></p><p>Status: ' + manifest["status"] + '</p><ul>' + items + '</ul><p>Tax year: ' + html.escape(str(candidate["jurisdiction"].get("tax_year"))) + '</p><p><a href="DRAFT-DR-486.pdf">Open the filled draft</a></p><p><a href="candidate.json">Original Find candidate, assumptions and verification requirements</a></p><p>Signatures, clerk petition number and received date remain for the authorized parties.</p></main>')
     return manifest, out
 
 

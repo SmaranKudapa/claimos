@@ -1,6 +1,6 @@
 # File
 
-The filing desk for Claim OS. `taxfile` accepts Nick's FindCandidate v1 JSON or its Naïve board-card JSON block, preserves the stable case ID, and prepares an unsigned draft of the current official Florida DR-486.
+The filing desk for Claim OS. `taxfile` accepts Nick's FindCandidate v1/v2 JSON or its Naïve board-card JSON block, preserves the stable case ID, and prepares an unsigned draft of the current official Florida DR-486.
 
 ## Run
 
@@ -51,3 +51,5 @@ PYTHONPATH=file python3 file/tests/exercise_sample.py --out /tmp/file-verificati
 Use a new output directory for every run. The exercise generates explicitly synthetic evidence, authorization, receipt and notice PDFs, fills the official DR-486, validates its fields, checks blocked cases, and tests receipt replay and deadline custody. Its report is verification only: no real signature, filing, payment, homeowner contact or recovery. `--template /path/to/dr486.pdf` uses an already downloaded official form.
 
 Receipt and notice inputs are validated before case state is changed. Notices supplied with receipts require an explicit response date. A later notice updates the case's current receipt view; receipt ledger entries preserve their original capture history. Missing mailing addresses and non-finite fees require review.
+
+The sample exercise also accepts `--schema-version 2` for a complete schema-2 packet. Schema-2 verification requirements remain holds until Evidence supplies their matching hashed resolutions. Full original candidates are retained in the manifest and `candidate.json`.
