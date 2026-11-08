@@ -64,3 +64,5 @@ PYTHONPATH=file python3 file/tests/exercise_pipeline.py --find candidates.jsonl 
 ```
 
 This exercise requires the existing `claimos-evidence` and `taxappeal-find` packages. It prepares public-record evidence and an unsigned blocked draft only; it does not send messages, file, sign, pay, or create agent-board cards.
+
+`taxfile chase-card` prepares File-owned waiting cards with the original Find case ID and `level: vab_petition`, preserving the identity Chase and Escalate need. It creates no board card and sends no message. Corrected/refiled packets keep the same identity and the existing submission-approval gate.

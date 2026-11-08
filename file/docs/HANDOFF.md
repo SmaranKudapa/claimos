@@ -43,3 +43,24 @@ A Find run summary, flattened CSV, `handoff.status: delivered`, or retry-file pa
 `taxfile evidence-handoff --candidate candidate.json --qualify handoff.json --result result.json --evidence file-handoff/evidence.json --out file-input/case-handoff.json` copies the packet and verified supporting artifacts into an isolated directory, retaining their hashes and the complete original result. Optional `--context filing-context.json` supplies independently obtained authorization and filing details; it never comes from a guessed deadline or a replay assumption.
 
 Native Evidence handoffs require the matching original result. The run must have completed, validation must have passed, the packet must support a reduction and be complete, and a recorded reviewer must approve that exact hash for `file_handoff`. Synthetic, replay, missing authorization, stale review, changed packet and unresolved verification states remain holds. Evidence review is separate from approval to submit the petition.
+
+## File → Chase → Escalate
+
+Each `Waiting on …` card must retain these exact body keys:
+
+```text
+case_id: <original Find case ID>
+level: vab_petition
+```
+
+Chase copies them into the `decision-letter` header so Escalate can retrieve the correct case. The case ID remains parcel/year-specific across a refiling and is never replaced with a portfolio or internal Qualify ID.
+
+Prepare a card without publishing or sending anything:
+
+```sh
+taxfile chase-card manifest.json --who "County clerk" --email VERIFIED_EMAIL --waiting-for "petition confirmation" --request-ref ACTUAL_PRIOR_REQUEST
+```
+
+The output includes the `follow_up:` line Chase expects, a stable creation key, `status: blocked` and `assignee: File`. Use the original request/receipt reference and verified recipient, deduplicate before board creation, and leave Chase's scheduled pass to consume it. Unknown response deadlines remain unknown. Replay and synthetic manifests cannot produce live follow-up cards.
+
+An Escalate correction follows Evidence → File with the same case ID and level. Prepare a new attempt separately, preserve prior receipts and decisions, and obtain the actual corrected signature/documents. The routing decision does not waive File's existing submission-approval gate.

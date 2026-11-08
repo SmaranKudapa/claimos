@@ -34,10 +34,21 @@ def main():
     ingest.add_argument("--evidence", required=True)
     ingest.add_argument("--context")
     ingest.add_argument("--out", required=True)
+    chase = commands.add_parser("chase-card")
+    chase.add_argument("manifest")
+    chase.add_argument("--who", required=True)
+    chase.add_argument("--email", required=True)
+    chase.add_argument("--waiting-for", required=True)
+    chase.add_argument("--request-ref", required=True)
+    chase.add_argument("--every-days", type=int, default=3)
+    chase.add_argument("--last-chased", default="never")
     commands.add_parser("status")
     args = parser.parse_args()
     try:
-        if args.command == "evidence-input":
+        if args.command == "chase-card":
+            from .chase import card_from_file
+            print(json.dumps(card_from_file(args.manifest, who=args.who, email=args.email, waiting_for=args.waiting_for, request_ref=args.request_ref, every_days=args.every_days, last_chased=args.last_chased), indent=2))
+        elif args.command == "evidence-input":
             from .bridge import evidence_input
             payload = evidence_input(args.candidate, args.qualify)
             out = Path(args.out)

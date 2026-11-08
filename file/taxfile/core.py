@@ -256,6 +256,11 @@ def prepare(input_path, output_root, template):
     if not revision:
         manifest["holds"].append("Official form revision could not be verified.")
         manifest["status"] = "blocked"
+    qualification = envelope.get("qualification") if isinstance(envelope.get("qualification"), dict) else {}
+    evidence_result = envelope.get("evidence_result") if isinstance(envelope.get("evidence_result"), dict) else {}
+    evidence = envelope.get("evidence") if isinstance(envelope.get("evidence"), dict) else {}
+    manifest["replay"] = bool(envelope.get("replay") or qualification.get("replay") or evidence_result.get("replay"))
+    manifest["synthetic"] = bool(envelope.get("synthetic") or evidence_result.get("synthetic") or evidence.get("status") == "synthetic_fixture")
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
     (out / "petition-data.json").write_text(json.dumps(data, indent=2))
     (out / "candidate.json").write_text(json.dumps(candidate, indent=2))

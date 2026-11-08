@@ -40,3 +40,9 @@ A complete, open-window bundle may reach operator review. Missing Evidence, unsi
 ## Find schema 2
 
 Read the bundled docs/HANDOFF.md for both supported candidate versions. Preserve the original candidate, parcel identity, confidence, assumptions, warnings, portfolio and outreach restrictions. Resolve every needs_verification string through matching Evidence verifications with hashed artifacts. Ingestion is not filing eligibility; unsupported counties, closed windows and suppressed owners remain blocked.
+
+## Chase and Escalate identity
+
+Every File-created `Waiting on …` card includes two separate body lines: `case_id: <exact original Find case ID>` and `level: vab_petition`. Preserve both on corrections/refilings. `taxfile chase-card` prepares the scheduled-pass format from a manifest, recipient and actual original-request reference. Its card stays owned by File and blocked; never assign it to Chase. Do not publish synthetic/replay follow-ups. The helper writes no board card and sends no message.
+
+A corrected filing keeps its Find identity and references the original receipt/decision. Escalate's request to refile does not replace the actual missing signature or the existing approval for the corrected submission.
