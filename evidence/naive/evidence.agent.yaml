@@ -1,0 +1,38 @@
+name: __EVIDENCE_AGENT_NAME__
+description: >
+  Evidence desk. Turns a signed, qualified Florida property-tax case into a sourced comparable-sales evidence packet
+  and a structured result for File. Never contacts owners, never files, never claims an appraisal.
+
+model: z-ai/glm-5.3-flash
+
+budget:
+  cap_usd: 20
+  max_task_usd: 1
+  period: month
+
+system_file: naive/evidence.system.md
+
+skills:
+  - claimos-evidence
+
+tools:
+  default_config:
+    permission: deny
+  configs:
+    bash:          { enabled: true, permission: allow }
+    read:          { enabled: true, permission: allow }
+    write:         { enabled: true, permission: allow }
+    ls:            { enabled: true, permission: allow }
+    find:          { enabled: true, permission: allow }
+    fetch_file:    { enabled: true, permission: allow }
+    find_files:    { enabled: true, permission: allow }
+    publish_file:  { enabled: true, permission: allow }
+    board_read:    { enabled: true, permission: allow }
+    ask_operator:  { enabled: true, permission: allow }
+    session_spend: { enabled: true, permission: allow }
+
+metadata:
+  company: Claim OS
+  step: evidence
+  owner: Fra
+  hands_off_to: file

@@ -138,3 +138,18 @@ def test_file_only_accepts_a_reviewed_current_packet_with_valid_authority(tmp_pa
     test_auth = run(envelope(case_id="case-T", auth={"status": "internal_test", "instrument": "internal_test"}), tmp_path)
     assert any("authorization" in p for p in check_handoff(test_auth)["problems"])
     assert any("superseded" in p for p in check_handoff(res, current_packet_hash="0" * 64)["problems"])
+
+
+def test_the_coordinator_step_result_fits_the_existing_contract(tmp_path, patched):
+    from claimevidence.stepresult import to_step_result
+    res = run(envelope(), tmp_path)
+    sr = to_step_result(res, open(res["packet"]["path"]).read())
+    assert set(sr) == {"case_id", "step", "decision", "summary", "sources", "artifacts", "tool_requests", "email_drafts"}
+    assert sr["step"] == "evidence" and sr["decision"] in ("ready", "review", "blocked")
+    assert sr["tool_requests"] == [] and sr["email_drafts"] == []
+    assert len(sr["summary"]) <= 6000 and len(sr["sources"]) <= 30 and len(sr["artifacts"]) <= 8
+    assert all(s.startswith("https://") for s in sr["sources"])
+    assert all(len(a["markdown"]) <= 40000 and a["title"] for a in sr["artifacts"])
+    assert sr["artifacts"][-1]["markdown"].startswith("```json")
+    blocked = to_step_result(run(envelope(case_id="case-X", auth={}), tmp_path), None)
+    assert blocked["decision"] == "blocked"

@@ -13,6 +13,7 @@ from . import __version__
 from .comps import CompParams, analyze, assessment_peers, subject_sales
 from .intake import run_intake
 from .model import INPUT_SCHEMA, METHOD_VERSION, RESULT_SCHEMA, Item, SourceUnavailable, now, sha256_obj, sha256_text
+from .html import to_html
 from .packet import render_internal, render_packet
 from .records import as_int, as_str, load_county
 from .requirements import build_matrix, homeowner_tasks
@@ -283,8 +284,10 @@ def _finish(base, run_id, started, processing, errors, rules, deadlines, items, 
         version = len([p for p in cdir.glob("*/packet.md")]) + (0 if (rdir / "packet.md").exists() else 1)
         _write(rdir / "packet.md", packet)
         _write(rdir / "internal_review.md", internal)
+        _write(rdir / "packet.html", to_html(packet, f"Evidence of value {base['appeal']['cycle_id']}"))
         packet_meta = {"version": version, "content_hash": packet_hash, "format": "text/markdown", "path": str(rdir / "packet.md"),
                        "internal_record_path": str(rdir / "internal_review.md"), "internal_record_hash": sha256_text(internal),
+                       "html_path": str(rdir / "packet.html"),
                        "county_facing": True, "contains_personal_data": False}
     if processing == "failed":
         nxt = {"actor": "coordinator", "action": "retry_evidence", "reason": "; ".join(e["detail"] for e in errors)[:300]}
