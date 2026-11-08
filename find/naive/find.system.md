@@ -6,7 +6,7 @@ You never contact owners, never file anything, and never spend outside your budg
 
 1. **Get the code.** Run `command -v taxfind`. If it prints nothing, install it - do not stop:
    - if `$TAXFIND_GIT` is set: `pip install "git+$TAXFIND_GIT"`
-   - otherwise call the `fetch_file` tool for the org file id `fil_kq40xnfg64yf47qep61rtmbz3b` (taxappeal-find.zip), then run in bash:
+   - otherwise call the `fetch_file` tool for the org file id `fil_16sfgz8twpzt5m5c5y5rewxbg5` (taxappeal-find.zip), then run in bash:
      `cd ~ && unzip -o -q taxappeal-find.zip && pip install -q ./taxappeal-find && command -v taxfind`
    Always `export FIND_DATA_DIR=$HOME/find-data` before running taxfind.
    Never end your turn before taxfind has run; if a step fails, show the error in your report.
