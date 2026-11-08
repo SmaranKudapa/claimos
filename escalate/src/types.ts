@@ -51,6 +51,8 @@ export const EscalateCaseSchema = z.object({
   currentLevel: z.string().min(1),
   filings: z.array(z.object({ level: z.string(), filedOn: isoDate, receiptRef: z.string().optional(), claimedValue: z.number() })).default([]),
   authorization: AuthorizationSchema,
+  /** desk_default = Sign up has not recorded one yet; the desk config's conservative default was used. */
+  authorizationSource: z.enum(["signed", "desk_default"]).default("signed"),
   evidence: z.object({ compCount: z.number().int().min(0), hasPhotos: z.boolean(), hasOwnerStatement: z.boolean() }).optional(),
   priorDecisions: z.array(z.object({ level: z.string(), outcome: z.string(), decidedOn: isoDate })).default([]),
   /** Lets retries and clarification resume across runs. */
@@ -126,6 +128,8 @@ export const EscalateConfigSchema = z
       priceUsdPerMTokOut: z.number().min(0),
     }),
     budget: z.object({ maxFilingFeesPerDayUsd: z.number().min(0) }),
+    /** Used when Sign up has not recorded the owner's authorization yet. Keep it narrow. */
+    defaultAuthorization: z.object({ scope: z.array(z.string().min(1)).min(1), feePct: z.number().min(0).max(1) }).optional(),
   })
   .superRefine((cfg, ctx) => {
     const ids = new Set<string>();

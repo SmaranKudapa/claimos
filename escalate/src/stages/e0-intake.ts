@@ -10,5 +10,6 @@ export function intake(d: Draft): void {
   const sameLevel = dec.level === c.currentLevel || (rungById(ctx.config, dec.level)?.id ?? dec.level) === (rungById(ctx.config, c.currentLevel)?.id ?? c.currentLevel);
   if (!sameLevel) return stop(d, "E0", "I_LEVEL_MISMATCH", `letter answers ${dec.level}, case is at ${c.currentLevel}`);
   if (!dec.text.trim()) return stop(d, "E0", "I_NO_DECISION_TEXT", "the letter has no text");
+  if (c.authorizationSource === "desk_default") d.flags.add("F_DEFAULT_AUTHORIZATION");
   log(d, "E0", "pass", `letter ${dec.decisionId} received ${dec.receivedOn} by ${dec.channel}`);
 }

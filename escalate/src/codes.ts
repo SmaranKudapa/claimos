@@ -10,6 +10,7 @@ export const CODES = {
   I_CASE_MISMATCH: "The letter is for a different case",
   I_LEVEL_MISMATCH: "The letter answers a different appeal level than the case is at",
   I_NO_DECISION_TEXT: "The decision letter has no text",
+  I_CASE_NOT_FOUND: "No case details were found for this letter's case id",
   I_WRONG_DESK: "The case belongs to a jurisdiction this desk config does not cover",
   // PENDING → Chase, at requeueOn
   P_NOT_FINAL: "The county has not decided yet; check again later",
@@ -49,6 +50,7 @@ export const CODES = {
   F_DEFAULT_PWIN: "No Qualify win probability on file; the desk default was used",
   F_DEFAULT_PREFERENCE: "The owner set no preference for partial wins; the partial win is accepted",
   F_ESCALATION_BLOCKED: "Appealing the rest of a partial win was not possible; the partial win is accepted",
+  F_DEFAULT_AUTHORIZATION: "Sign up has not recorded the owner's authorization; the desk's narrow default was used",
   F_LABEL_NUMBER_CONFLICT: "The letter's wording and its numbers disagreed; the numbers decide",
 } as const;
 export type Code = keyof typeof CODES;

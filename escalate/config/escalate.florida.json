@@ -3,41 +3,132 @@
   "version": "escalate-fl-2026.1",
   "jurisdictionId": "FL",
   "ladder": [
-    { "id": "vab_petition", "aliases": ["vab_value_appeal"], "order": 1, "name": "Value Adjustment Board petition", "formId": "DR-486",
-      "deadline": { "type": "days_after_decision", "days": 25 },
-      "filingFee": 15, "workDaysNeeded": 7, "bufferDays": 2, "fastTrackDays": 2, "pWinMultiplier": 1.0,
-      "hearing": true, "requiresLicensedRep": false, "valueCanIncrease": false },
-    { "id": "circuit_court", "order": 2, "name": "Circuit court suit", "formId": "COMPLAINT",
-      "deadline": { "type": "days_after_decision", "days": 60 },
-      "filingFee": 400, "workDaysNeeded": 20, "bufferDays": 5, "fastTrackDays": 10, "pWinMultiplier": 0.6,
-      "hearing": true, "requiresLicensedRep": true, "valueCanIncrease": true,
-      "referOutNote": "A Value Adjustment Board decision can be challenged in circuit court within 60 days after the board's decision; an attorney can advise you on that." }
+    {
+      "id": "vab_petition",
+      "aliases": [
+        "vab_value_appeal"
+      ],
+      "order": 1,
+      "name": "Value Adjustment Board petition",
+      "formId": "DR-486",
+      "deadline": {
+        "type": "days_after_decision",
+        "days": 25
+      },
+      "filingFee": 15,
+      "workDaysNeeded": 7,
+      "bufferDays": 2,
+      "fastTrackDays": 2,
+      "pWinMultiplier": 1,
+      "hearing": true,
+      "requiresLicensedRep": false,
+      "valueCanIncrease": false
+    },
+    {
+      "id": "circuit_court",
+      "order": 2,
+      "name": "Circuit court suit",
+      "formId": "COMPLAINT",
+      "deadline": {
+        "type": "days_after_decision",
+        "days": 60
+      },
+      "filingFee": 400,
+      "workDaysNeeded": 20,
+      "bufferDays": 5,
+      "fastTrackDays": 10,
+      "pWinMultiplier": 0.6,
+      "hearing": true,
+      "requiresLicensedRep": true,
+      "valueCanIncrease": true,
+      "referOutNote": "A Value Adjustment Board decision can be challenged in circuit court within 60 days after the board's decision; an attorney can advise you on that."
+    }
   ],
   "economics": {
-    "feePct": 0.3, "persistenceCycles": 1,
-    "costs": { "evidenceRefresh": 5, "hearingPrep": 15, "llm": 0.05 },
-    "defaultPWin": 0.3, "pWinCap": 0.85, "pWinFloor": 0.15,
-    "minExpectedValue": 25, "minRemainingGapPct": 0.03, "minRemainingAnnualSavings": 150
+    "feePct": 0.3,
+    "persistenceCycles": 1,
+    "costs": {
+      "evidenceRefresh": 5,
+      "hearingPrep": 15,
+      "llm": 0.05
+    },
+    "defaultPWin": 0.3,
+    "pWinCap": 0.85,
+    "pWinFloor": 0.15,
+    "minExpectedValue": 25,
+    "minRemainingGapPct": 0.03,
+    "minRemainingAnnualSavings": 150
   },
   "denialReasons": {
-    "comps_rejected":        { "pWinMultiplier": 0.8, "evidence": ["fresh_comps"] },
-    "insufficient_evidence": { "pWinMultiplier": 1.0, "evidence": ["owner_photos", "condition_report"] },
-    "value_supported":       { "pWinMultiplier": 0.6, "evidence": [] },
-    "condition_not_shown":   { "pWinMultiplier": 0.9, "evidence": ["owner_photos", "repair_estimates"] },
-    "other":                 { "pWinMultiplier": 0.7, "evidence": [] }
+    "comps_rejected": {
+      "pWinMultiplier": 0.8,
+      "evidence": [
+        "fresh_comps"
+      ]
+    },
+    "insufficient_evidence": {
+      "pWinMultiplier": 1,
+      "evidence": [
+        "owner_photos",
+        "condition_report"
+      ]
+    },
+    "value_supported": {
+      "pWinMultiplier": 0.6,
+      "evidence": []
+    },
+    "condition_not_shown": {
+      "pWinMultiplier": 0.9,
+      "evidence": [
+        "owner_photos",
+        "repair_estimates"
+      ]
+    },
+    "other": {
+      "pWinMultiplier": 0.7,
+      "evidence": []
+    }
   },
   "proceduralReasons": {
-    "missing_form":          { "curable": true,  "refileWithinDays": 10 },
-    "missing_signature":     { "curable": true,  "refileWithinDays": 10 },
-    "missing_authorization": { "curable": true,  "refileWithinDays": 10 },
-    "late_filing":           { "curable": false },
-    "other":                 { "curable": false }
+    "missing_form": {
+      "curable": true,
+      "refileWithinDays": 10
+    },
+    "missing_signature": {
+      "curable": true,
+      "refileWithinDays": 10
+    },
+    "missing_authorization": {
+      "curable": true,
+      "refileWithinDays": 10
+    },
+    "late_filing": {
+      "curable": false
+    },
+    "other": {
+      "curable": false
+    }
   },
   "reader": {
-    "model": null, "escalationModel": null, "promptVersion": "escalate-read@1",
-    "minReadConfidence": 0.7, "maxReadAttempts": 3, "retryAfterDays": 1,
-    "clarifyMaxDays": 7, "notFinalRecheckDays": 7, "maxCostPerCaseUsd": 0.10,
-    "priceUsdPerMTokIn": 1.0, "priceUsdPerMTokOut": 3.0
+    "model": null,
+    "escalationModel": null,
+    "promptVersion": "escalate-read@1",
+    "minReadConfidence": 0.7,
+    "maxReadAttempts": 3,
+    "retryAfterDays": 1,
+    "clarifyMaxDays": 7,
+    "notFinalRecheckDays": 7,
+    "maxCostPerCaseUsd": 0.1,
+    "priceUsdPerMTokIn": 1,
+    "priceUsdPerMTokOut": 3
   },
-  "budget": { "maxFilingFeesPerDayUsd": 500 }
+  "budget": {
+    "maxFilingFeesPerDayUsd": 500
+  },
+  "defaultAuthorization": {
+    "scope": [
+      "vab_petition"
+    ],
+    "feePct": 0.3
+  }
 }

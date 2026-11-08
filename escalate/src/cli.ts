@@ -6,6 +6,9 @@
  *                   [--llm naive|mock] [--out out/escalate-results.json] [--audit out/audit.jsonl] [--json]
  *   escalate show   --results <file> --case <caseId> [--json]
  *   escalate cases  --results <file> --export <file>        (UI records with "Appeal again" beats)
+ *   escalate from-board --card <card id> --letter <file> --qualify-handoff <handoff.json> --config <file>
+ *                   [--reading <file>] [--read-state <json>] [--today YYYY-MM-DD]
+ *                   (agent mode: one decision-letter comment in, the exact escalate-result comment out)
  *   escalate validate-config --config <file>
  *   escalate codes
  *
@@ -26,6 +29,8 @@ import { escalateAll, type Delivery } from "./pipeline.js";
 import { MockReader } from "./reader/mock.js";
 import type { Reader } from "./reader/types.js";
 import { toAppealBeat, toCaseRecordPatch } from "./case.js";
+import { caseFromQualify, decisionFromComment, parseLetterComment, resultComment, type QualifyHandoffEntry } from "./board.js";
+import { ProvidedReader } from "./reader/provided.js";
 import type { EscalateResult } from "./types.js";
 import { todayIn } from "./util.js";
 
@@ -51,6 +56,11 @@ const { values: a } = parseArgs({
     results: { type: "string", default: "out/escalate-results.json" },
     case: { type: "string" },
     export: { type: "string" },
+    card: { type: "string" },
+    letter: { type: "string" },
+    "qualify-handoff": { type: "string" },
+    reading: { type: "string" },
+    "read-state": { type: "string" },
     json: { type: "boolean" },
   },
   allowPositionals: false,
@@ -154,8 +164,29 @@ function cases() {
   console.log(`Wrote ${out.cases.length} case record(s) with "Appeal again" beats to ${a.export}`);
 }
 
+/** Agent mode: one card, one decision-letter comment; prints one JSON line with the comment to post. */
+async function fromBoard() {
+  const config = loadConfig(need(a.config, "config"));
+  const today = a.today ?? todayIn(process.env.ESCALATE_TIMEZONE);
+  const card = need(a.card, "card");
+  const letter = parseLetterComment(readFileSync(need(a.letter, "letter"), "utf8"));
+  if (!letter) return console.log(JSON.stringify({ card_id: card, error: "not a decision-letter comment in the agreed shape; leave this card untouched" }));
+  const handoff = readJson(need(a["qualify-handoff"], "qualify-handoff")) as { cases: QualifyHandoffEntry[] };
+  const entry = letter.caseId ? handoff.cases.find((x) => x.find_case_id === letter.caseId) : undefined;
+  const readAttempts = a["read-state"] ? [JSON.parse(a["read-state"])] : [];
+  const reader = a.reading ? new ProvidedReader(readJson(a.reading)) : new MockReader();
+  const ctx: EscalateContext = { config, today, reader };
+  const decision = decisionFromComment(letter, entry?.route?.id ?? null);
+  const caseRaw = entry ? caseFromQualify(entry, letter, config, { readAttempts }) : { caseId: letter.caseId ?? "unknown" };
+  let [r] = await escalateAll([{ case: caseRaw, decision }], ctx);
+  if (!entry) r = { ...r!, reasonCodes: ["I_CASE_NOT_FOUND"], summary: `INCOMPLETE · I_CASE_NOT_FOUND · no Qualify record for case ${letter.caseId ?? "unknown"}`, stageLog: [{ stage: "E0", outcome: "stop", detail: "I_CASE_NOT_FOUND" }] };
+  console.log(JSON.stringify({ card_id: card, case_id: r!.caseId, status: r!.status, reader: reader.name, write: resultComment(r!, card) }));
+}
+
 async function main() {
   switch (cmd) {
+    case "from-board":
+      return fromBoard();
     case "run":
       return run();
     case "show":
