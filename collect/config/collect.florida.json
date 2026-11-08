@@ -1,0 +1,29 @@
+{
+  "_note": "Florida collect desk (tax year 2026). Fee: the agreed share of the first year's savings, invoiced after the county's corrected tax bill (the customer portal promises this). Minimum/maximum fee, due date, reminder schedule and wait limits are team assumptions to confirm.",
+  "version": "collect-fl-2026.1",
+  "jurisdictionId": "FL",
+  "fee": {
+    "basis": "first_year_savings",
+    "defaultPct": 0.3,
+    "minFee": 25,
+    "maxFee": 5000,
+    "currency": "usd"
+  },
+  "invoice": {
+    "dueDays": 30,
+    "reminderDays": [
+      14,
+      30,
+      45
+    ],
+    "writeOffDays": 60,
+    "numberPrefix": "COS"
+  },
+  "bill": {
+    "required": true,
+    "recheckDays": 14,
+    "maxWaitDays": 240,
+    "valueToleranceUsd": 1,
+    "minReadConfidence": 0.7
+  }
+}

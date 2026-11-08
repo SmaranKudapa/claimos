@@ -1,0 +1,599 @@
+[
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1001",
+      "parcelId": "PH-1001",
+      "jurisdictionId": "placeholder",
+      "address": "201 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 1"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1001"
+    },
+    "bill": null,
+    "reading": null
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1002",
+      "parcelId": "PH-1002",
+      "jurisdictionId": "placeholder",
+      "address": "202 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 2"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-07-01",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1002"
+    },
+    "bill": null,
+    "reading": null
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1003",
+      "parcelId": "PH-1003",
+      "jurisdictionId": "placeholder",
+      "address": "203 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 3"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1003"
+    },
+    "bill": {
+      "docId": "BILL-1003",
+      "caseId": "case_placeholder_PH-1003",
+      "receivedOn": "2026-12-05",
+      "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1003\nBill date: 2026-12-01\nCorrected assessed value: $420,000\nOriginal tax amount: $10,000.00\nCorrected tax amount: $8,400.00"
+    },
+    "reading": {
+      "billDate": "2026-12-01",
+      "assessedValue": 420000,
+      "originalTax": 10000,
+      "correctedTax": 8400,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "billDate",
+          "quote": "Bill date: 2026-12-01"
+        },
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $420,000"
+        },
+        {
+          "field": "originalTax",
+          "quote": "Original tax amount: $10,000.00"
+        },
+        {
+          "field": "correctedTax",
+          "quote": "Corrected tax amount: $8,400.00"
+        }
+      ]
+    }
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1004",
+      "parcelId": "PH-1004",
+      "jurisdictionId": "placeholder",
+      "address": "204 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 4"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1004"
+    },
+    "bill": {
+      "docId": "BILL-1004",
+      "caseId": "case_placeholder_PH-1004",
+      "receivedOn": "2026-12-05",
+      "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1004\nBill date: 2026-12-01\nCorrected assessed value: $420,000"
+    },
+    "reading": {
+      "billDate": "2026-12-01",
+      "assessedValue": 420000,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "billDate",
+          "quote": "Bill date: 2026-12-01"
+        },
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $420,000"
+        }
+      ]
+    }
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1005",
+      "parcelId": "PH-1005",
+      "jurisdictionId": "placeholder",
+      "address": "205 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 5"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1005"
+    },
+    "bill": {
+      "docId": "BILL-1005",
+      "caseId": "case_placeholder_PH-1005",
+      "receivedOn": "2026-12-05",
+      "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1005\nCorrected assessed value: $440,000"
+    },
+    "reading": {
+      "assessedValue": 440000,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $440,000"
+        }
+      ]
+    }
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1006",
+      "parcelId": "PH-1006",
+      "jurisdictionId": "placeholder",
+      "address": "206 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 6"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1006"
+    },
+    "bill": {
+      "docId": "BILL-1006",
+      "caseId": "case_placeholder_PH-1006",
+      "receivedOn": "2026-12-05",
+      "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1006\nCorrected assessed value: $500,000"
+    },
+    "reading": {
+      "assessedValue": 500000,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $500,000"
+        }
+      ]
+    }
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1007",
+      "parcelId": "PH-1007",
+      "jurisdictionId": "placeholder",
+      "address": "207 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 7"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 497500,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1007"
+    },
+    "bill": {
+      "docId": "BILL-1007",
+      "caseId": "case_placeholder_PH-1007",
+      "receivedOn": "2026-12-05",
+      "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1007\nCorrected assessed value: $497,500"
+    },
+    "reading": {
+      "assessedValue": 497500,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $497,500"
+        }
+      ]
+    }
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1008",
+      "parcelId": "PH-1008",
+      "jurisdictionId": "placeholder",
+      "address": "208 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 8"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 5000000,
+      "wonAssessedValue": 3000000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1008"
+    },
+    "bill": {
+      "docId": "BILL-1008",
+      "caseId": "case_placeholder_PH-1008",
+      "receivedOn": "2026-12-05",
+      "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1008\nCorrected assessed value: $3,000,000"
+    },
+    "reading": {
+      "assessedValue": 3000000,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $3,000,000"
+        }
+      ]
+    }
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1009",
+      "parcelId": "PH-1009",
+      "jurisdictionId": "placeholder",
+      "address": "209 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 9"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1009"
+    },
+    "bill": {
+      "docId": "BILL-1009",
+      "caseId": "case_placeholder_PH-1009",
+      "receivedOn": "2026-12-05",
+      "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1009\nWe have updated your account. Details will follow."
+    },
+    "reading": {
+      "confidence": 0.2,
+      "evidence": []
+    }
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1010",
+      "parcelId": "PH-1010",
+      "jurisdictionId": "placeholder",
+      "address": "210 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 10"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1010"
+    },
+    "bill": {
+      "docId": "BILL-1010",
+      "caseId": "case_placeholder_PH-1099",
+      "receivedOn": "2026-12-05",
+      "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1010\nBill date: 2026-12-01\nCorrected assessed value: $420,000\nOriginal tax amount: $10,000.00\nCorrected tax amount: $8,400.00"
+    },
+    "reading": {
+      "billDate": "2026-12-01",
+      "assessedValue": 420000,
+      "originalTax": 10000,
+      "correctedTax": 8400,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "billDate",
+          "quote": "Bill date: 2026-12-01"
+        },
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $420,000"
+        },
+        {
+          "field": "originalTax",
+          "quote": "Original tax amount: $10,000.00"
+        },
+        {
+          "field": "correctedTax",
+          "quote": "Corrected tax amount: $8,400.00"
+        }
+      ]
+    }
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1011",
+      "parcelId": "PH-1011",
+      "jurisdictionId": "placeholder",
+      "address": "211 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 11"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1011",
+      "invoice": {
+        "number": "PH-INV-1",
+        "issuedOn": "2026-12-10",
+        "dueOn": "2027-01-01",
+        "amount": 480,
+        "reminders": []
+      }
+    },
+    "bill": null,
+    "reading": null
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1012",
+      "parcelId": "PH-1012",
+      "jurisdictionId": "placeholder",
+      "address": "212 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 12"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1012",
+      "invoice": {
+        "number": "PH-INV-1",
+        "issuedOn": "2026-11-25",
+        "dueOn": "2027-01-01",
+        "amount": 480,
+        "reminders": []
+      }
+    },
+    "bill": null,
+    "reading": null
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1013",
+      "parcelId": "PH-1013",
+      "jurisdictionId": "placeholder",
+      "address": "213 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 13"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1013",
+      "invoice": {
+        "number": "PH-INV-1",
+        "issuedOn": "2026-10-01",
+        "dueOn": "2027-01-01",
+        "amount": 480,
+        "reminders": []
+      }
+    },
+    "bill": null,
+    "reading": null
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1014",
+      "parcelId": "PH-1014",
+      "jurisdictionId": "placeholder",
+      "address": "214 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 14"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_FULL_WIN",
+      "decisionId": "D-1014",
+      "invoice": {
+        "number": "PH-INV-1",
+        "issuedOn": "2026-11-25",
+        "dueOn": "2027-01-01",
+        "amount": 480,
+        "reminders": [],
+        "paid": {
+          "on": "2026-12-02",
+          "ref": "pi_sample_14"
+        }
+      }
+    },
+    "bill": null,
+    "reading": null
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1015",
+      "parcelId": "PH-1015",
+      "jurisdictionId": "placeholder",
+      "address": "215 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 15"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 420000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "C_REFER_OUT",
+      "decisionId": "D-1015"
+    },
+    "bill": null,
+    "reading": null
+  },
+  {
+    "case": {
+      "caseId": "case_placeholder_PH-1016",
+      "parcelId": "PH-1016",
+      "jurisdictionId": "placeholder",
+      "address": "216 Placeholder Lane, Sampletown",
+      "owner": {
+        "names": [
+          "Sample Owner 16"
+        ],
+        "type": "individual",
+        "contactChannel": "email"
+      },
+      "oldAssessedValue": 500000,
+      "wonAssessedValue": 470000,
+      "taxRate": 0.02,
+      "feePct": 0.3,
+      "authorizationSource": "signed",
+      "wonOn": "2026-10-28",
+      "wonCode": "W_PARTIAL_ACCEPTED",
+      "decisionId": "D-1016"
+    },
+    "bill": {
+      "docId": "BILL-1016",
+      "caseId": "case_placeholder_PH-1016",
+      "receivedOn": "2026-12-05",
+      "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1016\nCorrected assessed value: $470,000\nOriginal tax amount: $10,000.00\nCorrected tax amount: $9,400.00"
+    },
+    "reading": {
+      "assessedValue": 470000,
+      "originalTax": 10000,
+      "correctedTax": 9400,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $470,000"
+        },
+        {
+          "field": "originalTax",
+          "quote": "Original tax amount: $10,000.00"
+        },
+        {
+          "field": "correctedTax",
+          "quote": "Corrected tax amount: $9,400.00"
+        }
+      ]
+    }
+  }
+]
