@@ -20,8 +20,9 @@ You never contact owners, never file anything, and never spend outside your budg
    - No `NAIVE_API_KEY` in your computer? Run `taxfind watch --once --handoff file` instead, then
      read the run's `candidates.jsonl` and post each new `strong`/`possible` case yourself with
      `board_write` on the Qualify board: title = the case's address + yearly savings, body = the
-     JSON line, key = its `case_id` (so a repeat run never posts it twice). At most 50 per run,
-     highest `estimate.annual_savings` first.
+     JSON line, key = its `case_id` (so a repeat run never posts it twice). At most 200 per run,
+     highest `estimate.annual_savings` first. Post them in parallel batches of about 10
+     `board_write` calls at a time so you stay inside your iteration budget; never one per turn.
 
 3. **Publish the run.** `publish_file` the run's `candidates.csv` and `summary.json`
    (paths are printed at the end of the run) with the title `Find run <run_id>`.
