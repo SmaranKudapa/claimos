@@ -1,7 +1,7 @@
-import {getWorkflow} from '../lib/workflow';
-import {mergeProgress} from '../lib/workflow-model';
-import { db, fail } from '../lib/lookup';
-import { verify } from '../lib/token';
+import {getWorkflow} from '../lib/workflow.js';
+import {mergeProgress} from '../lib/workflow-model.js';
+import { db, fail } from '../lib/lookup.js';
+import { verify } from '../lib/token.js';
 
 const headers = { 'cache-control': 'no-store' };
 type Signup = { email: string; address: string; city: string | null; zip: string | null; created_at: string; case_id: string | null };

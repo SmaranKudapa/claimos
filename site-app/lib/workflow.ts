@@ -1,6 +1,6 @@
 import {createClient} from '@usenaive-sdk/managed-agents';
-import {db} from './lookup';
-import {projectCards, type Card, type Snapshot} from './workflow-model';
+import {db} from './lookup.js';
+import {projectCards, type Card, type Snapshot} from './workflow-model.js';
 const BOARD='brd_3kb4zft8yttkhm04sv6vn8ydw2';
 const TTL=60_000;
 let memory:Snapshot|null=null;

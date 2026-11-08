@@ -1,4 +1,4 @@
-import { db, findCandidate, fail } from '../lib/lookup';
+import { db, findCandidate, fail } from '../lib/lookup.js';
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim().slice(0, 200) : '');
 

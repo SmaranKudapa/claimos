@@ -1,5 +1,5 @@
-import { db, fail } from '../lib/lookup';
-import { sign } from '../lib/token';
+import { db, fail } from '../lib/lookup.js';
+import { sign } from '../lib/token.js';
 
 // No commas, parentheses or wildcards: the address goes straight into PostgREST filters.
 const EMAIL = /^[^\s@,()*]+@[^\s@,()*]+\.[^\s@,()*]+$/;

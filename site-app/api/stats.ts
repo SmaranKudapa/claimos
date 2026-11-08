@@ -1,4 +1,4 @@
-import { db, count, fail } from '../lib/lookup';
+import { db, count, fail } from '../lib/lookup.js';
 
 // Homes screened per county come from Find's run summaries; the candidates table only holds flagged homes.
 // shortcut: constants keyed by county, replace with a runs table once Find publishes one.

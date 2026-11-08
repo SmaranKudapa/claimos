@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {projectCards,publicProgress,mergeProgress,type Card} from '../lib/workflow-model';
-import {filingGuide} from '../lib/filing';
+import {projectCards,publicProgress,mergeProgress,type Card} from '../lib/workflow-model.js';
+import {filingGuide} from '../lib/filing.js';
 const cid='FL-36-2026-TEST';
 const card=(body:string,patch:Partial<Card>={}):Card=>({id:'crd_test',title:'Candidate',body,note:null,status:'todo',assignee:null,updated_at:'2026-11-08T03:00:00Z',...patch});
 const json=(o:unknown)=>'```json\n'+JSON.stringify(o)+'\n```';

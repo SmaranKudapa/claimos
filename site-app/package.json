@@ -5,7 +5,8 @@
   "scripts": {
     "build": "echo 'static site, nothing to build'",
     "test": "node --import tsx --test test/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:runtime": "tsc --noEmit false --outDir .build && node test/runtime-smoke.mjs"
   },
   "engines": {
     "node": "24.x"

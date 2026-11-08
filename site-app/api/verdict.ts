@@ -1,4 +1,4 @@
-import { findCandidate, fail } from '../lib/lookup';
+import { findCandidate, fail } from '../lib/lookup.js';
 
 const headers = { 'cache-control': 'no-store' };
 
