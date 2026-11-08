@@ -1,0 +1,6 @@
+{
+  "framework": null,
+  "outputDirectory": "public",
+  "rewrites": [{ "source": "/mcp", "destination": "/api/mcp" }],
+  "functions": { "api/**/*.ts": { "maxDuration": 60 } }
+}
