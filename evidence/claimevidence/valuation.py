@@ -50,7 +50,7 @@ def conclude(subject, analysis: dict, peers: dict, own_sales: list[dict], find_p
     if peers.get("peers", 0) >= 8 and peers.get("median_value_per_sqft"):
         indications["assessment_uniformity"] = {"value": as_int(peers["median_value_per_sqft"] * float(subject.sqft)),
                                                 "formula": f"peer median ${peers['median_value_per_sqft']:,.2f}/sq ft x {float(subject.sqft):,.0f} sq ft",
-                                                "basis": "the county's own value per sq ft for similar homes in the same peer group", "role": "cross-check"}
+                                                "basis": "the county's own value per sq ft for similar homes in the same county neighborhood", "role": "cross-check"}
     contradiction = None
     for s in own_sales:
         if s["qualified"] and s["before_valuation_date"] and s["time_adjusted_price"]:
@@ -110,7 +110,8 @@ def conclude(subject, analysis: dict, peers: dict, own_sales: list[dict], find_p
         rows = []
         for x in similar:
             eq = as_int(x["time_adjusted_price"] * level)
-            rel = "supports the county value" if eq >= jv else ("consistent with the request" if proposed and eq <= proposed * 1.10 else "between the two")
+            rel = ("supports the county value" if eq >= jv else "consistent with the request" if proposed and eq <= proposed * 1.10
+                   else "between the two" if proposed else "below the county value")
             rows.append({**x, "just_value_equivalent": eq, "relation": rel})
         contrary = [r for r in rows if r["relation"] == "supports the county value"]
         later = {"sales": rows, "count": len(rows),

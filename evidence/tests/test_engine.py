@@ -19,7 +19,7 @@ def test_end_to_end_signed_case_produces_a_packet_and_a_structured_result(tmp_pa
     assert res["conclusions"]["package_complete"] is True
     p = res["packet"]
     md = open(p["markdown_path"]).read()
-    assert "Petitioner's evidence of value" in md and "Value requested" in md and "Not yet assigned" in md
+    assert "PETITIONER'S EVIDENCE SUBMISSION" in md and "Value requested" in md and "Pending (not yet assigned)" in md
     assert "| Petitioner | TEST OWNER |" in md
     assert "fil_poa_test" not in md and "annual" not in md.lower() and "appraisal" not in md.lower()
     assert open(p["pdf_path"], "rb").read(5) == b"%PDF-" and p["sha256"] == p["content_hash"]

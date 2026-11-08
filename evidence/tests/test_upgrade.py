@@ -77,7 +77,7 @@ def test_later_sales_that_point_to_the_county_value_are_flagged_as_a_conflict(co
     s = _subject(county)
     a = analyze(county, s)
     a["subsequent_sales"] = [{"parcel_id": f"L{i}", "address": "x", "sale_month": "2026-05", "sale_price": 600000, "sqft": 2000,
-                              "location": "same peer group as the subject", "time_factor": 1.0, "time_adjusted_price": 600000,
+                              "location": "same county neighborhood as the subject", "time_factor": 1.0, "time_adjusted_price": 600000,
                               "effective_year_built": 2005, "county_just_value": 500000} for i in range(3)]
     v = conclude(s, a, {"peers": 0}, [], None, 0.85)
     assert v["later_sales"]["conflict"] is True and v["later_sales"]["contrary"] == 3
@@ -137,3 +137,30 @@ def test_presentation_and_substance_are_checked_separately(tmp_path, patched):
     assert kinds == {"presentation", "substance"}
     assert any(c["id"] == "V-LAYOUT-ORPHAN" for c in v["checks"])
     assert res["readiness"]["presentation_check"] == "passed" and res["readiness"]["substance_check"] == "passed"
+
+
+def test_the_text_follows_the_data_and_carries_no_sample_specific_wording(tmp_path, patched):
+    from claimevidence.report import m
+    outs = [run(envelope(parcel=p, case_id=f"case-{p}"), tmp_path, today=TODAY) for p in ("P0000", "P0001")]
+    texts = []
+    for res in outs:
+        md = open(res["packet"]["markdown_path"]).read()
+        texts.append(md)
+        v = res["valuation"]
+        assert m(v["county_values"]["just_value"]) in md
+        if v["outcome"] == "supports_reduction":
+            assert m(v["proposed_just_value"]) in md and m(v["market_value_indication"]) in md
+        for word in ("Bay", "Weekend", "Redfish", "Panama", "Margaritaville", "Lagoon", "571,444", "476,100"):
+            assert word not in md, word
+        assert res["appeal"]["parcel_id"] in md
+    assert texts[0] != texts[1]
+
+
+def test_conditional_sections_are_omitted_with_a_recorded_reason(tmp_path, patched):
+    res = run(envelope(), tmp_path, today=TODAY)
+    omitted = {o["section"] for o in res["packet"]["omitted_sections"]}
+    assert "Witness evidence" in omitted and "Condition evidence" in omitted
+    md = open(res["packet"]["markdown_path"]).read()
+    assert "Witness evidence" not in md.split("| Witness contact information")[1].split("\n", 1)[1]
+    internal = open(res["packet"]["internal_record_path"]).read()
+    assert "Sections omitted" in internal and "Witness evidence: no witness has been identified" in internal

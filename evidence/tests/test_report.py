@@ -24,22 +24,25 @@ def test_every_index_entry_points_at_the_page_that_holds_the_exhibit(tmp_path, p
     res = run(envelope(), tmp_path, today=TODAY)
     pages = _pages(res)
     ex = res["packet"]["exhibits"]
-    assert [e["id"] for e in ex] == [f"Exhibit {i + 1}" for i in range(len(ex))]
+    assert [e["id"] for e in ex] == [f"Exhibit {'ABCDEFGHIJ'[i]}" for i in range(len(ex))]
+    assert all(e["pages"] for e in ex)
     for e in ex:
         assert f"{e['id']}: {e['title'][:20]}" in pages[e["page"] - 1]
-    index_page = next(p for p in pages if "Evidence index" in p or "Exhibit Description Date" in p)
+    index_page = next(p for p in pages if "Evidence index" in p)
     assert all(e["id"] in index_page for e in ex)
     assert all(f"Page {i + 1} of {len(pages)}" in p for i, p in enumerate(pages))
     labels = [o.title for o in PdfReader(res["packet"]["pdf_path"]).outline if not isinstance(o, list)]
-    assert "Summary" in labels and "Evidence index" in labels
+    assert "1. Statement of the case and requested determination" in labels and "2. Evidence index" in labels and "Exhibits" in labels
 
 
 def test_the_identification_page_never_invents_a_petition_number_and_shows_one_when_supplied(tmp_path, patched):
     a = run(envelope(), tmp_path, today=TODAY)
-    assert "Petition number Not yet assigned" in _pages(a)[0]
-    b = run(envelope(submission={"petition_number": "2026-0042", "contact_phone": "850-555-0100"}), tmp_path, today=TODAY)
+    assert "Petition number Pending (not yet assigned)" in _pages(a)[0] and "DRAFT - NOT FOR SUBMISSION" in _pages(a)[0]
+    b = run(envelope(submission={"petition_number": "2026-0042", "contact_phone": "850-555-0100",
+                                 "submitting_party": "Test Owner, petitioner"}), tmp_path, today=TODAY)
     first = _pages(b)[0]
-    assert "Petition number 2026-0042" in first and "850-555-0100" in first
+    assert "Petition number 2026-0042" in first and "850-555-0100" in first and "DRAFT" not in first
+    assert b["packet"]["release_gaps"] == []
     assert not [c for c in b["validation"]["checks"] if c["id"] == "V-FMT-COVER" and c["status"] != "pass"]
 
 
@@ -190,7 +193,7 @@ def test_an_incomplete_case_still_renders_but_requests_nothing_and_stays_blocked
     res = run(envelope(), tmp_path, today=TODAY)
     assert res["conclusions"]["argument_support"] == "insufficient_evidence"
     first = _pages(res)[0]
-    assert "Value requested No value is requested" in first
+    assert "Value requested No value is requested" in first and "EVIDENCE REVIEW, NOT FOR SUBMISSION" in first
     assert res["validation"]["status"] == "validated_against_configured_requirements"
     assert res["readiness"]["portal_status"]["code"] == "insufficient_evidence"
     assert json.load(open(res["file_handoff"]["evidence_json"]))["status"] == "incomplete"
@@ -223,7 +226,7 @@ def test_a_witness_without_an_address_blocks_the_exchange_but_not_generation(tmp
     sub = [{"id": "w1", "kind": "statement", "statement_text": "I will testify.", "witness": "Pat Owner",
             "witness_subject": "the condition of the roof on January 1"}]
     res = run(envelope(homeowner_submissions=sub), tmp_path, today=TODAY)
-    assert "Pat Owner" in " ".join(_pages(res)) and "To be added before the exchange" in " ".join(_pages(res))
+    assert "Pat Owner" in " ".join(_pages(res)) and "address to be added before the exchange" in " ".join(_pages(res))
     assert any(c["id"] == "V-WITNESS" and c["status"] == "warn" for c in res["validation"]["checks"])
     man = json.load(open(res["delivery"]["path"]))
     ex = next(d for d in man["deliveries"] if d["id"] == "exchange_property_appraiser")
@@ -236,8 +239,7 @@ def test_a_packet_that_requests_nothing_is_titled_not_for_submission(tmp_path, p
     patched["county"] = build_county(n_sales=2)
     res = run(envelope(), tmp_path, today=TODAY)
     first = _pages(res)[0]
-    assert first.startswith("Evidence review, not for submission") or "Evidence review, not for submission" in first[:200]
-    assert "Not for submission." in first
+    assert "EVIDENCE REVIEW, NOT FOR SUBMISSION" in first and "DRAFT - NOT FOR SUBMISSION" in first
 
 
 def test_a_comparable_set_needing_large_adjustments_is_flagged_for_the_reviewer(tmp_path, patched):

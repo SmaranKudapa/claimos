@@ -32,14 +32,14 @@ class CompParams:
             "land_band": "Houses only: county land value within a factor of about 1.65 (log ratio 0.5), keeping waterfront and interior lots apart.",
             "min_comps": "At least three suitable sales are required before any indication of value is reported.",
             "outlier_iqr": "A qualified sale whose county-value-to-price ratio falls outside 3 interquartile ranges of the county's own ratios is set aside as potentially atypical.",
-            "gross_adjustment_flag": "A comparable whose gross adjustments exceed 25% of its price is flagged for review (a common residential appraisal guideline, applied here as a screening heuristic, not a legal rule).",
+            "gross_adjustment_flag": "A comparable whose gross adjustments exceed 25% of its price is flagged for review (a common residential valuation guideline, applied here as a screening heuristic, not a legal rule).",
             "net_adjustment_flag": "A comparable whose net adjustment exceeds 15% of its price is flagged for review (same guideline).",
             "cod_max": "If the adjusted indications vary by more than a 25% coefficient of dispersion, the comparables do not agree and the result is insufficient evidence.",
             "older_gap_years": "Internal screen: age is not adjusted, so if half or more of the sales are more than 3 years older (effective year) than the subject, the indication is likely biased low and the case goes to review instead of supporting a value.",
         }
 
 
-TIER_LABEL = {1: "same peer group as the subject", 2: "same appraisal neighborhood", 3: "same market area"}
+TIER_LABEL = {1: "same county neighborhood as the subject", 2: "same broader county neighborhood", 3: "same market area"}
 
 
 def _tiers(subject: pd.Series, pool: pd.DataFrame) -> pd.Series:
@@ -115,6 +115,7 @@ def analyze(cd: CountyData, subject: pd.Series, p: CompParams | None = None) -> 
                "record": {"or_book": as_str(getattr(x, "OR_BOOK", None)), "or_page": as_str(getattr(x, "OR_PAGE", None)),
                           "clerk_no": as_str(getattr(x, "CLERK_NO", None)), "sale_id": as_str(getattr(x, "SALE_ID_CD", None))},
                "sqft": as_int(x.sqft), "effective_year_built": as_int(x.eff), "actual_year_built": as_int(getattr(x, "ACT_YR_BLT", None)),
+               "lot_sqft": as_int(getattr(x, "LND_SQFOOT", None)), "neighborhood": as_str(getattr(x, "NBRHD_ORIG", None) or getattr(x, "NBRHD_CD", None)),
                "county_land_value": as_int(x.land), "county_special_features_value": as_int(getattr(x, "SPEC_FEAT_VAL", 0) or 0),
                "county_just_value": as_int(x.JV), "location": TIER_LABEL[int(x.tier)], "time_factor": round(float(x.tadj), 4),
                "similarity_score": round(c["score"], 3),
@@ -302,6 +303,6 @@ def assessment_peers(cd: CountyData, subject: pd.Series, size_band: float = 0.20
     near = g.assign(d=np.abs(np.log(g.sqft / subject.sqft))).sort_values("d").head(k)
     return {"peers": int(len(g)), "median_value_per_sqft": round(med, 2), "subject_value_per_sqft": round(float(subject.ppsf), 2),
             "ratio": round(float(subject.ppsf) / med, 4) if med else None,
-            "basis": "county just value per sq ft of homes in the same peer group within 20% of the subject's living area",
+            "basis": "county just value per sq ft of homes in the same county neighborhood within 20% of the subject's living area",
             "examples": [{"parcel_id": r.PARCEL_ID, "address": as_str(r.PHY_ADDR1) or "", "sqft": as_int(r.sqft),
                           "county_just_value": as_int(r.JV), "value_per_sqft": round(float(r.ppsf), 2)} for r in near.itertuples()]}

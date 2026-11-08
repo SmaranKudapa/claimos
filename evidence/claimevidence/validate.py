@@ -62,14 +62,17 @@ def validate(doc: Doc, pdf: Path | None, render_info: dict | None, base: dict, c
     full = " ".join(pages) if pages else text
     _check(out, "V-GEN-PDF", "format", bool(pages), f"PDF rendered with {len(pages)} pages" if pages else "no PDF was rendered", "CO-FMT-01")
     first = pages[0] if pages else text[:4000]
-    for label, needle in (("parcel", ap["parcel_id"]), ("tax year", f"Tax year {ap['tax_year']}"), ("authority", forum.get("authority") or "?"),
-                          ("address", str(s.get("PHY_ADDR1") or "?")), ("party", "Party submitting Petitioner"),
+    for label, needle in (("parcel", ap["parcel_id"]), ("tax year", f"Assessment year {ap['tax_year']}"), ("authority", (forum.get("authority") or "?").upper()),
+                          ("address", str(s.get("PHY_ADDR1") or "?")), ("party", "Submitting party"),
                           ("valuation date", f"January 1, {ap['tax_year']}")):
         _check(out, f"V-ID-{label.replace(' ', '_').upper()}", "identity", needle in first, f"{label} on the identification page: {needle}",
                "FL-HRG-02 cover page" if label in ("parcel", "party") else "internal")
     pn = submission.get("petition_number")
-    _check(out, "V-ID-PETITION", "identity", (pn in first) if pn else ("Not yet assigned" in first),
-           f"petition number shown as {pn or 'Not yet assigned'}; no number is invented", "FL-HRG-02")
+    _check(out, "V-ID-PETITION", "identity", (pn in first) if pn else ("Pending (not yet assigned)" in first),
+           f"petition number shown as {pn or 'pending'}; no number is invented", "FL-HRG-02")
+    gaps = getattr(doc, "release_gaps", [])
+    _check(out, "V-RELEASE", "identity", not gaps, "every identifier needed for release is present" if not gaps else
+           "marked DRAFT, release blocked until: " + "; ".join(gaps), "template", "warn")
     _check(out, "V-VAL-JV", "values", m(cv["just_value"]) in full, f"county just value {m(cv['just_value'])} appears as on the roll", "internal")
     supports = val["outcome"] == "supports_reduction" and bool(a and a.get("selected"))
     if supports:
@@ -180,7 +183,7 @@ def validate(doc: Doc, pdf: Path | None, render_info: dict | None, base: dict, c
         _check(out, "V-FMT-COUNTY-SIZE", "format", render_info["bytes"] <= limit, f"{render_info['bytes']:,} bytes against the county's {limit:,}-byte upload limit",
                "county local procedures")
     wit = [b for b in doc.blocks if b[0] == "table" and b[4] == "wit"]
-    gaps = [r[0] for b in wit for r in b[2] if r[1].startswith("To be added")]
+    gaps = [r[0].split(",")[0] for b in wit for r in b[2] if "address to be added" in r[0]]
     _check(out, "V-WITNESS", "delivery", not gaps, "every witness has a name, address and subject" if not gaps else
            f"witness address missing for {', '.join(gaps)}; the exchange needs it (R. 12D-9.020)", "FL-EVX-08", "warn")
     cover_missing = [k for k in ("petition_number", "contact_phone") if not submission.get(k)]
@@ -191,7 +194,7 @@ def validate(doc: Doc, pdf: Path | None, render_info: dict | None, base: dict, c
         heads = [b[1] for b in doc.blocks if b[0] == "h1"] + [f"{e['id']}: {e['title']}" for e in doc.exhibits]
         orphans = []
         for i, t in enumerate(pages):
-            body = t.split("Version ")[0].rstrip() if "Version " in t else t.rstrip()
+            body = re.sub(r"(DRAFT - NOT FOR SUBMISSION \| )?Parcel \S+ \| \d{4} \| Page \d+ of \d+", "", t).strip()
             if any(body.endswith(h) for h in heads):
                 orphans.append(i + 1)
         _check(out, "V-LAYOUT-ORPHAN", "presentation", not orphans, "no heading is stranded at the bottom of a page" if not orphans else

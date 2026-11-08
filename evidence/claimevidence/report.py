@@ -48,24 +48,35 @@ def source_line(f: dict) -> str:
             f"{str(f.get('published') or '')[:10]}, retrieved {str(f.get('retrieved_at') or '')[:10]}, SHA-256 {str(f.get('sha256') or '')[:16]}")
 
 
+LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
 class Doc:
     def __init__(self, title: str, case_label: str):
         self.title = title
         self.case_label = case_label
         self.blocks: list[tuple] = []
         self.exhibits: list[dict] = []
+        self.draft = False
+        self.release_gaps: list[str] = []
+        self.omitted: list[dict] = []
+        self.report_date = None
 
     def add(self, *b):
         self.blocks.append(b)
+
+    def omit(self, section: str, why: str):
+        self.omitted.append({"section": section, "why": why})
 
     @staticmethod
     def ref(key: str) -> str:
         return "{{ex:%s}}" % key
 
     def exhibit(self, key: str, title: str, description: str, date: str, source: str, supports: str):
-        eid = f"Exhibit {len(self.exhibits) + 1}"
+        n = len(self.exhibits)
+        eid = f"Exhibit {LETTERS[n] if n < 26 else 'Z' + str(n - 25)}"
         self.exhibits.append({"key": key, "id": eid, "title": title, "description": description, "date": date, "source": source,
-                              "supports": supports, "page": None})
+                              "supports": supports, "page": None, "pages": None})
         self.add("exhibit", key, eid, title)
 
     def resolve(self) -> list[str]:
@@ -131,6 +142,30 @@ class Doc:
         return "\n".join(out)
 
 
+def rng(vals, fmt) -> str:
+    vals = [v for v in vals if v is not None]
+    if not vals:
+        return "-"
+    lo, hi = min(vals), max(vals)
+    return fmt(lo) if lo == hi else f"{fmt(lo)} to {fmt(hi)}"
+
+
+def release_gaps(petitioner: str, submission: dict, supports: bool) -> list[str]:
+    out = []
+    if not supports:
+        out.append("a supported requested value")
+    if petitioner.startswith(("Not yet", "Withheld", "Pending")):
+        out.append("verified petitioner name (signed authorization)")
+    if not submission.get("petition_number"):
+        out.append("petition number")
+    if not submission.get("contact_phone"):
+        out.append("contact telephone")
+    if not submission.get("submitting_party"):
+        out.append("submitting party name and role")
+    return out
+
+
+
 def homeowner_view(items: list[dict]) -> list[dict]:
     out = []
     for i in items:
@@ -154,242 +189,364 @@ def build(base: dict, col: dict, a: dict | None, val: dict, items: list[dict], f
     year = ap["tax_year"]
     files = {f["kind"]: f for f in col["files"]}
     cv = val["county_values"]
-    ind = (a or {}).get("indication")
-    supports = val["outcome"] == "supports_reduction" and bool(a and a.get("selected"))
+    sel = (a or {}).get("selected") or []
+    supports = val["outcome"] == "supports_reduction" and bool(sel)
     use = USE.get(str(s.get("DOR_UC") or "").zfill(3), "property")
     owner = homeowner_view(items)
     refs = refs or {}
     R = Doc.ref
     zipc = str(s.get("PHY_ZIPCD") or "").split(".")[0]
     addr = ", ".join(x for x in (s.get("PHY_ADDR1"), s.get("PHY_CITY")) if x) + (f", FL {zipc}" if zipc else ", FL")
-    title = (forum.get("document") or "Evidence summary") if supports else "Evidence review, not for submission"
-    d = Doc(("TEST FIXTURE, NOT FOR SUBMISSION. " if synthetic else "") + title, f"{ap['parcel_id']} / {year}")
-    witnesses = [o for o in owner if o.get("witness")]
+    authority = forum.get("authority") or "the receiving authority"
+    county = (forum.get("county") or {}).get("county") or "the"
     jvi = val.get("just_value_indications") or {}
-    sel = (a or {}).get("selected") or []
     later = val.get("later_sales") or {}
     bridge = val.get("bridge") or {}
     cos = val.get("cost_of_sale")
+    recon = (a or {}).get("reconciliation") or {}
+    witnesses = [o for o in owner if o.get("witness")]
+    vdate = date_long(f"{year}-01-01")
+    title = "Petitioner's evidence submission" if supports else "Evidence review, not for submission"
+    d = Doc(("TEST FIXTURE, NOT FOR SUBMISSION. " if synthetic else "") + title, f"Parcel {ap['parcel_id']} | {year}")
+    d.report_date = generated_on
+    gaps = release_gaps(petitioner, submission, supports)
+    d.release_gaps = gaps
+    d.draft = bool(gaps) or synthetic
 
-    d.add("title", d.title)
-    d.add("subtitle", f"{forum.get('authority')}, tax year {year}")
-    meta = [("Receiving authority", forum.get("authority") or "-"),
-            ("Party submitting", "Petitioner"),
-            ("Petitioner", petitioner),
-            ("Property address", f"{addr} ({use})" if addr else "-"),
-            ("Parcel", ap["parcel_id"]),
-            ("Tax year", f"{year}; valuation date {date_long(f'{year}-01-01')}"),
-            ("Petition number", submission.get("petition_number") or "Not yet assigned"),
-            ("Contact telephone", submission.get("contact_phone") or "To be added before submission"),
-            ("Off-site witnesses", "; ".join(w["witness"] + (f", {w['witness_phone']}" if w.get("witness_phone") else "") for w in witnesses)
-             if witnesses else "No off-site witnesses"),
+    if synthetic:
+        d.add("draft", "TEST FIXTURE, NOT FOR SUBMISSION. Built from test records; it must never be sent to a county.")
+    if d.draft and not synthetic:
+        d.add("draft", "DRAFT - NOT FOR SUBMISSION. Missing before release: " + "; ".join(gaps) + ".")
+    quasi = forum.get("kind") == "administrative_quasi_judicial"
+    d.add("court", f"{'BEFORE' if quasi else 'TO'} THE {authority.upper()}")
+    if supports:
+        d.add("title", "PETITIONER'S EVIDENCE SUBMISSION")
+        d.add("title", f"{year} PROPERTY VALUE PETITION")
+    else:
+        d.add("title", "EVIDENCE REVIEW, NOT FOR SUBMISSION")
+        d.add("title", f"{year} PROPERTY VALUE REVIEW")
+    wit_contact = "; ".join(w["witness"] + (f", {w['witness_phone']}" if w.get("witness_phone") else ", telephone pending") for w in witnesses)
+    meta = [("Petitioner", petitioner),
+            ("Property address", addr),
+            ("Parcel/folio number", ap["parcel_id"]),
+            ("Petition number", submission.get("petition_number") or "Pending (not yet assigned)"),
+            ("Assessment year", str(year)),
+            ("Valuation date", vdate),
+            ("Submitting party", submission.get("submitting_party") or "Petitioner (name and role pending)"),
+            ("Contact telephone", submission.get("contact_phone") or "Pending"),
+            ("Witness contact information", wit_contact or "No witnesses identified"),
             ("Value challenged", f"{year} just value of {m(cv['just_value'])}"),
             ("Value requested", f"Just value of {m(val['proposed_just_value'])}" if supports else "No value is requested. The evidence does not support one."),
-            ("Version", f"{version['number']}, {date_long(generated_on)}, content fingerprint {version['fingerprint'][:12]}"),
-            ("Prepared by", "Claim OS software, from the public records listed in the evidence index. The text and figures are produced by fixed code, not written by hand."),
-            ("Reviewed by", "Not reviewed at the time of generation. Review and approval are recorded separately against this version.")]
+            ("Report date and version", f"{date_long(generated_on)}; version {version['number']}, content fingerprint {version['fingerprint'][:12]}")]
     d.add("meta", meta)
-    d.add("note", "No appraiser, real estate broker or attorney prepared or reviewed this summary. It is submitted as the petitioner's evidence.")
-    if not supports:
-        d.add("note", "Not for submission. The evidence gathered does not support a lower value, so this review is kept for the case record only.")
-    if synthetic:
-        d.add("note", "This document is built from synthetic test records. It describes no real property and must never be sent to a county.")
+    d.add("note", "Prepared by Claim OS software from the public records listed in the evidence index; the text and figures are produced by fixed "
+                  "code, not written by hand. Not reviewed at the time of generation: review and approval are recorded separately against this "
+                  "version. No appraiser, real estate broker or attorney prepared or reviewed it.")
+    d.add("pagebreak")
 
-    d.add("h1", "Summary")
-    d.add("p", f"Issue: whether the {year} just value of {m(cv['just_value'])} exceeds the property's just value on January 1, {year}. "
-               "Florida just value is market value after the usual costs of sale (s. 193.011(1) and (8), Florida Statutes).")
+    d.add("h1", "1. Statement of the case and requested determination")
+    d.add("h2", "Property and issue")
+    d.add("p", f"This submission concerns the {year} valuation of {addr}, parcel {ap['parcel_id']}, as of {vdate}. The county's {year} roll "
+               f"reports a just value of {m(cv['just_value'])} ({R('roll')}). The petitioner challenges that just value as higher than the "
+               "property's just value, which Florida law treats as market value after the usual costs of sale (Section 4).")
     if supports:
-        prices = sorted(c["sale_price"] for c in sel)
-        where = "in the subject's county neighborhood" if all("peer group" in c["location"] for c in sel) else "in the subject's market area"
-        bullets = [f"{words(len(sel)).capitalize()} qualified sales of comparable homes {where} sold for "
-                   f"{m(prices[0])} to {m(prices[-1])} before January 1, {year} ({R('sales')}).",
-                   f"Adjusted to the subject and to January 1, they indicate a market value of {m(val['market_value_indication'])} "
-                   f"({R('adjustments')}). The county's {m(cv['just_value'])} is {bridge.get('county_value_to_market_indication', 0):.0%} of that market value."]
-        conv = []
-        if "market_less_cost_of_sale" in jvi:
-            conv.append(f"{m(jvi['market_less_cost_of_sale']['value'])} after the county's {cos['rate']:.0%} cost-of-sale adjustment")
-        conv.append(f"{m(jvi['market_at_county_level']['value'])} at the ratio of just value to sale price the county applies to its own qualified sales")
-        bullets.append("Converted to just value, the market value indicates " + " or ".join(conv) + f" ({R('level')}).")
-        if "comparables_own_assessment_ratio" in jvi:
-            r = statistics.median(c["county_just_value"] / c["sale_price"] for c in sel)
-            bullets.append(f"The county values the same {words(len(sel))} sold homes at a median {r:.1%} of their sale prices; "
-                           f"the subject is valued at {cv['just_value'] / bridge['steps'][0]['value']:.0%} of their median price ({R('sales')}).")
-        if later.get("count"):
-            bullets.append(("One similar home" if later["count"] == 1 else f"{words(later['count']).capitalize()} similar homes")
-                           + f" sold after January 1 for {'' if later['count'] == 1 else 'a median '}{m(later['median_price'])}, "
-                           f"a just-value equivalent of {m(later['median_just_value_equivalent'])} ({R('later')}).")
-        d.add("bullets", bullets)
-        d.add("p", f"Requested determination: set the {year} just value at {m(val['proposed_just_value'])}, the higher of the two "
-                   "conversions of the market value, rounded to the nearest $100. Assessed and taxable values follow from that just value under any exemptions "
-                   "and caps; they are not argued separately.")
-    else:
-        d.add("p", f"The evidence gathered does not support a requested value. Reason: {val['outcome_reason']}.")
-
-    d.add("h1", "Petition and authorization")
-    auth = refs.get("authorization") or {}
-    d.add("table", ["Document", "Status", "Prepared or held by"],
-          [["Petition to the Value Adjustment Board (Form DR-486)",
-            f"Filed, petition {submission['petition_number']}" if submission.get("petition_number") else "Not yet filed; filed separately from this evidence",
-            "Prepared by Claim OS for the petitioner; the clerk assigns the petition number"],
-           ["Authorization to represent the owner (Form DR-486POA or written authorization)",
-            "Signed; held in the case record" if auth.get("status") == "signed" else "Not yet signed",
-            "Kept in the case record; it goes with the petition, not with this evidence"]],
-          [3.0, 2.2, 2.3], "refs")
-
-    d.add("h1", "Evidence index")
-    d.add("index")
-
-    d.add("h1", "Subject property")
-    facts = [["Just value", m(cv["just_value"]), "County roll", R("roll")],
-             ["Assessed value, school / non-school", f"{m(cv['assessed_value_school'])} / {m(cv['assessed_value_non_school'])}", "County roll", R("roll")],
-             ["Taxable value, school / non-school", f"{m(cv['taxable_value_school'])} / {m(cv['taxable_value_non_school'])}", "County roll", R("roll")],
-             ["Land value", m(s.get("LND_VAL")), "County roll", R("roll")],
-             ["Special features value", m(s.get("SPEC_FEAT_VAL")), "County roll", R("roll")],
-             ["Living area (sq ft)", n(s.get("TOT_LVG_AREA")), "County roll", R("roll")],
-             ["Year built, actual / effective", f"{y(s.get('ACT_YR_BLT'))} / {y(s.get('EFF_YR_BLT'))}", "County roll", R("roll")],
-             ["Neighborhood code", str(s.get("NBRHD_ORIG") or "-"), "County roll", R("roll")]]
-    disc = []
-    for o in owner:
-        for field, claimed in (o.get("claimed") or {}).items():
-            recorded = s.get(field)
-            facts.append([f"{FIELD_LABEL.get(field, field)} as stated by the owner", n(claimed) if isinstance(claimed, (int, float)) else str(claimed),
-                          "Owner statement, not verified", R(f"owner_{o['evidence_id']}") if o["county_facing"] else "Case record"])
-            if recorded is not None and str(recorded) != str(claimed):
-                disc.append(f"{FIELD_LABEL.get(field, field)}: the county records {n(recorded) if isinstance(recorded, (int, float)) else recorded}; "
-                            f"the owner states {n(claimed) if isinstance(claimed, (int, float)) else claimed}.")
-        if o.get("statement") and o.get("include_statement"):
-            facts.append([o["label"], o["statement"], "Owner statement, not verified", "Case record"])
-    d.add("table", ["Fact", "Value", "Source", "Reference"], facts, [2.1, 2.2, 1.7, 1.0], "facts")
-    if disc:
-        d.add("p", "Discrepancies between the county's records and the owner's statements. The analysis uses the county's figures until the difference is documented:")
-        d.add("bullets", disc)
-    if cv.get("homestead"):
-        d.add("p", "The property has a homestead exemption. Its assessed value is capped below just value, so a lower just value changes the assessed value only if it falls below the capped amount.")
-
-    if supports:
-        d.add("h1", "Method")
+        prices = [c["sale_price"] for c in sel]
         same_size = all(abs(c["size_diff_pct"]) < 0.10 for c in sel)
         near_age = all(c["effective_age_gap"] is not None and abs(c["effective_age_gap"]) <= 3 for c in sel)
-        fit = [f"the sales are in the subject's county neighborhood"]
-        if same_size:
-            fit.append("within 10% of its living area")
-        if near_age:
-            fit.append("within three years of its effective year built")
-        d.add("p", "Sales comparison, because recent qualified sales of similar homes are available: " + ", ".join(fit) + ". "
-                   "Each sale is moved to January 1 with the county's monthly price index and adjusted for differences in county land value, "
-                   "special features and living area. Age, condition and quality are not adjusted; they are controlled by choosing similar sales. "
-                   "The adjusted prices are reconciled at their median, and the result is converted from market value to just value. "
-                   "Income and cost approaches are not used: there is no rental evidence, and building cost data is not public.")
-        d.add("h1", "Comparable sales")
-        head = ["", "Subject"] + [f"Sale {i + 1}" for i in range(len(sel))]
-        grid = [["Address", s.get("PHY_ADDR1") or ""] + [c["address"] for c in sel],
-                ["Sale date", "-"] + [c["sale_month"] for c in sel],
-                ["Sale price", "-"] + [m(c["sale_price"]) for c in sel],
-                ["Living area", n(s.get("TOT_LVG_AREA"))] + [n(c["sqft"]) for c in sel],
-                ["Year built / effective", f"{y(s.get('ACT_YR_BLT'))} / {y(s.get('EFF_YR_BLT'))}"] + [f"{y(c['actual_year_built'])} / {y(c['effective_year_built'])}" for c in sel],
-                ["Land value", m(s.get("LND_VAL"))] + [m(c["county_land_value"]) for c in sel],
-                ["County value", m(cv["just_value"])] + [m(c["county_just_value"]) for c in sel],
-                ["Net adjustment", "-"] + [signed(c["net_adjustment"]) for c in sel],
-                ["Adjusted price", "-"] + [m(c["indicated_value"]) for c in sel]]
-        d.add("table", head, grid, None, "grid")
-        recon = a.get("reconciliation") or {}
-        wts = recon.get("weights") or {}
-        mids = set(recon.get("median_between") or [])
-        notes = []
-        for i, c in enumerate(sel):
-            notes.append([f"Sale {i + 1}", "; ".join(c.get("similarities") or []) or "-", "; ".join(c.get("differences") or []) or "none material",
-                          "; ".join((c.get("uncertainty") or []) + (c.get("flags") or [])) or "-",
-                          "sets the median" if c["parcel_id"] in mids else "counts once"])
-        d.add("p", "How each sale compares:")
-        d.add("table", ["Sale", "Similar", "Different", "Uncertainty", "Weight"], notes, [0.5, 2.0, 1.6, 2.1, 0.9], "notes")
-        d.add("p", f"Reconciliation: the median of the adjusted prices, {m(val['market_value_indication'])}, set by the two middle sales. "
-                   f"Giving more weight to the sales that needed the least adjustment gives {m(recon.get('weighted_cross_check'))}.")
-        counts = a.get("exclusion_counts") or {}
-        d.add("p", f"Search: {a['candidates_considered']:,} qualified sales of the same property use in the subject's market area before January 1, {year}. "
-                   f"{a['candidates_usable']:,} met the selection rules; the {words(len(sel))} closest were used. Sales were not chosen by price. "
-                   f"The nearest sales that were not used, with the reason for each, are in {R('excluded')}."
-                   + (f" Sales failing each rule (a sale can fail more than one): " + ", ".join(f"{k.lower()} {v:,}" for k, v in counts.items()) + "." if counts else ""))
-
-        d.add("h1", "Calculations")
-        steps = bridge.get("steps") or []
-        rows = [[st_["label"], m(st_["value"])] for st_ in steps[:3]]
+        where = "in the subject's county neighborhood" if all(c["location"].startswith("same county neighborhood") for c in sel) else "in the subject's market area"
+        traits = [where] + (["within 10% of its living area"] if same_size else []) + (["within three years of its effective year built"] if near_age else [])
+        d.add("h2", "Principal evidence")
+        d.add("p", f"The analysis relies on {words(len(sel))} qualified sales recorded by the county before January 1, {year}, at "
+                   f"{rng(prices, m)} ({R('sales')}). The sales are " + ", ".join(traits) + ". Material differences are addressed in "
+                   f"Section 5, with calculations in {R('adjustments')}. The county's own values for these sold homes and for similar homes "
+                   f"are used as cross-checks ({R('sales')}, {R('peers')}).")
+        d.add("h2", "Supported conclusion")
+        conv = []
         if "market_less_cost_of_sale" in jvi:
-            rows.append([f"Just value: market value x (1 - {cos['rate']:.0%} cost of sale, DR-493)", m(jvi["market_less_cost_of_sale"]["value"])])
-        rows.append([f"Just value: market value x {val['county_level']:.4f}, the county's measured ratio", m(jvi["market_at_county_level"]["value"])])
-        if "comparables_own_assessment_ratio" in jvi:
-            rows.append(["Cross-check: market value x the county's own ratio for these sales", m(jvi["comparables_own_assessment_ratio"]["value"])])
-        if "assessment_uniformity" in jvi:
-            rows.append([f"Cross-check: similar homes' county value per sq ft ({R('peers')})", m(jvi["assessment_uniformity"]["value"])])
-        rows.append(["Requested just value (higher of the two conversions, rounded to $100)", m(val["proposed_just_value"])])
-        rows.append(["County just value", m(cv["just_value"])])
-        d.add("table", ["Step", "Value"], rows, [5.4, 1.6], "bridge")
-        g = bridge.get("gap") or {}
-        d.add("p", f"Of the {m(g.get('total'))} difference between the county's value and the request, {m(g.get('county_value_above_market_indication'))} "
-                   f"is the county's value exceeding the indicated market value itself, {m(g.get('just_value_conversion'))} is the conversion from market value "
-                   f"to just value, and {m(g.get('rounding'))} is rounding. The comparable adjustments and the conversion are separate steps.")
-        if cos:
-            d.add("p", f"Conversion: the Bay County Property Appraiser reports on Form DR-493 for the {year} roll that it adjusts recorded sale prices by "
-                       f"{cos['rate']:.0%} for this property class ({R('level')}). The sales used here are recorded prices with no such deduction, so it is "
-                       f"applied once, to the market value indication. The county's measured ratio, {val['county_level']:.4f}, is shown as the alternative; "
-                       "the two are never combined. Neither is an exemption or an assessment cap.")
-        sens = recon.get("sensitivity") or {}
-        d.add("p", f"Sensitivity: the recorded prices alone have a median of {m(sens.get('recorded_prices_median'))}; without the time adjustment the "
-                   f"median adjusted price is {m(sens.get('without_time_adjustment_median'))}; weighting the sales by how little they were adjusted gives "
-                   f"{m(recon.get('weighted_cross_check'))}. Each is below the {m(round(cv['just_value'] / val['county_level']))} market value the county's "
-                   f"value implies at its own ratio. Time index: {a.get('time_index_note')}.")
+            conv.append(f"{m(jvi['market_less_cost_of_sale']['value'])} after the county's {cos['rate']:.0%} cost-of-sale figure")
+        conv.append(f"{m(jvi['market_at_county_level']['value'])} at the county's measured ratio of just value to sale price")
+        d.add("p", f"The median adjusted sale indicates a market value of {m(val['market_value_indication'])}. Converted to just value, that is "
+                   + " or ".join(conv) + f". The analysis supports a just value of {m(val['proposed_just_value'])}, the higher conversion rounded "
+                   "to the nearest $100 (Section 6).")
+        quals = []
+        k = sum(1 for c in sel if c.get("new_construction"))
+        if k:
+            quals.append(f"{words(k)} of the {words(len(sel))} sales are new construction, and builder incentives or upgrades are not in public records")
+        quals.append("the subject's interior condition and quality were not inspected and are not in the county's public data")
+        if any(abs(c["time_factor"] - 1) > 0.03 for c in sel):
+            quals.append("the time adjustment rests on a county-wide price index")
+        d.add("h2", "Material qualification")
+        d.add("p", "The conclusion is qualified because " + "; ".join(quals) + ". Section 7 assesses these points and the contrary evidence.")
+        d.add("h2", "Requested determination")
+        d.add("p", f"The petitioner asks the board to set the {year} just value at {m(val['proposed_just_value'])}. Assessed and taxable values "
+                   "follow from that just value under any exemptions and caps; they are not argued separately.")
+    else:
+        d.add("h2", "Result")
+        d.add("p", f"The evidence gathered does not support a requested value. Reason: {val['outcome_reason']}. No value is requested, and the "
+                   "case returns for review.")
+    auth = refs.get("authorization") or {}
+    d.add("h2", "Related filings")
+    d.add("table", ["Document", "Status", "Where it is"],
+          [["Petition to the Value Adjustment Board (Form DR-486)",
+            f"Petition {submission['petition_number']}" if submission.get("petition_number") else "Not yet filed",
+            "Filed separately with the clerk; the clerk assigns the petition number"],
+           ["Authorization to represent the owner (Form DR-486POA or written authorization)",
+            "Signed; held in the case record" if auth.get("status") == "signed" else "Not yet signed",
+            "Goes with the petition, not with this evidence"]],
+          [3.0, 1.8, 2.7], "refs")
 
-    d.add("h1", "Contrary evidence and limitations")
+    d.add("h1", "2. Evidence index")
+    d.add("index")
+
+    d.add("h1", "3. Subject property facts and disputed issues")
+    contrary = {}
+    for o in owner:
+        for field, claimed in (o.get("claimed") or {}).items():
+            contrary.setdefault(field, []).append((o, claimed))
+
+    def con(field):
+        return "; ".join(f"Owner states {n(c) if isinstance(c, (int, float)) else c} (not verified)" for _, c in contrary.get(field, [])) or "No contrary information"
+
+    facts = [["Property type", f"{use} (use code {s.get('DOR_UC')})", "No contrary information", R("roll")],
+             ["Living area (sq ft)", n(s.get("TOT_LVG_AREA")), con("TOT_LVG_AREA"), R("roll")],
+             ["Lot size (sq ft)", n(s.get("LND_SQFOOT")) if s.get("LND_SQFOOT") else "Not stated on the roll", con("LND_SQFOOT"), R("roll")],
+             ["Year built, actual / effective", f"{y(s.get('ACT_YR_BLT'))} / {y(s.get('EFF_YR_BLT'))}", con("ACT_YR_BLT"), R("roll")],
+             ["Land value", m(s.get("LND_VAL")), "No contrary information", R("roll")],
+             ["Special features (improvements other than the main building)", m(s.get("SPEC_FEAT_VAL")), "No contrary information", R("roll")],
+             ["Condition and interior quality", "Not in the county's public data", "Not evaluated", "-"],
+             ["Just value", m(cv["just_value"]), "Disputed: see Section 6", R("roll")],
+             ["Assessed value, school / non-school", f"{m(cv['assessed_value_school'])} / {m(cv['assessed_value_non_school'])}", "Follows just value", R("roll")],
+             ["Taxable value, school / non-school", f"{m(cv['taxable_value_school'])} / {m(cv['taxable_value_non_school'])}", "Follows just value", R("roll")],
+             ["Homestead exemption", "Yes" if cv.get("homestead") else "No", "No contrary information", R("roll")]]
+    d.add("table", ["Characteristic", "Official record", "Verified contrary information, if any", "Source"], facts, [2.2, 1.9, 1.9, 0.9], "facts")
+    disputed = [(f, v) for f, v in contrary.items()]
+    if disputed:
+        for field, claims in disputed:
+            label = FIELD_LABEL.get(field, field)
+            for o, claimed in claims:
+                rec = s.get(field)
+                d.add("h2", label)
+                d.add("p", f"The county records {n(rec) if isinstance(rec, (int, float)) else rec}. The owner states "
+                           f"{n(claimed) if isinstance(claimed, (int, float)) else claimed}; that statement has not been independently verified. "
+                           f"The difference matters because {label.lower()} enters the comparison directly. The analysis uses the county's figure "
+                           "until a measurement, permit or survey confirms the owner's.")
+    else:
+        d.add("p", "No fact in the county's record is disputed in this submission. Condition and interior quality are not in the county's "
+                   "public data and were not inspected.")
+    if cv.get("homestead"):
+        d.add("p", "The property has a homestead exemption. Its assessed value is capped below just value, so a lower just value changes the "
+                   "assessed value only if it falls below the capped amount.")
+
+    d.add("h1", "4. Valuation framework")
+    fw = [f"Real property is valued as of January 1 of the tax year. § 192.042(1), Fla. Stat. (2025). The sales here are moved to {vdate}.",
+          "Just value means market value; the property appraiser must consider, among other factors, the present cash value and the net proceeds "
+          "of sale after the usual costs of sale. § 193.011(1), (8), Fla. Stat. (2025). The analysis estimates market value from sales and "
+          "converts it to just value (Section 6).",
+          "The board reviews whether the property appraiser's just value is supported; the petitioner must show by a preponderance of the "
+          "evidence that it does not represent just value. Fla. Admin. Code R. 12D-9.027(2)(b)1.; § 194.301, Fla. Stat. (2026).",
+          "The board may consider assessments among comparable properties within homogeneous areas or neighborhoods. § 194.034(5), Fla. Stat. "
+          "(2026). The county's own values for similar homes are offered as a cross-check."]
+    if cos:
+        fw.append(f"The {county} County Property Appraiser reports on Department of Revenue Form DR-493 for the {year} roll a {cos['rate']:.0%} "
+                  "adjustment to recorded sale prices for this property class. That form and the Department's 2026 VAB training, which advises "
+                  "applying the figure once to unadjusted sales, are guidance rather than statute.")
+    if later.get("count"):
+        fw.append("No statute or rule addresses sales after January 1. A 2008 Department of Revenue bulletin (PTO 08-02) treats them as a check on "
+                  "the January 1 value alongside earlier sales; they are used that way here (Section 7).")
+    fw.append("Selection and adjustment follow common residential valuation practice, for example IAAO and Fannie Mae guidance on "
+              "comparable-sale adjustments. That guidance is a methodological benchmark, not Florida law.")
+    d.add("bullets", fw)
+
+    if supports:
+        d.add("h1", "5. Comparable sales analysis")
+        d.add("h2", "5.1 Selection")
+        counts = a.get("exclusion_counts") or {}
+        months = sorted(c["sale_month"] for c in sel)
+        d.add("p", f"Search area: the subject's county neighborhood, widening to the county's broader neighborhood and market-area codes only if needed. Period: "
+                   f"the {a['params']['lookback_months']} months before {vdate}. Property type: {use}s (use code {s.get('DOR_UC')}). Sources: the "
+                   f"Department of Revenue's {year} roll (NAL) and sales (SDF) files ({R('roll')}, {R('sales')}). Criteria: sales the county "
+                   "qualified as arm's length (codes 01 and 02), one building, living area within about 25%, effective year built within 15 "
+                   "years, county land value within a factor of about 1.65, and a county-value-to-price ratio inside the county's normal range.")
+        d.add("p", f"Result: {a['candidates_considered']:,} qualified sales were considered and {a['candidates_usable']:,} met the criteria. The "
+                   f"{words(len(sel))} most similar were used, sold {months[0]} to {months[-1]}. Sales were ranked by similarity, never by price. "
+                   + (("Sales failing each rule (a sale can fail more than one): " + ", ".join(f"{k.lower()} {v:,}" for k, v in counts.items())
+                       + f". The closest excluded sales are listed in {R('excluded')}. ") if counts else "")
+                   + "The search covers the county's recorded sales file only; it is not a survey of unrecorded sales or listings.")
+        d.add("h2", "5.2 Property comparison")
+        chunks = [sel[i:i + 3] for i in range(0, len(sel), 3)]
+        for ci, chunk in enumerate(chunks):
+            off = ci * 3
+            head = ["Characteristic", "Subject"] + [f"Sale {off + j + 1}" for j in range(len(chunk))]
+            rows = [["Address", s.get("PHY_ADDR1") or ""] + [c["address"] for c in chunk],
+                    ["Parcel", ap["parcel_id"]] + [c["parcel_id"] for c in chunk],
+                    ["Sale date", "-"] + [c["sale_month"] for c in chunk],
+                    ["Sale price", "-"] + [m(c["sale_price"]) for c in chunk],
+                    ["Living area (sq ft)", n(s.get("TOT_LVG_AREA"))] + [n(c["sqft"]) for c in chunk],
+                    ["Lot size (sq ft)", n(s.get("LND_SQFOOT")) if s.get("LND_SQFOOT") else "Not stated"] + [n(c.get("lot_sqft")) if c.get("lot_sqft") else "Not stated" for c in chunk],
+                    ["Year built / effective", f"{y(s.get('ACT_YR_BLT'))} / {y(s.get('EFF_YR_BLT'))}"] + [f"{y(c['actual_year_built'])} / {y(c['effective_year_built'])}" for c in chunk],
+                    ["Condition", "Not evaluated"] + ["Not evaluated" for _ in chunk],
+                    ["Location", f"Neighborhood {s.get('NBRHD_ORIG') or '-'}"] + [c["location"].capitalize() for c in chunk],
+                    ["Special features value", m(s.get("SPEC_FEAT_VAL"))] + [m(c["county_special_features_value"]) for c in chunk],
+                    ["Transaction", "-"] + [f"Qualified (code {c['qualification_code']})" + ("; new construction" if c.get("new_construction") else "") for c in chunk],
+                    ["County just value", m(cv["just_value"])] + [m(c["county_just_value"]) for c in chunk],
+                    ["Source", R("roll")] + [R("sales") for _ in chunk]]
+            d.add("table", head, rows, [1.6, 1.3] + [1.3] * len(chunk), f"grid{ci}")
+        d.add("h2", "5.3 Adjustments")
+        d.add("p", "Sign convention: a positive adjustment raises a sale's price because the sale is inferior to the subject in that respect, or "
+                   "sold when prices were lower than on January 1; a negative adjustment lowers it for the opposite reason. The conversion from "
+                   "market value to just value is a separate step in Section 6 and is not part of these adjustments.")
+        basis = {"time": f"County monthly price index ({R('level')})", "land": f"County land values ({R('roll')}, {R('sales')})",
+                 "special_features": f"County feature values ({R('roll')}, {R('sales')})", "living_area": f"Rate extracted from these sales ({R('adjustments')})"}
+        for ci, chunk in enumerate(chunks):
+            off = ci * 3
+            head = ["Adjustment item"] + [f"Sale {off + j + 1}" for j in range(len(chunk))] + ["Basis or source"]
+            rows = [["Unadjusted sale price"] + [m(c["sale_price"]) for c in chunk] + [R("sales")],
+                    ["Time to January 1"] + [signed(c["adjustments"]["time"]) for c in chunk] + [basis["time"]],
+                    ["Land"] + [signed(c["adjustments"]["land"]) for c in chunk] + [basis["land"]],
+                    ["Special features"] + [signed(c["adjustments"]["special_features"]) for c in chunk] + [basis["special_features"]],
+                    ["Living area"] + [signed(c["adjustments"]["living_area"]) for c in chunk] + [basis["living_area"]],
+                    ["Age, condition and quality"] + ["Not evaluated" for _ in chunk] + ["Not in public records; controlled by selection"],
+                    ["Net adjustment"] + [signed(c["net_adjustment"]) for c in chunk] + ["Sum of the rows above"],
+                    ["Adjusted price"] + [m(c["indicated_value"]) for c in chunk] + [R("adjustments")]]
+            d.add("table", head, rows, [1.6] + [1.15] * len(chunk) + [2.0], f"adjg{ci}")
+        d.add("h2", "5.4 Adjustment explanations")
+        explained = 0
+        for key, label in (("time", "Time"), ("land", "Land"), ("special_features", "Special features"), ("living_area", "Living area")):
+            amts = [c["adjustments"][key] for c in sel]
+            if not any(amts):
+                continue
+            explained += 1
+            det = sel[0]["adjustment_detail"][key]
+            if key == "time":
+                diff = f"The sales closed {months[0]} to {months[-1]}; the valuation date is {vdate}."
+                calc = "sale price x (time factor - 1); factors " + rng([c["time_factor"] for c in sel], lambda v: f"{v:.4f}")
+                lim = (a.get("time_index_note") or "") + "; it is a county-wide trend, not a measurement for this neighborhood"
+            elif key == "land":
+                diff = "County land values differ: subject " + m(s.get("LND_VAL")) + ", sales " + rng([c["county_land_value"] for c in sel], m) + "."
+                calc = f"(subject land value - sale land value) / {val['county_level']:.4f}"
+                lim = "county land values are mass-valuation estimates; location premiums not captured in them are not adjusted"
+            elif key == "special_features":
+                diff = "County special-feature values differ: subject " + m(s.get("SPEC_FEAT_VAL")) + ", sales " + rng([c["county_special_features_value"] for c in sel], m) + "."
+                calc = f"(subject feature value - sale feature value) / {val['county_level']:.4f}"
+                lim = "the county does not publish what each feature is; values are mass-valuation estimates"
+            else:
+                diff = "Living areas differ: subject " + n(s.get("TOT_LVG_AREA")) + " sq ft, sales " + rng([c["sqft"] for c in sel], n) + " sq ft."
+                calc = f"(subject sq ft - sale sq ft) x ${a['building_rate_per_sqft']:,.2f} per sq ft"
+                lim = "the rate is extracted from a small set of sales"
+            d.add("h2", label)
+            d.add("table", ["Element", "Detail"], [["Difference", diff], ["Basis", det["support"].capitalize()], ["Calculation", calc],
+                                                  ["Result", rng(amts, signed) + " across the sales" + ("" if all(amts) else " (zero where there is no difference)")],
+                                                  ["Limitation", lim[0].upper() + lim[1:]]], [1.2, 5.8], f"adjx_{key}")
+        if not explained:
+            d.add("p", "No adjustment was needed: the sales match the subject on every adjusted characteristic.")
+
+        d.add("h1", "6. Reconciliation and requested value")
+        ordered = sorted(sel, key=lambda c: c["gross_adjustment_pct"])
+        least = [f"Sale {sel.index(c) + 1}" for c in ordered[:2]]
+        most = [f"Sale {sel.index(c) + 1}" for c in ordered[-2:]] if len(ordered) > 3 else []
+        d.add("p", f"The adjusted prices range from {m((a.get('indication') or {}).get('low'))} to {m((a.get('indication') or {}).get('high'))}. "
+                   f"The median, {m(val['market_value_indication'])}, is used because each sale then counts once and no single sale can move the "
+                   f"result far. {' and '.join(least)} needed the least adjustment and deserve the most weight"
+                   + (f"; {' and '.join(most)} needed the most and deserve less" if most else "") + ". Weighting the sales that way gives "
+                   f"{m(recon.get('weighted_cross_check'))}, close to the median.")
+        d.add("p", "Market value is then converted to just value as a separate step, using either the county's DR-493 cost-of-sale figure or the "
+                   "county's measured ratio of just value to sale price. The two are alternatives and are never combined. The request uses the "
+                   "higher result, rounded to the nearest $100, which favours the county.")
+        steps = [["1", "Adjusted sale prices (Section 5.3)", "Median of " + rng([c["indicated_value"] for c in sel], m), m(val["market_value_indication"]), R("adjustments")],
+                 ["2", "Cross-check: weighting by least adjustment", "Weighted mean of the adjusted prices", m(recon.get("weighted_cross_check")), R("adjustments")]]
+        if "market_less_cost_of_sale" in jvi:
+            steps.append(["3", "Just value at the DR-493 cost of sale", f"{m(val['market_value_indication'])} x (1 - {cos['rate']:.0%})",
+                          m(jvi["market_less_cost_of_sale"]["value"]), R("level")])
+        steps.append([str(len(steps) + 1), "Just value at the county's measured ratio", f"{m(val['market_value_indication'])} x {val['county_level']:.4f}",
+                      m(jvi["market_at_county_level"]["value"]), R("level")])
+        steps.append([str(len(steps) + 1), "Requested just value", "Higher of the conversions, rounded to $100", m(val["proposed_just_value"]), "-"])
+        if "comparables_own_assessment_ratio" in jvi:
+            steps.append([str(len(steps) + 1), "Cross-check: county's own ratio for these sales", jvi["comparables_own_assessment_ratio"]["formula"].replace("market value indication ", "$"),
+                          m(jvi["comparables_own_assessment_ratio"]["value"]), R("sales")])
+        if "assessment_uniformity" in jvi:
+            steps.append([str(len(steps) + 1), "Cross-check: similar homes' county value", jvi["assessment_uniformity"]["formula"].replace("peer median ", ""),
+                          m(jvi["assessment_uniformity"]["value"]), R("peers")])
+        steps.append([str(len(steps) + 1), "County just value", f"{year} roll", m(cv["just_value"]), R("roll")])
+        d.add("table", ["Step", "Item", "Input or calculation", "Result", "Supporting reference"], steps, [0.4, 2.2, 2.3, 1.0, 1.1], "calc")
+        g = bridge.get("gap") or {}
+        above = val.get("cross_checks_above_request") or []
+        d.add("p", f"Of the {m(g.get('total'))} difference between the county's value and the request, {m(g.get('county_value_above_market_indication'))} "
+                   f"is the county's value exceeding the indicated market value itself, {m(g.get('just_value_conversion'))} is the conversion from "
+                   f"market value to just value, and {m(g.get('rounding'))} is rounding."
+                   + (f" {' and '.join(x.replace('_', ' ') for x in above).capitalize()} point higher than the request and are left to the reviewer." if above else ""))
+        sens = recon.get("sensitivity") or {}
+        d.add("p", f"Sensitivity: the unadjusted prices have a median of {m(sens.get('recorded_prices_median'))}, and without the time adjustment "
+                   f"the median adjusted price is {m(sens.get('without_time_adjustment_median'))}. At the county's measured ratio its "
+                   f"{m(cv['just_value'])} corresponds to a market value of {m(round(cv['just_value'] / val['county_level']))}, above each of these.")
+
+    d.add("h1", ("7" if supports else "5") + ". Material limitations and contrary evidence")
+    items_c = []
     if val.get("contradiction"):
         c = val["contradiction"]
-        d.add("p", f"The property sold in {month_long(c['sale_month'])} for {m(c['sale_price'])}. At the county's measured level that implies "
-                   f"{m(c['implied_just_value'])}, which supports the county's value ({R('history')}).")
+        items_c.append(("The property's own sale", f"It sold in {month_long(c['sale_month'])} for {m(c['sale_price'])} ({R('history')}).",
+                        "A qualified sale of the property itself before January 1 is direct evidence of its value.",
+                        f"At the county's measured ratio it implies {m(c['implied_just_value'])}, which supports the county's value.",
+                        "It defeats the request; no value is requested.", "Whether the sale had unusual terms is not known."))
     if later.get("count"):
-        one = later["count"] == 1
-        d.add("p", f"Sales after January 1: {'one home' if one else words(later['count']) + ' homes'} within 10% of the subject's size sold for "
-                   f"{m(later['median_price'])}{'' if one else ' (median)'}, or {m(later['median_time_adjusted'])} moved back to January 1. "
-                   f"At the county's ratio that is {m(later['median_just_value_equivalent'])}. "
-                   + (f"{words(later['contrary']).capitalize()} of them point{'s' if later['contrary'] == 1 else ''} to a value at or above the county's."
-                      if later["contrary"] else "No later sale points to a value at or above the county's.")
-                   + f" {'It is' if one else 'They are'} a check on the January 1 indication, not its basis ({R('later')}).")
-    lim = ["Interior condition, quality, view and renovations are not in the public files and are not adjusted for. No inspection was made.",
-           "Sales are as recorded and qualified by the county. Buyers and sellers were not contacted, and concessions are not known."]
-    if any(c.get("new_construction") for c in sel):
-        k = sum(1 for c in sel if c.get("new_construction"))
-        lim.append(f"{words(k).capitalize()} of the sales are new construction. Builder incentives, lot premiums and upgrades are not in public records.")
-    lim.append("Location is compared by the county's neighborhood and market-area codes. Distance, waterfront and flood exposure are not measured.")
+        hi = max(later["sales"], key=lambda x: x["sale_price"])
+        items_c.append(("Sales after January 1",
+                        f"{words(later['count']).capitalize()} homes within 10% of the subject's size sold after January 1 for {rng([x['sale_price'] for x in later['sales']], m)}"
+                        f"; the highest was {hi['address']} at {m(hi['sale_price'])} in {hi['sale_month']} ({R('later')}).",
+                        ("Some of these prices exceed the requested value, and the higher ones approach or exceed the county's figure."
+                         if supports else "Later prices can show whether the county's figure was in line with the market."),
+                        "They are prices, which measure market value. Moved back to January 1 with the county index and put on the just-value basis "
+                        f"at the county's ratio, they range from {rng([x['just_value_equivalent'] for x in later['sales']], m)} against the county's "
+                        f"{m(cv['just_value'])}" + (f"; the highest corresponds to {m(hi['just_value_equivalent'])}" if hi else "") + ".",
+                        ("They do not change the analysis: " + (f"{words(later['contrary'])} of them point to the county's value or higher."
+                                                               if later["contrary"] else "none points to the county's value or higher.")),
+                        "Their terms, condition and any builder incentives are not known, and the index after January 1 rests on fewer sales."))
     if a and a.get("systematic_bias"):
-        lim.append(a["systematic_bias"].capitalize() + ".")
-    d.add("bullets", lim)
+        items_c.append(("Age of the comparable sales", a["systematic_bias"].capitalize() + ".", "Older homes usually sell for less, so the indication would be too low.",
+                        "Age is not adjusted because public data cannot support an age adjustment.", "It prevents a requested value.",
+                        "A supported age or condition adjustment, or newer comparable sales, would be needed."))
+    k = sum(1 for c in sel if c.get("new_construction"))
+    if k:
+        items_c.append(("New-construction sales", f"{words(k).capitalize()} of the sales were sold new.",
+                        "Builder sales can include incentives, upgrades or lot premiums that make the recorded price differ from a resale price.",
+                        "Their prices are close to the resale in the set, and the county itself values them at a similar ratio to price.",
+                        "They are kept, with this qualification.", "Incentives and upgrades are not in public records."))
+    if sel and a.get("time_index_note"):
+        items_c.append(("Time adjustment", f"Each sale is moved to January 1 with a county-wide monthly index; {a['time_index_note']}.",
+                        "A noisy index can move adjusted prices up or down.",
+                        f"Without any time adjustment the median adjusted price is {m(recon.get('sensitivity', {}).get('without_time_adjustment_median'))}.",
+                        "The conclusion does not depend on it.", "A neighborhood-level index is not available from public data."))
+    for title_, ident, why, comp, effect, unres in items_c:
+        d.add("h2", title_)
+        d.add("table", ["Point", "Assessment"], [["Item", ident], ["Why it could matter", why], ["Comparability and relevance", comp],
+                                               ["Effect on the analysis", effect], ["Unresolved", unres]], [1.7, 5.3], "contrary")
+    d.add("p", "General limitations:")
+    d.add("bullets", ["Interior condition, quality, view and renovations are not in the public files and are not adjusted for. No inspection was made.",
+                      "Sales are as recorded and qualified by the county. Buyers and sellers were not contacted, and concessions are not known.",
+                      "Location is compared by the county's neighborhood and market-area codes. Distance, waterfront and flood exposure are not measured."])
 
     cond = [o for o in owner if o["kind"] in ("photo", "repair_estimate", "inspection") and o["county_facing"]]
     if cond:
-        d.add("h1", "Condition evidence")
-        d.add("p", f"The owner supplied the documents below. They have not been independently verified. Property is valued as of January 1, {year}, "
-                   "so each item shows the date the document was made and, separately, the date the condition is said to have existed. "
-                   "A repair estimate states a cost to repair; it is not offered as a dollar-for-dollar reduction in value.")
+        d.add("h2", "Condition evidence")
+        d.add("p", f"The owner supplied the documents below. They have not been independently verified. Property is valued as of {vdate}, so each "
+                   "item shows the date the document was made and, separately, the date the condition is said to have existed. A repair estimate "
+                   "states a cost to repair; it is not offered as a dollar-for-dollar reduction in value.")
         d.add("table", ["Item", "Document date", "Condition date", "Reference"],
-              [[o["label"], o.get("document_date") or "Undated", o.get("condition_date") or "Not stated", R(f"owner_{o['evidence_id']}")] for o in cond],
-              [3.2, 1.2, 1.2, 1.0], "cond")
+              [[o["label"], o.get("document_date") or "Date not established", o.get("condition_date") or "Not stated", R(f"owner_{o['evidence_id']}")]
+               for o in cond], [3.2, 1.2, 1.2, 1.0], "cond")
 
-    if supports:
-        d.add("h1", "Conclusion")
-        lo = min(v["value"] for v in jvi.values())
-        hi = max(v["value"] for v in jvi.values())
-        above = val.get("cross_checks_above_request") or []
-        d.add("p", f"The just-value indications range from {m(lo)} to {m(hi)}"
-                   + (f", and all are below the county's {m(cv['just_value'])}. " if hi < cv["just_value"] else f"; the county's value is {m(cv['just_value'])}. ")
-                   + f"The request uses the higher of the two conversions of the market value indication"
-                   + (f"; {' and '.join(x.replace('_', ' ') for x in above)} point higher and should be weighed by the reviewer" if above else "")
-                   + f". The petitioner requests that the board set the {year} just value at {m(val['proposed_just_value'])}.")
-
-    d.add("h1", "Witnesses")
     if witnesses:
-        d.add("table", ["Witness", "Address", "General subject of testimony"],
-              [[w["witness"], w.get("witness_address") or "To be added before the exchange", w.get("witness_subject") or "The matters in this summary"]
-               for w in witnesses], [1.6, 2.4, 3.0], "wit")
-        d.add("p", "This is a summary of expected testimony, not a statement taken from any witness.")
+        d.add("h1", ("8" if supports else "6") + ". Witness evidence")
+        d.add("table", ["Witness", "Role or firsthand knowledge", "Expected factual subjects", "Related exhibits"],
+              [[f"{w['witness']}, {w.get('witness_address') or 'address to be added before the exchange'}", w.get("witness_role") or "Owner",
+                w.get("witness_subject") or "The matters in this submission",
+                ", ".join(R(f"owner_{o['evidence_id']}") for o in owner if o["county_facing"]) or "-"] for w in witnesses], [2.2, 1.4, 2.4, 1.0], "wit")
+        d.add("p", "This summarizes expected testimony. No statement has been taken from any witness.")
     else:
-        d.add("p", "No witnesses are identified as of the report date.")
+        d.omit("Witness evidence", "no witness has been identified for this case")
+    if not cond:
+        d.omit("Condition evidence", "the owner has supplied no condition documents")
+    if not supports:
+        d.omit("Comparable sales analysis and reconciliation", "the evidence does not support a requested value")
     _exhibits(d, base, col, a, val, files, owner, supports)
     return d
 
@@ -402,8 +559,11 @@ def _exhibits(d, base, col, a, val, files, owner, supports):
     sel = (a or {}).get("selected") or []
     months = sorted(c["sale_month"] for c in sel)
     window = f"{months[0]} to {months[-1]}" if months else f"before January 1, {year}"
-    d.exhibit("roll", "County roll record for the subject parcel", "County roll record for the subject parcel", roll_date,
-              "Florida DOR NAL file", "Identity, values and characteristics")
+    nal, sdf = files["NAL"], files["SDF"]
+    pub = lambda f: str(f.get("published") or "")[:10] or "Date not established"
+    got = lambda f: str(f.get("retrieved_at") or "")[:10]
+    d.exhibit("roll", "Subject property record", f"County roll record for the subject parcel ({roll_date})", pub(nal),
+              f"Florida DOR NAL file, retrieved {got(nal)}", "Identity, values and characteristics")
     d.add("p", f"Source: {source_line(files['NAL'])}. Record key PARCEL_ID {ap['parcel_id']}.")
     fields = [("PARCEL_ID", "Parcel", ap["parcel_id"]), ("PHY_ADDR1", "Site address", s.get("PHY_ADDR1")), ("PHY_CITY", "City", s.get("PHY_CITY")),
               ("DOR_UC", "Use code", s.get("DOR_UC")), ("NBRHD_CD", "Neighborhood", s.get("NBRHD_ORIG")), ("JV", "Just value", m(s.get("JV"))),
@@ -414,17 +574,18 @@ def _exhibits(d, base, col, a, val, files, owner, supports):
               ("EFF_YR_BLT", "Effective year built", y(s.get("EFF_YR_BLT")))]
     d.add("table", ["Field", "Meaning", "Value"], [[f, lbl, str(v if v is not None else "-")] for f, lbl, v in fields], [1.6, 2.6, 2.8], "fields")
     if supports:
-        d.exhibit("sales", "Recorded sales used as comparables", "Qualified sales used as comparables, with deed references", window,
-                  "Florida DOR SDF and NAL files", "Sale prices, dates and characteristics")
+        d.exhibit("sales", "Comparable-sale transaction records", f"Qualified sales used as comparables, {window}, with deed references and county values",
+                  pub(sdf), f"Florida DOR SDF and NAL files, retrieved {got(sdf)}", "Sale prices, dates and characteristics")
         d.add("p", f"Source: {source_line(files['SDF'])}, joined to the NAL file for characteristics. Each is a qualified (code 01 or 02), "
                    f"improved, single-parcel sale recorded before January 1, {year}.")
-        d.add("table", ["Sale", "Parcel", "Address", "Date", "Price", "Deed", "Code", "Sq ft", "Eff. year"],
+        d.add("table", ["Sale", "Parcel", "Address", "Date", "Price", "Deed", "Code", "Sq ft", "County value", "Value / price"],
               [[f"Sale {i + 1}", c["parcel_id"], c["address"], c["sale_month"], m(c["sale_price"]),
                 (f"OR {c['record']['or_book']}/{c['record']['or_page']}" if c["record"].get("or_book") else (c["record"].get("clerk_no") or "-")),
-                c["qualification_code"] or "-", n(c["sqft"]), y(c["effective_year_built"])] for i, c in enumerate(sel)],
-              [0.5, 1.05, 1.45, 0.6, 0.8, 0.95, 0.45, 0.55, 0.6], "sales")
-        d.exhibit("adjustments", "Adjustment calculations", "Adjustment of each sale to the subject", f"As of January 1, {year}",
-                  "Calculated from the roll, sales and index exhibits", "Adjusted price of each sale")
+                c["qualification_code"] or "-", n(c["sqft"]), m(c["county_just_value"]),
+                f"{c['county_just_value'] / c['sale_price']:.1%}" if c.get("county_just_value") and c.get("sale_price") else "-"] for i, c in enumerate(sel)],
+              [0.45, 0.95, 1.3, 0.62, 0.75, 0.85, 0.45, 0.5, 0.8, 0.6], "sales")
+        d.exhibit("adjustments", "Adjustment calculations", "Adjustment of each sale to the subject, with formulas", d.report_date,
+                  "Claim OS calculation from the roll, sales and index exhibits", "Adjusted price of each sale")
         rows = []
         for i, c in enumerate(sel):
             ad = c["adjustments"]
@@ -438,12 +599,13 @@ def _exhibits(d, base, col, a, val, files, owner, supports):
                for i, c in enumerate(sel) if c.get("adjustment_detail")], [0.55, 1.75, 1.75, 1.6, 1.65], "adjf")
         d.add("p", "Support for each adjustment: " + " ".join(f"{k.replace('_', ' ').capitalize()}: {v['support']}." for k, v in
                                                            (sel[0].get("adjustment_detail") or {}).items()))
-        d.add("bullets", [f"{k.replace('_', ' ').capitalize()}: {v}." for k, v in a["adjustment_basis"].items()]
-              + [f"Building rate: ${a['building_rate_per_sqft']:,.2f} per sq ft, the {a['building_rate_basis']}.",
-                 f"Reconciliation: {a['indication']['method']}, giving {m(a['indication']['market_value'])}."])
-        d.exhibit("level", "Time index, cost of sale and assessment level", "County time index, DR-493 cost of sale and measured level",
-                  f"As of January 1, {year}", "County qualified sales; DR-493", "Time adjustment and conversion to just value")
-        d.add("p", f"Time index: {a.get('time_method')}.")
+        d.add("bullets", [f"Not adjusted: {a['adjustment_basis']['not_adjusted']}.",
+                          f"Building rate: ${a['building_rate_per_sqft']:,.2f} per sq ft, the {a['building_rate_basis']}.",
+                          f"Reconciliation: {a['indication']['method']}, giving {m(a['indication']['market_value'])}."])
+        d.exhibit("level", "Time index, cost of sale and measured ratio", "County time index, Form DR-493 cost of sale and the county's measured ratio",
+                  pub(sdf), "Florida DOR SDF file; Form DR-493" + (f" ({val['cost_of_sale']['section']})" if val.get("cost_of_sale") else ""),
+                  "Time adjustment and conversion to just value")
+        d.add("p", f"Time index ({a.get('time_method')}), with the factor applied to each sale:")
         d.add("table", ["Sale", "Sale date", "Time factor", "Time-adjusted price"],
               [[f"Sale {i + 1}", c["sale_month"], f"{c['time_factor']:.4f}", m(round(c["sale_price"] * c["time_factor"]))] for i, c in enumerate(sel)],
               [1.0, 1.2, 1.2, 1.8], "time")
@@ -453,13 +615,14 @@ def _exhibits(d, base, col, a, val, files, owner, supports):
                        f"(Florida Department of Revenue, {cs['section']}, {cs['source']}). The sales above are recorded prices with no cost-of-sale deduction, so it is applied once.")
         d.add("p", f"Measured level: {val['county_level']:.4f}, the {a.get('level_source')}.")
     else:
-        d.exhibit("sales", "Recorded sales considered", "Recorded sales considered", window, "Florida DOR SDF file", "Why no value is requested")
+        d.exhibit("sales", "Comparable-sale transaction records", f"Recorded sales considered, {window}", pub(sdf),
+                  f"Florida DOR SDF file, retrieved {got(sdf)}", "Why no value is requested")
         why = (a or {}).get("reliability_reason")
         d.add("p", f"Source: {source_line(files['SDF'])}.")
-        d.add("p", f"Why no value is requested: {val['outcome_reason']}." + (f" Comparable set: {why}." if why else ""))
+        d.add("p", f"Why no value is requested: {val['outcome_reason']}." + (f" Comparable set: {why}." if why and why != val["outcome_reason"] else ""))
     peers = col.get("peers") or {}
-    d.exhibit("peers", "Assessments of similar homes", "County values of similar homes in the same peer group", roll_date,
-              "Florida DOR NAL file", "Uniformity, offered as support only")
+    d.exhibit("peers", "Assessments of similar homes", f"County values of similar homes in the same neighborhood ({roll_date})", pub(nal),
+              f"Florida DOR NAL file, retrieved {got(nal)}", "Uniformity, offered as support only")
     if peers.get("peers"):
         d.add("p", f"The subject is valued at ${peers['subject_value_per_sqft']:,.2f} per sq ft. The median for {peers['peers']} similar homes is "
                    f"${peers['median_value_per_sqft']:,.2f} ({peers['basis']}). Source: {source_line(files['NAL'])}.")
@@ -468,16 +631,16 @@ def _exhibits(d, base, col, a, val, files, owner, supports):
               [1.3, 2.4, 0.8, 1.3, 1.0], "peers")
     else:
         d.add("p", "No similar homes were found in the same peer group within the size range.")
-    d.exhibit("excluded", "Sales considered and not used", "Closest sales that were not used, with the reason", window,
-              "Florida DOR SDF file", "Shows the selection was not one-sided")
+    d.exhibit("excluded", "Sales considered and not used", f"Closest sales that were not used, {window}, with the reason", pub(sdf),
+              f"Florida DOR SDF file, retrieved {got(sdf)}", "Shows the selection was not one-sided")
     if a and a.get("excluded_nearest"):
         d.add("table", ["Address", "Date", "Price", "Reason not used"],
               [[e["address"], e["sale_month"], m(e["sale_price"]), "; ".join(r["detail"] for r in e["excluded_because"])] for e in a["excluded_nearest"][:12]],
               [1.8, 0.7, 0.9, 3.6], "excl")
     else:
         d.add("p", "No excluded sales to list.")
-    d.exhibit("history", "Subject sale history and sales after January 1", "The subject's recorded sales and sales after January 1",
-              f"Through {str(files['SDF'].get('published') or '')[:10]}", "Florida DOR SDF file", "Contrary evidence disclosed")
+    d.exhibit("history", "Subject sale history", "The subject's recorded sales in the current sales file", pub(sdf),
+              f"Florida DOR SDF file, retrieved {got(sdf)}", "Contrary evidence disclosed")
     own = col.get("own_sales") or []
     if own:
         d.add("table", ["Sale date", "Price", "Code", "Qualified", "Before Jan 1", "Deed"],
@@ -485,12 +648,12 @@ def _exhibits(d, base, col, a, val, files, owner, supports):
                 (f"OR {o['record']['or_book']}/{o['record']['or_page']}" if o["record"].get("or_book") else (o["record"].get("clerk_no") or "-"))] for o in own],
               [1.0, 1.1, 0.6, 0.9, 1.0, 1.4], "own")
     else:
-        d.add("p", "The sales file for this roll records no sale of the subject.")
+        d.add("p", "The sales file for this roll records no sale of the subject. Earlier sales, if any, are outside this file.")
     sub = (a or {}).get("subsequent_sales") or []
     lat = val.get("later_sales") or {}
     if lat.get("count"):
-        d.exhibit("later", "Sales after January 1", "Similar homes sold after the valuation date, as a check", "After January 1",
-                  "Florida DOR SDF file", "Consistency of the January 1 indication")
+        d.exhibit("later", "Sales after January 1", "Similar homes sold after the valuation date, as a check", pub(sdf),
+                  f"Florida DOR SDF file, retrieved {got(sdf)}", "Consistency of the January 1 indication")
         d.add("p", "Homes in the subject's neighborhood within 10% of its living area that sold after January 1. Each price is moved back to January 1 "
                    f"with the county index and multiplied by the county's measured ratio ({val['county_level']:.4f}) to compare with the subject's just value.")
         d.add("table", ["Address", "Sale date", "Price", "Time factor", "At Jan 1", "Just-value equivalent", "Compared with the county value"],
@@ -501,7 +664,7 @@ def _exhibits(d, base, col, a, val, files, owner, supports):
         d.add("table", ["Address", "Parcel", "Sale date", "Price", "Sq ft"],
               [[x["address"], x["parcel_id"], x["sale_month"], m(x["sale_price"]), n(x["sqft"])] for x in sub], [2.2, 1.4, 0.8, 1.2, 0.8], "sub")
     for o in [o for o in owner if o["county_facing"]]:
-        d.exhibit(f"owner_{o['evidence_id']}", o["label"], o["label"], o.get("document_date") or "Undated", "Supplied by the owner, not verified",
+        d.exhibit(f"owner_{o['evidence_id']}", o["label"], o["label"], o.get("document_date") or "Date not established", "Supplied by the owner, not verified",
                   o.get("supports") or ("Condition" if o["kind"] in ("photo", "repair_estimate", "inspection") else "Property facts"))
         d.add("p", f"Supplied by the owner and not independently verified. Document date: {o.get('document_date') or 'undated'}. "
                    f"Date the owner says the condition existed: {o.get('condition_date') or 'not stated'}. Original file SHA-256 {str(o.get('sha256') or '')[:16]}.")

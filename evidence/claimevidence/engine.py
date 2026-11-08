@@ -371,7 +371,10 @@ def _finish(base, run_id, started, processing, errors, rules, deadlines, items, 
     packet_meta = None
     fm = ctx["forum"]
     if gen:
-        internal = gen["internal"] + "\n## Packet validation\n\n| Check | Status | Detail |\n|---|---|---|\n" + "\n".join(
+        internal = gen["internal"] + "\n## Packet status\n\n" + ("DRAFT, release blocked until: " + "; ".join(gen["doc"].release_gaps) if gen["doc"].release_gaps
+                                                                  else "Release identifiers present.") + "\n\nSections omitted:\n\n" + (
+            "\n".join(f"- {o['section']}: {o['why']}" for o in gen["doc"].omitted) or "- none") + "\n\nTemplate defaults: " + (
+            "; ".join(f"{k}: {v}" for k, v in ((gen.get("render") or {}).get("style") or {}).items())) + "\n" + "\n## Packet validation\n\n| Check | Status | Detail |\n|---|---|---|\n" + "\n".join(
             f"| {c['id']} | {c['status']} | {str(c['detail']).replace('|', '/')} |" for c in gen["validation"]["checks"]) + "\n"
         _write(rdir / "internal_review.md", internal)
         pdf = gen.get("pdf")
@@ -381,16 +384,20 @@ def _finish(base, run_id, started, processing, errors, rules, deadlines, items, 
                        "path": str(pdf) if pdf else str(rdir / "packet.md"), "markdown_path": str(rdir / "packet.md"),
                        "html_path": str(rdir / "packet.html"), "internal_record_path": str(rdir / "internal_review.md"),
                        "internal_record_hash": sha256_text(internal), "title": gen["doc"].title,
-                       "exhibits": [{k: e[k] for k in ("id", "title", "description", "date", "source", "supports", "page")} for e in gen["doc"].exhibits],
+                       "exhibits": [{k: e.get(k) for k in ("id", "title", "description", "date", "source", "supports", "page", "pages")} for e in gen["doc"].exhibits],
                        "redactions_applied": gen["redactions_applied"], "report_date": gen["report_date"], "synthetic": gen["synthetic"],
+                       "draft": gen["doc"].draft, "release_gaps": gen["doc"].release_gaps, "omitted_sections": gen["doc"].omitted,
                        "county_facing": not gen["synthetic"], "contains_owner_contact_data": False}
     witness_gaps = [c["detail"] for c in (validation or {}).get("checks", []) if c["id"] == "V-WITNESS" and c["status"] != "pass"]
+    rel = [f"packet is a draft until it has: {g}" for g in ((gen or {}).get("doc").release_gaps if gen else [])]
     manifest = None
     if fm.get("supported") == "packet":
         sub_d = dict((gen or {}).get("submission") or inp.get("submission") or {})
         sub_d.setdefault("hearing_format", (inp.get("appeal") or {}).get("hearing_format"))
         manifest = build_delivery(fm, deadlines or {}, packet_meta, review, sub_d,
-                                  inp.get("delivery_events") or [], bool(inp.get("synthetic")), {"exchange_property_appraiser": witness_gaps})
+                                  inp.get("delivery_events") or [], bool(inp.get("synthetic")),
+                                  {"exchange_property_appraiser": witness_gaps + rel, "remote_vab_upload": rel, "hearing_copies": rel,
+                                   "absent_petitioner_filing": rel})
     if manifest:
         _write(rdir / "delivery.json", json.dumps(manifest, indent=1, default=str))
     auth_state = _auth_state(inp, intake)
