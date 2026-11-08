@@ -59,6 +59,11 @@ def build_matrix(appeal_type, a, val, items, inp, intake, rules) -> list[dict]:
                      "Shows the characteristics the county used", False, rid.get("property_record_card", "ClaimOS method"),
                      "property appraiser record card", [i["evidence_id"] for i in prc], "satisfied" if prc else "missing", "operator",
                      None if prc else "not yet retrieved from the property appraiser"))
+    hist = [i for i in items if i["kind"] == "property_record_card" and (i.get("facts") or {}).get("sale_history")]
+    rows.append(_row("MV-10", "market_value", "The subject's earlier sales checked on the property appraiser's record",
+                     "A recent purchase of the subject is direct evidence of its value and must be disclosed", False, "ClaimOS method",
+                     "property appraiser sale history", [i["evidence_id"] for i in hist], "satisfied" if hist else "missing", "operator",
+                     None if hist else "the Department of Revenue sales file covers only this roll's sales window; check the property appraiser's record"))
     photos = [i for i in items if i["kind"] == "homeowner_photo" and i["verification"] == "homeowner_document_unverified"]
     rows.append(_row("MV-09", "market_value", "Current exterior photographs of the subject",
                      "Shows the property described is the property valued", False, rid.get("photographs", "ClaimOS method"),

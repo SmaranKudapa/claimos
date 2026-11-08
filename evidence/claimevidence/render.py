@@ -24,7 +24,7 @@ STYLE_DEFAULTS = {"page": "US Letter, 1 inch margins", "font": "Helvetica, the P
 
 
 def _esc(t) -> str:
-    t = re.sub(r"(?<=[\d)]) x (?=[\d($])", " \u00d7 ", str(t))
+    t = re.sub(r"(?:(?<=[\d)])|(?<=ft)) x (?=[\d($])", " \u00d7 ", str(t))
     return H.escape(t, quote=False).replace("§ ", "§\u00a0").replace("R. 12D", "R.\u00a012D")
 
 
@@ -125,7 +125,9 @@ def to_pdf(doc: Doc, path: Path, footer_left: str, title: str, subject: str = ""
                 t = table(b[1], b[2], b[3], b[4]) if kind == "table" else table(INDEX_HEAD, _index_rows(doc, ranges), INDEX_W, "index")
                 rows = len(b[2]) if kind == "table" else len(doc.exhibits)
                 held = []
-                if out and getattr(out[-1], "style", None) is st["p"] and rows <= 14 and len(getattr(out[-1], "text", "")) <= 240:
+                heads = (st["lead"], st["h1"], st["h2"], st["exhibit"])
+                if (out and getattr(out[-1], "style", None) is st["p"] and rows <= 14
+                        and (len(getattr(out[-1], "text", "")) <= 240 or (len(out) > 1 and getattr(out[-2], "style", None) in heads))):
                     held.insert(0, out.pop())
                 while out and getattr(out[-1], "style", None) in (st["lead"], st["h1"], st["h2"], st["exhibit"]):
                     held.insert(0, out.pop())

@@ -164,3 +164,18 @@ def test_conditional_sections_are_omitted_with_a_recorded_reason(tmp_path, patch
     assert "Witness evidence" not in md.split("| Witness contact information")[1].split("\n", 1)[1]
     internal = open(res["packet"]["internal_record_path"]).read()
     assert "Sections omitted" in internal and "Witness evidence: no witness has been identified" in internal
+
+
+def test_a_no_value_review_is_not_addressed_to_the_board_and_lists_the_sales_it_rejected(tmp_path, patched, county):
+    cd = copy.deepcopy(county)
+    i = cd.homes.index[cd.homes.PARCEL_ID == "P0000"][0]
+    cd.homes.loc[i, "eff"] = 2016.0
+    cd.homes.loc[i, "EFF_YR_BLT"] = 2016
+    patched["county"] = cd
+    res = run(envelope(), tmp_path, today=TODAY)
+    assert res["valuation"]["outcome"] == "insufficient_evidence"
+    md = open(res["packet"]["markdown_path"]).read()
+    assert "BEFORE THE" not in md and "EVIDENCE REVIEW — NOT FOR SUBMISSION" in md
+    assert "internal Claim OS screen" in md and "ranked by similarity and not used" in md
+    for x in (res["valuation"].get("later_sales") or {}).get("sales", []):
+        assert x["relation"] in ("supports the county value", "below the county value")

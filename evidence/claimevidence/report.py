@@ -633,12 +633,12 @@ def _exhibits(d, base, col, a, val, files, owner, supports):
                   pub(sdf), f"Florida DOR SDF and NAL files, retrieved {got(sdf)}", "Sale prices, dates and characteristics")
         d.add("p", f"Source: {source_line(files['SDF'])}, joined to the NAL file for characteristics. Each is a qualified (code 01 or 02), "
                    f"improved, single-parcel sale recorded before January 1, {year}.")
-        d.add("table", ["Sale", "Parcel", "Address", "Date", "Price", "Deed", "Code", "Sq ft", "County value", "Value / price"],
+        d.add("table", ["No.", "Parcel", "Address", "Date", "Price", "Deed", "Code", "Sq ft", "County value", "Value / price"],
               [[str(i + 1), c["parcel_id"], c["address"], mon(c["sale_month"]), m(c["sale_price"]),
                 (f"OR {c['record']['or_book']}/{c['record']['or_page']}" if c["record"].get("or_book") else (c["record"].get("clerk_no") or "-")),
                 c["qualification_code"] or "-", n(c["sqft"]), m(c["county_just_value"]),
                 f"{c['county_just_value'] / c['sale_price']:.1%}" if c.get("county_just_value") and c.get("sale_price") else "-"] for i, c in enumerate(sel)],
-              [0.35, 1.0, 1.25, 0.65, 0.72, 0.8, 0.45, 0.45, 0.75, 0.58], "sales")
+              [0.34, 0.98, 1.2, 0.74, 0.72, 0.8, 0.42, 0.45, 0.75, 0.58], "sales")
         d.exhibit("adjustments", "Adjustment calculations", "Adjustment of each sale to the subject, with formulas", d.report_date,
                   "Claim OS calculation from Exhibits A, B and D", "Adjusted price of each sale")
         rows = []
