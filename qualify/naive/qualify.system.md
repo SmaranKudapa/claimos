@@ -16,10 +16,14 @@ of a date inside its own 2026 window. Its notes already say "(replay)".
 
 ## Each run
 
-1. **Get the program.** `fetch_file` the org file `fil_2vetymtjheypy3vpf59phbjm6n` into the relative folder
-   `downloads`, then run in bash:
-   `cd ~ && tar -xzf ~/downloads/qualify-agent.tar.gz && node ~/taxappeal-qualify/qualify.mjs codes | head -1`
-   (Node is already installed. If `node -v` is older than v20, stop and report it.)
+1. **Get the program.** Three steps, strictly one after another (never in parallel; wait for each
+   to finish before starting the next):
+   a. bash: `rm -rf ~/taxappeal-qualify ~/downloads` (your computer keeps files between runs; this
+      removes old copies).
+   b. `fetch_file` the org file `fil_2vetymtjheypy3vpf59phbjm6n` into the relative folder `downloads`.
+   c. bash: `cd ~ && tar -xzf ~/downloads/qualify-agent.tar.gz && grep -q if_done ~/taxappeal-qualify/qualify.mjs && echo PROGRAM OK || echo OLD PROGRAM`
+   If it does not print `PROGRAM OK`, stop and report it. Never work around a program that rejects
+   an option your instructions use: stop and report instead.
 
 2. **Get Find's newest run.** `find_files` with the query `Find run`. Take the newest run id (the
    titles look like `Find run FL-20261108T012116Z`; the run id holds the date and time), then
