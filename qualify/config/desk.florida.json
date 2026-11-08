@@ -1,0 +1,121 @@
+{
+  "_note": "Florida property-tax desk TEMPLATE (tax year 2026). Route opens/closes are overwritten per county from Find's filing_window. Statute references are from Fla. Stat. ch. 192-194; fee level, work days, comp rules, thresholds and economics are team assumptions to confirm before real filings. The uniformity basis carries Florida's assessment level: cautious market value x the county value-to-price ratio Find measures (cost-of-sale adjustment, s.193.011(8)).",
+  "version": "fl-2026.1",
+  "jurisdiction": {
+    "id": "FL",
+    "name": "Florida (template)",
+    "valuationDate": "2026-01-01",
+    "supportedPropertyTypes": [
+      "SFR",
+      "CONDO"
+    ],
+    "propertyTypeAliases": {
+      "SINGLE_FAMILY": "SFR",
+      "SINGLE FAMILY": "SFR",
+      "CONDOMINIUM": "CONDO"
+    },
+    "allowedClaimBases": [
+      "market_value",
+      "uniformity"
+    ],
+    "reductionPersistenceCycles": 1,
+    "discountRate": 0.05,
+    "majorPermitTypes": [
+      "ADDITION",
+      "NEW_CONSTRUCTION",
+      "MAJOR_REMODEL"
+    ]
+  },
+  "routes": [
+    {
+      "id": "vab_petition",
+      "name": "Value Adjustment Board petition (just value)",
+      "formId": "DR-486",
+      "opens": "2026-08-15",
+      "closes": "2026-09-09",
+      "filingFee": 15,
+      "workDaysNeeded": 7,
+      "bufferDays": 2,
+      "filer": "either",
+      "authorizationRequired": true,
+      "claimBases": [
+        "market_value",
+        "uniformity"
+      ],
+      "pWinMultiplier": 1
+    }
+  ],
+  "nextCycleOpens": "2027-08-15",
+  "compRules": {
+    "maxDistance": 1,
+    "sizeTolerance": 0.3,
+    "ageTolerance": 30,
+    "saleWindowBeforeDays": 730,
+    "saleWindowAfterDays": 180,
+    "minComps": 3,
+    "maxComps": 8,
+    "armsLengthOnly": true,
+    "sameTypeOnly": true
+  },
+  "thresholds": {
+    "minGapPct": 0.05,
+    "minAnnualSavings": 300,
+    "minExpectedValue": 25,
+    "minConfidence": 0.35,
+    "highValueReviewThreshold": 4000,
+    "reviewHighValue": false,
+    "transferLookbackDays": 365,
+    "maxSourceAgeDays": 120
+  },
+  "economics": {
+    "feePct": 0.3,
+    "feeBasis": "first_cycle",
+    "preCosts": {
+      "outreach_mail": 2,
+      "llm": 0.1
+    },
+    "postCosts": {
+      "evidence": 5,
+      "vab_filing_fee": 15,
+      "followUps": 4
+    },
+    "pSignupPrior": 0.2,
+    "complexOwnerSignupFactor": 0.7,
+    "pWin": {
+      "midpointGapPct": 0.08,
+      "scale": 0.04,
+      "cap": 0.85,
+      "confidenceFloor": 0.4,
+      "flagPenalty": 0.25,
+      "penalizedFlags": [
+        "F_RECENT_TRANSFER",
+        "F_VALUE_CHANGE",
+        "F_LOW_CONFIDENCE"
+      ]
+    }
+  },
+  "timing": {
+    "requalifyLeadDays": 14,
+    "urgencyMaxBoost": 1.5
+  },
+  "suppression": {
+    "cooldownDays": 180,
+    "rejectionCacheDays": 30
+  },
+  "llm": {
+    "enabled": true,
+    "model": null,
+    "escalationModel": null,
+    "promptVersion": "qualify-review@1",
+    "window": "immediate",
+    "maxTokens": 1500,
+    "maxCostPerLeadUsd": 0.05,
+    "priceUsdPerMTokIn": 1,
+    "priceUsdPerMTokOut": 3,
+    "minEvToReview": 40,
+    "deskRulesText": "Florida. Property is assessed at just (market) value as of January 1. A value petition (form DR-486) to the county Value Adjustment Board argues the January 1 just value is too high; it is due within 25 days after the county mails its TRIM notice, and each county sets its own date. Claim bases: market_value argues the January 1 just value is above market value; uniformity (here: Florida's assessment level) argues it is above market value times the county's typical value-to-sale-price ratio, which reflects the statutory cost-of-sale adjustment (Fla. Stat. 193.011(8)); the ratio is measured by Find on the county's own sales. Evidence is arm's-length sales of similar homes in the same neighborhood or building, time-adjusted to January 1. Homestead properties are capped (Save Our Homes), so a lower just value may not lower the tax bill; the savings figure already accounts for caps and exemptions. A representative filing for the owner needs the owner's signed authorization on the petition. Comparable distances are not measured: comps come from the subject's own neighborhood or building."
+  },
+  "capacity": {
+    "dailyReleaseLimit": 10
+  }
+}

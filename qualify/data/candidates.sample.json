@@ -1,0 +1,2414 @@
+[
+  {
+    "parcelId": "P-1001",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "101 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1001"
+      ],
+      "type": "individual",
+      "mailingAddress": "101 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 1050000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 1029000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1400,
+      "lotArea": 4200,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {},
+      "rawDocs": [
+        {
+          "ref": "roll-1001",
+          "kind": "assessment_record",
+          "text": "Parcel P-1001. Single family, 1,400 sq ft, built 1965. No permits on file."
+        }
+      ]
+    },
+    "comps": [
+      {
+        "compId": "P-1001-C1",
+        "price": 812000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1233,
+        "propertyType": "SFR",
+        "yearBuilt": 1961,
+        "distance": 0.4,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1001-C2",
+        "price": 860000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1314,
+        "propertyType": "SFR",
+        "yearBuilt": 1961,
+        "distance": 0.75,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1001-C3",
+        "price": 801000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1261,
+        "propertyType": "SFR",
+        "yearBuilt": 1972,
+        "distance": 0.12,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1001-C4",
+        "price": 908000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1425,
+        "propertyType": "SFR",
+        "yearBuilt": 1969,
+        "distance": 0.18,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1001-C5",
+        "price": 932000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1387,
+        "propertyType": "SFR",
+        "yearBuilt": 1959,
+        "distance": 0.39,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1003",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "102 Sample Street",
+    "propertyType": "CONDOMINIUM",
+    "owner": {
+      "names": [
+        "Owner P-1003"
+      ],
+      "type": "individual",
+      "mailingAddress": "102 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 720000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 705600
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 950,
+      "lotArea": 2850,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1003-C1",
+        "price": 636000,
+        "saleDate": "2025-07-14",
+        "livingArea": 942,
+        "propertyType": "CONDO",
+        "yearBuilt": 1967,
+        "distance": 0.11,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1003-C2",
+        "price": 596000,
+        "saleDate": "2025-08-30",
+        "livingArea": 913,
+        "propertyType": "CONDO",
+        "yearBuilt": 1963,
+        "distance": 0.17,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1003-C3",
+        "price": 604000,
+        "saleDate": "2025-09-22",
+        "livingArea": 912,
+        "propertyType": "CONDO",
+        "yearBuilt": 1964,
+        "distance": 0.53,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1003-C4",
+        "price": 643000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1002,
+        "propertyType": "CONDO",
+        "yearBuilt": 1972,
+        "distance": 0.21,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1003-C5",
+        "price": 658000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1012,
+        "propertyType": "CONDO",
+        "yearBuilt": 1964,
+        "distance": 0.7,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1023",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "103 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1023"
+      ],
+      "type": "individual",
+      "mailingAddress": "103 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 880000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 862400
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1250,
+      "lotArea": 3750,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1023-C1",
+        "price": 775000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1313,
+        "propertyType": "SFR",
+        "yearBuilt": 1972,
+        "distance": 0.55,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1023-C2",
+        "price": 695000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1113,
+        "propertyType": "SFR",
+        "yearBuilt": 1973,
+        "distance": 0.65,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1023-C3",
+        "price": 741000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1266,
+        "propertyType": "SFR",
+        "yearBuilt": 1967,
+        "distance": 0.29,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1023-C4",
+        "price": 752000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1264,
+        "propertyType": "SFR",
+        "yearBuilt": 1962,
+        "distance": 0.61,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1023-C5",
+        "price": 682000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1106,
+        "propertyType": "SFR",
+        "yearBuilt": 1973,
+        "distance": 0.63,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1026",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "104 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1026"
+      ],
+      "type": "individual",
+      "mailingAddress": "104 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 960000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 940800
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1500,
+      "lotArea": 4500,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1026-C1",
+        "price": 732000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1298,
+        "propertyType": "SFR",
+        "yearBuilt": 1963,
+        "distance": 0.77,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1026-C2",
+        "price": 877000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1640,
+        "propertyType": "SFR",
+        "yearBuilt": 1957,
+        "distance": 0.51,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1026-C3",
+        "price": 789000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1392,
+        "propertyType": "SFR",
+        "yearBuilt": 1963,
+        "distance": 0.26,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1026-C4",
+        "price": 863000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1572,
+        "propertyType": "SFR",
+        "yearBuilt": 1963,
+        "distance": 0.28,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1026-C5",
+        "price": 751000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1288,
+        "propertyType": "SFR",
+        "yearBuilt": 1969,
+        "distance": 0.27,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1002",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "105 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1002"
+      ],
+      "type": "individual",
+      "mailingAddress": "105 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 2050000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 2009000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 2100,
+      "lotArea": 6300,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1002-C1",
+        "price": 1475000,
+        "saleDate": "2025-07-14",
+        "livingArea": 2013,
+        "propertyType": "SFR",
+        "yearBuilt": 1971,
+        "distance": 0.34,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1002-C2",
+        "price": 1348000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1821,
+        "propertyType": "SFR",
+        "yearBuilt": 1967,
+        "distance": 0.73,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1002-C3",
+        "price": 1726000,
+        "saleDate": "2025-09-22",
+        "livingArea": 2288,
+        "propertyType": "SFR",
+        "yearBuilt": 1963,
+        "distance": 0.15,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1002-C4",
+        "price": 1613000,
+        "saleDate": "2025-10-18",
+        "livingArea": 2063,
+        "propertyType": "SFR",
+        "yearBuilt": 1960,
+        "distance": 0.11,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1002-C5",
+        "price": 1674000,
+        "saleDate": "2025-11-09",
+        "livingArea": 2161,
+        "propertyType": "SFR",
+        "yearBuilt": 1967,
+        "distance": 0.51,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1002-C6",
+        "price": 1841000,
+        "saleDate": "2025-12-05",
+        "livingArea": 2356,
+        "propertyType": "SFR",
+        "yearBuilt": 1963,
+        "distance": 0.35,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1006",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "106 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1006"
+      ],
+      "type": "individual",
+      "mailingAddress": "106 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 1275000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 1249500
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1800,
+      "lotArea": 5400,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1006-C1",
+        "price": 981000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1624,
+        "propertyType": "SFR",
+        "yearBuilt": 1963,
+        "distance": 0.43,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1006-C2",
+        "price": 1278000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1972,
+        "propertyType": "SFR",
+        "yearBuilt": 1959,
+        "distance": 0.11,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1006-C3",
+        "price": 1005000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1680,
+        "propertyType": "SFR",
+        "yearBuilt": 1958,
+        "distance": 0.68,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1006-C4",
+        "price": 1056000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1660,
+        "propertyType": "SFR",
+        "yearBuilt": 1964,
+        "distance": 0.47,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1006-C5",
+        "price": 1015000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1657,
+        "propertyType": "SFR",
+        "yearBuilt": 1969,
+        "distance": 0.24,
+        "armsLength": true
+      }
+    ],
+    "transfer": {
+      "date": "2025-06-15",
+      "price": 1240000,
+      "armsLength": true
+    }
+  },
+  {
+    "parcelId": "P-1007",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "107 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1007"
+      ],
+      "type": "individual",
+      "mailingAddress": "107 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 1150000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 1127000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1650,
+      "lotArea": 5000,
+      "yearBuilt": 1965,
+      "lastPermitDate": "2025-08-01",
+      "permitTypes": [
+        "ADDITION"
+      ]
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1007-C1",
+        "price": 1065000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1777,
+        "propertyType": "SFR",
+        "yearBuilt": 1965,
+        "distance": 0.64,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1007-C2",
+        "price": 1041000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1799,
+        "propertyType": "SFR",
+        "yearBuilt": 1971,
+        "distance": 0.72,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1007-C3",
+        "price": 1005000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1751,
+        "propertyType": "SFR",
+        "yearBuilt": 1971,
+        "distance": 0.39,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1007-C4",
+        "price": 1048000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1839,
+        "propertyType": "SFR",
+        "yearBuilt": 1960,
+        "distance": 0.34,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1007-C5",
+        "price": 970000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1717,
+        "propertyType": "SFR",
+        "yearBuilt": 1964,
+        "distance": 0.11,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1008",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "108 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Hill Family Trust"
+      ],
+      "type": "trust",
+      "mailingAddress": "PO Box 12",
+      "ownerOccupied": false
+    },
+    "assessment": {
+      "assessedValue": 1060000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 1038800
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1500,
+      "lotArea": 4500,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1008-C1",
+        "price": 806000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1330,
+        "propertyType": "SFR",
+        "yearBuilt": 1964,
+        "distance": 0.43,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1008-C2",
+        "price": 928000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1604,
+        "propertyType": "SFR",
+        "yearBuilt": 1971,
+        "distance": 0.14,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1008-C3",
+        "price": 907000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1519,
+        "propertyType": "SFR",
+        "yearBuilt": 1961,
+        "distance": 0.24,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1008-C4",
+        "price": 846000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1432,
+        "propertyType": "SFR",
+        "yearBuilt": 1969,
+        "distance": 0.48,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1008-C5",
+        "price": 1004000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1706,
+        "propertyType": "SFR",
+        "yearBuilt": 1965,
+        "distance": 0.68,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1020",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "109 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1020"
+      ],
+      "type": "individual",
+      "mailingAddress": "109 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 1000000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 980000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1400,
+      "lotArea": 4200,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1020-C1",
+        "price": 766000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1204,
+        "propertyType": "SFR",
+        "yearBuilt": 1973,
+        "distance": 0.58,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1020-C2",
+        "price": 859000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1342,
+        "propertyType": "SFR",
+        "yearBuilt": 1971,
+        "distance": 0.73,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1020-C3",
+        "price": 880000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1404,
+        "propertyType": "SFR",
+        "yearBuilt": 1970,
+        "distance": 0.27,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1020-C4",
+        "price": 796000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1263,
+        "propertyType": "SFR",
+        "yearBuilt": 1968,
+        "distance": 0.42,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1020-C5",
+        "price": 792000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1217,
+        "propertyType": "SFR",
+        "yearBuilt": 1964,
+        "distance": 0.33,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1020-X1",
+        "price": 492800,
+        "saleDate": "2025-12-15",
+        "livingArea": 1400,
+        "propertyType": "SFR",
+        "distance": 0.4,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1022",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "110 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1022"
+      ],
+      "type": "individual",
+      "mailingAddress": "110 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 940000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 921200
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1350,
+      "lotArea": 4050,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {},
+      "rawDocs": [
+        {
+          "ref": "permit-1022",
+          "kind": "permit_record",
+          "text": "Kitchen remodel and rear addition, finaled 2025-09."
+        }
+      ]
+    },
+    "comps": [
+      {
+        "compId": "P-1022-C1",
+        "price": 741000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1256,
+        "propertyType": "SFR",
+        "yearBuilt": 1967,
+        "distance": 0.8,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1022-C2",
+        "price": 695000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1154,
+        "propertyType": "SFR",
+        "yearBuilt": 1972,
+        "distance": 0.13,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1022-C3",
+        "price": 787000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1284,
+        "propertyType": "SFR",
+        "yearBuilt": 1971,
+        "distance": 0.19,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1022-C4",
+        "price": 834000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1407,
+        "propertyType": "SFR",
+        "yearBuilt": 1967,
+        "distance": 0.58,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1022-C5",
+        "price": 764000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1224,
+        "propertyType": "SFR",
+        "yearBuilt": 1970,
+        "distance": 0.24,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1021",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "111 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1021"
+      ],
+      "type": "individual",
+      "mailingAddress": "111 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 900000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 882000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1600,
+      "lotArea": 4800,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1021-C1",
+        "price": 795000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1501,
+        "propertyType": "SFR",
+        "yearBuilt": 1963,
+        "distance": 0.58,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1021-C2",
+        "price": 991000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1754,
+        "propertyType": "SFR",
+        "yearBuilt": 1962,
+        "distance": 0.62,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1021-C3",
+        "price": 935000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1803,
+        "propertyType": "SFR",
+        "yearBuilt": 1973,
+        "distance": 0.45,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1021-C4",
+        "price": 976000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1743,
+        "propertyType": "SFR",
+        "yearBuilt": 1970,
+        "distance": 0.69,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1021-C5",
+        "price": 975000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1822,
+        "propertyType": "SFR",
+        "yearBuilt": 1972,
+        "distance": 0.75,
+        "armsLength": true
+      }
+    ],
+    "neighborhood": {
+      "medianAssessmentRatio": 0.82
+    }
+  },
+  {
+    "parcelId": "P-1004",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "112 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1004"
+      ],
+      "type": "individual",
+      "mailingAddress": "112 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 820000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 803600
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1600,
+      "lotArea": 4800,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1004-C1",
+        "price": 769000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1479,
+        "propertyType": "SFR",
+        "yearBuilt": 1962,
+        "distance": 0.19,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1004-C2",
+        "price": 863000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1772,
+        "propertyType": "SFR",
+        "yearBuilt": 1960,
+        "distance": 0.1,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1004-C3",
+        "price": 725000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1472,
+        "propertyType": "SFR",
+        "yearBuilt": 1973,
+        "distance": 0.37,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1004-C4",
+        "price": 797000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1592,
+        "propertyType": "SFR",
+        "yearBuilt": 1962,
+        "distance": 0.41,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1004-C5",
+        "price": 892000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1749,
+        "propertyType": "SFR",
+        "yearBuilt": 1968,
+        "distance": 0.73,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1005",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "113 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1005"
+      ],
+      "type": "individual",
+      "mailingAddress": "113 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 310000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 303800
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1700,
+      "lotArea": 5100,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1005-C1",
+        "price": 1483000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1927,
+        "propertyType": "SFR",
+        "yearBuilt": 1957,
+        "distance": 0.26,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1005-C2",
+        "price": 1467000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1929,
+        "propertyType": "SFR",
+        "yearBuilt": 1968,
+        "distance": 0.5,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1005-C3",
+        "price": 1259000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1669,
+        "propertyType": "SFR",
+        "yearBuilt": 1971,
+        "distance": 0.51,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1005-C4",
+        "price": 1354000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1837,
+        "propertyType": "SFR",
+        "yearBuilt": 1971,
+        "distance": 0.73,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1005-C5",
+        "price": 1154000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1459,
+        "propertyType": "SFR",
+        "yearBuilt": 1970,
+        "distance": 0.38,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1009",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "114 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1009"
+      ],
+      "type": "individual",
+      "mailingAddress": "114 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 2400000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 2352000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 3200,
+      "lotArea": 9600,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1009-C1",
+        "price": 2319000,
+        "saleDate": "2025-07-14",
+        "livingArea": 3599,
+        "propertyType": "SFR",
+        "distance": 0.38,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1009-C2",
+        "price": 1914000,
+        "saleDate": "2025-08-30",
+        "livingArea": 2988,
+        "propertyType": "SFR",
+        "distance": 0.44,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1009-F1",
+        "price": 2288000,
+        "saleDate": "2025-11-01",
+        "livingArea": 3200,
+        "propertyType": "SFR",
+        "distance": 2,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1009-F2",
+        "price": 2288000,
+        "saleDate": "2025-11-01",
+        "livingArea": 3200,
+        "propertyType": "SFR",
+        "distance": 3,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1009-F3",
+        "price": 2288000,
+        "saleDate": "2025-11-01",
+        "livingArea": 3200,
+        "propertyType": "SFR",
+        "distance": 4,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1009-O1",
+        "price": 2496000,
+        "saleDate": "2024-05-10",
+        "livingArea": 3200,
+        "propertyType": "SFR",
+        "distance": 0.3,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1009-O2",
+        "price": 2496000,
+        "saleDate": "2024-05-10",
+        "livingArea": 3200,
+        "propertyType": "SFR",
+        "distance": 0.3,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1012",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "115 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1012"
+      ],
+      "type": "individual",
+      "mailingAddress": "115 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 1100000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 1078000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1500,
+      "lotArea": 4500,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": true
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1012-C1",
+        "price": 829000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1412,
+        "propertyType": "SFR",
+        "yearBuilt": 1969,
+        "distance": 0.39,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1012-C2",
+        "price": 918000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1593,
+        "propertyType": "SFR",
+        "yearBuilt": 1963,
+        "distance": 0.58,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1012-C3",
+        "price": 792000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1285,
+        "propertyType": "SFR",
+        "yearBuilt": 1972,
+        "distance": 0.16,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1012-C4",
+        "price": 1030000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1666,
+        "propertyType": "SFR",
+        "yearBuilt": 1960,
+        "distance": 0.36,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1012-C5",
+        "price": 915000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1517,
+        "propertyType": "SFR",
+        "yearBuilt": 1971,
+        "distance": 0.2,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1013",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "116 Sample Street",
+    "propertyType": "COMMERCIAL",
+    "owner": {
+      "names": [
+        "Owner P-1013"
+      ],
+      "type": "individual",
+      "mailingAddress": "116 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 6800000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 6664000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 12000,
+      "lotArea": 36000,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1013-C1",
+        "price": 4656000,
+        "saleDate": "2025-07-14",
+        "livingArea": 10676,
+        "propertyType": "SFR",
+        "yearBuilt": 1970,
+        "distance": 0.46,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1013-C2",
+        "price": 4866000,
+        "saleDate": "2025-08-30",
+        "livingArea": 10562,
+        "propertyType": "SFR",
+        "yearBuilt": 1971,
+        "distance": 0.6,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1013-C3",
+        "price": 5560000,
+        "saleDate": "2025-09-22",
+        "livingArea": 12102,
+        "propertyType": "SFR",
+        "yearBuilt": 1960,
+        "distance": 0.24,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1013-C4",
+        "price": 4853000,
+        "saleDate": "2025-10-18",
+        "livingArea": 11145,
+        "propertyType": "SFR",
+        "yearBuilt": 1957,
+        "distance": 0.37,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1013-C5",
+        "price": 5790000,
+        "saleDate": "2025-11-09",
+        "livingArea": 12268,
+        "propertyType": "SFR",
+        "yearBuilt": 1969,
+        "distance": 0.77,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1014",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "117 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "City Parks Department"
+      ],
+      "type": "government",
+      "mailingAddress": "1 Civic Way",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 3000000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 2940000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 4000,
+      "lotArea": 12000,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1014-C1",
+        "price": 2073000,
+        "saleDate": "2025-07-14",
+        "livingArea": 4055,
+        "propertyType": "SFR",
+        "yearBuilt": 1963,
+        "distance": 0.45,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1014-C2",
+        "price": 1717000,
+        "saleDate": "2025-08-30",
+        "livingArea": 3409,
+        "propertyType": "SFR",
+        "yearBuilt": 1971,
+        "distance": 0.11,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1014-C3",
+        "price": 1960000,
+        "saleDate": "2025-09-22",
+        "livingArea": 3865,
+        "propertyType": "SFR",
+        "yearBuilt": 1959,
+        "distance": 0.77,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1014-C4",
+        "price": 1715000,
+        "saleDate": "2025-10-18",
+        "livingArea": 3471,
+        "propertyType": "SFR",
+        "yearBuilt": 1966,
+        "distance": 0.57,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1014-C5",
+        "price": 2351000,
+        "saleDate": "2025-11-09",
+        "livingArea": 4496,
+        "propertyType": "SFR",
+        "yearBuilt": 1957,
+        "distance": 0.59,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1015",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "118 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1015"
+      ],
+      "type": "individual",
+      "mailingAddress": "118 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 1000000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 980000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1400,
+      "lotArea": 4200,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1015-C1",
+        "price": 926000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1547,
+        "propertyType": "SFR",
+        "yearBuilt": 1969,
+        "distance": 0.46,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1015-C2",
+        "price": 936000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1557,
+        "propertyType": "SFR",
+        "yearBuilt": 1970,
+        "distance": 0.17,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1015-C3",
+        "price": 916000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1567,
+        "propertyType": "SFR",
+        "yearBuilt": 1972,
+        "distance": 0.66,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1015-C4",
+        "price": 924000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1573,
+        "propertyType": "SFR",
+        "yearBuilt": 1967,
+        "distance": 0.18,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1015-C5",
+        "price": 987000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1606,
+        "propertyType": "SFR",
+        "yearBuilt": 1967,
+        "distance": 0.29,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1018",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "119 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1018"
+      ],
+      "type": "individual",
+      "mailingAddress": "119 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 1020000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 999600
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1400,
+      "lotArea": 4200,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1018-C1",
+        "price": 580000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1593,
+        "propertyType": "SFR",
+        "distance": 0.16,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1018-C2",
+        "price": 723000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1315,
+        "propertyType": "SFR",
+        "distance": 0.44,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1018-C3",
+        "price": 785000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1301,
+        "propertyType": "SFR",
+        "distance": 0.65,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1019",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "120 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1019"
+      ],
+      "type": "individual",
+      "mailingAddress": "120 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 160000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 156800
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 600,
+      "lotArea": 1800,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1019-C1",
+        "price": 145000,
+        "saleDate": "2025-07-14",
+        "livingArea": 614,
+        "propertyType": "SFR",
+        "yearBuilt": 1965,
+        "distance": 0.52,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1019-C2",
+        "price": 143000,
+        "saleDate": "2025-08-30",
+        "livingArea": 640,
+        "propertyType": "SFR",
+        "yearBuilt": 1958,
+        "distance": 0.29,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1019-C3",
+        "price": 143000,
+        "saleDate": "2025-09-22",
+        "livingArea": 598,
+        "propertyType": "SFR",
+        "yearBuilt": 1958,
+        "distance": 0.18,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1019-C4",
+        "price": 114000,
+        "saleDate": "2025-10-18",
+        "livingArea": 519,
+        "propertyType": "SFR",
+        "yearBuilt": 1969,
+        "distance": 0.7,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1019-C5",
+        "price": 152000,
+        "saleDate": "2025-11-09",
+        "livingArea": 682,
+        "propertyType": "SFR",
+        "yearBuilt": 1965,
+        "distance": 0.23,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1024",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "121 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1024"
+      ],
+      "type": "individual",
+      "mailingAddress": "121 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 600000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 588000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1100,
+      "lotArea": 3300,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1024-C1",
+        "price": 579000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1165,
+        "propertyType": "SFR",
+        "yearBuilt": 1967,
+        "distance": 0.45,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1024-C2",
+        "price": 563000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1078,
+        "propertyType": "SFR",
+        "yearBuilt": 1958,
+        "distance": 0.6,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1024-C3",
+        "price": 493000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1021,
+        "propertyType": "SFR",
+        "yearBuilt": 1968,
+        "distance": 0.4,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1024-C4",
+        "price": 624000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1178,
+        "propertyType": "SFR",
+        "yearBuilt": 1966,
+        "distance": 0.51,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1024-C5",
+        "price": 585000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1196,
+        "propertyType": "SFR",
+        "yearBuilt": 1967,
+        "distance": 0.78,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1025",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "122 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1025"
+      ],
+      "type": "individual",
+      "mailingAddress": "122 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 1020000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 999600
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1450,
+      "lotArea": 4350,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1025-C1",
+        "price": 783000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1353,
+        "propertyType": "SFR",
+        "yearBuilt": 1969,
+        "distance": 0.57,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1025-C2",
+        "price": 870000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1453,
+        "propertyType": "SFR",
+        "yearBuilt": 1973,
+        "distance": 0.5,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1025-C3",
+        "price": 824000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1319,
+        "propertyType": "SFR",
+        "yearBuilt": 1965,
+        "distance": 0.37,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1025-C4",
+        "price": 893000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1492,
+        "propertyType": "SFR",
+        "yearBuilt": 1962,
+        "distance": 0.28,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1025-C5",
+        "price": 768000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1340,
+        "propertyType": "SFR",
+        "yearBuilt": 1965,
+        "distance": 0.33,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1010",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "123 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1010"
+      ],
+      "type": "individual",
+      "mailingAddress": "123 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 1000000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 980000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1500,
+      "lotArea": 4500,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    }
+  },
+  {
+    "parcelId": "P-1011",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "124 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1011"
+      ],
+      "type": "individual",
+      "mailingAddress": "124 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 1000000,
+      "valuationDate": "2026-01-01",
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 980000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1500,
+      "lotArea": 4500,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-30",
+      "sources": {
+        "assessment": "assessor-roll",
+        "comps": "sales-feed"
+      },
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1011-C1",
+        "price": 944000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1597,
+        "propertyType": "SFR",
+        "yearBuilt": 1968,
+        "distance": 0.36,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1011-C2",
+        "price": 786000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1308,
+        "propertyType": "SFR",
+        "yearBuilt": 1960,
+        "distance": 0.65,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1011-C3",
+        "price": 888000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1442,
+        "propertyType": "SFR",
+        "yearBuilt": 1960,
+        "distance": 0.47,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1011-C4",
+        "price": 775000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1343,
+        "propertyType": "SFR",
+        "yearBuilt": 1960,
+        "distance": 0.45,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1011-C5",
+        "price": 851000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1358,
+        "propertyType": "SFR",
+        "yearBuilt": 1962,
+        "distance": 0.62,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1016",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "125 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1016"
+      ],
+      "type": "individual",
+      "mailingAddress": "125 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 1000000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 980000
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1500,
+      "lotArea": 4500,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-07-01",
+      "sources": {},
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1016-C1",
+        "price": 876000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1420,
+        "propertyType": "SFR",
+        "yearBuilt": 1971,
+        "distance": 0.3,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1016-C2",
+        "price": 894000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1537,
+        "propertyType": "SFR",
+        "yearBuilt": 1963,
+        "distance": 0.28,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1016-C3",
+        "price": 761000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1329,
+        "propertyType": "SFR",
+        "yearBuilt": 1961,
+        "distance": 0.76,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1016-C4",
+        "price": 741000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1294,
+        "propertyType": "SFR",
+        "yearBuilt": 1963,
+        "distance": 0.42,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1016-C5",
+        "price": 862000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1493,
+        "propertyType": "SFR",
+        "yearBuilt": 1968,
+        "distance": 0.72,
+        "armsLength": true
+      }
+    ]
+  },
+  {
+    "parcelId": "P-1001",
+    "jurisdictionId": "placeholder",
+    "situsAddress": "126 Sample Street",
+    "propertyType": "SFR",
+    "owner": {
+      "names": [
+        "Owner P-1001"
+      ],
+      "type": "individual",
+      "mailingAddress": "126 Sample Street",
+      "ownerOccupied": true
+    },
+    "assessment": {
+      "assessedValue": 1040000,
+      "valuationDate": "2026-01-01",
+      "taxRate": 0.012,
+      "history": [
+        {
+          "valuationDate": "2025-01-01",
+          "assessedValue": 1019200
+        }
+      ],
+      "exemptions": []
+    },
+    "physical": {
+      "livingArea": 1400,
+      "lotArea": 4200,
+      "yearBuilt": 1965
+    },
+    "status": {
+      "appealOnFile": false
+    },
+    "provenance": {
+      "fetchedAt": "2026-10-01",
+      "sources": {},
+      "rawDocs": []
+    },
+    "comps": [
+      {
+        "compId": "P-1001-C1",
+        "price": 821000,
+        "saleDate": "2025-07-14",
+        "livingArea": 1276,
+        "propertyType": "SFR",
+        "yearBuilt": 1966,
+        "distance": 0.49,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1001-C2",
+        "price": 967000,
+        "saleDate": "2025-08-30",
+        "livingArea": 1450,
+        "propertyType": "SFR",
+        "yearBuilt": 1959,
+        "distance": 0.31,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1001-C3",
+        "price": 1005000,
+        "saleDate": "2025-09-22",
+        "livingArea": 1531,
+        "propertyType": "SFR",
+        "yearBuilt": 1968,
+        "distance": 0.62,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1001-C4",
+        "price": 879000,
+        "saleDate": "2025-10-18",
+        "livingArea": 1307,
+        "propertyType": "SFR",
+        "yearBuilt": 1966,
+        "distance": 0.73,
+        "armsLength": true
+      },
+      {
+        "compId": "P-1001-C5",
+        "price": 1001000,
+        "saleDate": "2025-11-09",
+        "livingArea": 1480,
+        "propertyType": "SFR",
+        "yearBuilt": 1968,
+        "distance": 0.25,
+        "armsLength": true
+      }
+    ]
+  }
+]

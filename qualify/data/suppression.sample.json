@@ -1,0 +1,14 @@
+{
+  "dncParcels": [
+    "P-1015"
+  ],
+  "dncOwners": [],
+  "clientParcels": [],
+  "representedParcels": [],
+  "declined": [
+    {
+      "parcelId": "P-1025",
+      "date": "2026-08-01"
+    }
+  ]
+}

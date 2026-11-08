@@ -1,0 +1,99 @@
+{
+  "_note": "PLACEHOLDER desk config. Every date, fee, rate, and threshold here is made up so the pipeline can run. Replace it with your jurisdiction's real rules before using results.",
+  "version": "placeholder-2026.1",
+  "jurisdiction": {
+    "id": "placeholder",
+    "name": "Placeholder Jurisdiction",
+    "valuationDate": "2026-01-01",
+    "supportedPropertyTypes": ["SFR", "CONDO", "TOWNHOUSE", "DUPLEX"],
+    "propertyTypeAliases": { "SINGLE FAMILY": "SFR", "R1": "SFR", "CONDOMINIUM": "CONDO" },
+    "allowedClaimBases": ["market_value", "uniformity"],
+    "reductionPersistenceCycles": 1,
+    "discountRate": 0.05,
+    "majorPermitTypes": ["ADDITION", "NEW_CONSTRUCTION", "MAJOR_REMODEL"]
+  },
+  "routes": [
+    {
+      "id": "review",
+      "name": "Assessor review request",
+      "formId": "FORM-REVIEW",
+      "opens": "2026-09-01",
+      "closes": "2026-12-18",
+      "filingFee": 0,
+      "workDaysNeeded": 7,
+      "bufferDays": 3,
+      "filer": "either",
+      "authorizationRequired": true,
+      "claimBases": ["market_value"],
+      "pWinMultiplier": 1.0
+    },
+    {
+      "id": "appeal",
+      "name": "Formal appeal",
+      "formId": "FORM-APPEAL",
+      "opens": "2026-04-01",
+      "closes": "2026-06-30",
+      "filingFee": 40,
+      "workDaysNeeded": 10,
+      "bufferDays": 3,
+      "filer": "agent",
+      "authorizationRequired": true,
+      "claimBases": ["market_value", "uniformity"],
+      "pWinMultiplier": 1.1
+    }
+  ],
+  "nextCycleOpens": "2027-04-01",
+  "compRules": {
+    "maxDistance": 1.0,
+    "sizeTolerance": 0.3,
+    "ageTolerance": 30,
+    "saleWindowBeforeDays": 270,
+    "saleWindowAfterDays": 90,
+    "minComps": 3,
+    "maxComps": 8,
+    "armsLengthOnly": true,
+    "sameTypeOnly": true
+  },
+  "thresholds": {
+    "minGapPct": 0.05,
+    "minAnnualSavings": 300,
+    "minExpectedValue": 25,
+    "minConfidence": 0.35,
+    "highValueReviewThreshold": 4000,
+    "reviewHighValue": true,
+    "transferLookbackDays": 365,
+    "maxSourceAgeDays": 60
+  },
+  "economics": {
+    "feePct": 0.3,
+    "feeBasis": "first_cycle",
+    "preCosts": { "enrichment": 3, "outreach": 2, "llm": 0.5 },
+    "postCosts": { "evidence": 5, "followUps": 4 },
+    "pSignupPrior": 0.25,
+    "complexOwnerSignupFactor": 0.7,
+    "pWin": {
+      "midpointGapPct": 0.08,
+      "scale": 0.04,
+      "cap": 0.9,
+      "confidenceFloor": 0.4,
+      "flagPenalty": 0.25,
+      "penalizedFlags": ["F_RECENT_TRANSFER", "F_VALUE_CHANGE", "F_LOW_CONFIDENCE"]
+    }
+  },
+  "timing": { "requalifyLeadDays": 14, "urgencyMaxBoost": 1.5 },
+  "suppression": { "cooldownDays": 180, "rejectionCacheDays": 30 },
+  "llm": {
+    "enabled": true,
+    "model": null,
+    "escalationModel": null,
+    "promptVersion": "qualify-review@1",
+    "window": "immediate",
+    "maxTokens": 1500,
+    "maxCostPerLeadUsd": 0.05,
+    "priceUsdPerMTokIn": 1.0,
+    "priceUsdPerMTokOut": 3.0,
+    "minEvToReview": 40,
+    "deskRulesText": "Claims argue the property's market value on the valuation date is below its assessed value (market_value), or that it is assessed at a higher ratio than similar nearby properties (uniformity). Comparable sales must be arm's-length, of the same property type, and sold within the allowed window around the valuation date. The owner (or every co-owner, trustee, or authorized officer) must sign an agent authorization before filing."
+  },
+  "capacity": { "dailyReleaseLimit": 3 }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "taxappeal-qualify",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ClaimOS Qualify step: decides which Find candidates to pursue, by which filing route, and in what order",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "bin": {
+    "qualify": "dist/src/cli.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "qualify": "tsx src/cli.ts",
+    "sample-data": "tsx scripts/make-sample-data.ts",
+    "demo": "node -e \"require('fs').rmSync('out/demo-results.json',{force:true})\" && tsx scripts/make-sample-data.ts && tsx src/cli.ts run --candidates data/candidates.sample.json --config config/desk.placeholder.json --suppression data/suppression.sample.json --today 2026-11-05 --llm mock --out out/demo-results.json --audit out/demo-audit.jsonl && tsx src/cli.ts cases --results out/demo-results.json --candidates data/candidates.sample.json --config config/desk.placeholder.json --export out/demo-cases.json",
+    "verify": "npm run typecheck && npm test && npm run demo",
+    "bundle:agent": "npx --yes esbuild@0.24.0 src/cli.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist-agent/taxappeal-qualify/qualify.mjs --banner:js=\"import { createRequire as __cr } from 'module'; const require = __cr(import.meta.url);\" && node -e \"require('fs').mkdirSync('dist-agent/taxappeal-qualify/config',{recursive:true});require('fs').copyFileSync('config/desk.florida.json','dist-agent/taxappeal-qualify/config/desk.florida.json')\""
+  },
+  "dependencies": {
+    "@usenaive-sdk/managed-agents": "^0.12.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}
