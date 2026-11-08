@@ -17,14 +17,25 @@ def find_record(jsonl: Path | str, county_code: str, tax_year: int, parcel_id: s
     return None
 
 
-def build_input(case_id: str, find: dict, qualification: dict | None, authorization: dict | None, consent: dict | None = None,
+def county_name(code) -> str | None:
+    from .forums import COUNTY_ADAPTERS
+    for a in COUNTY_ADAPTERS.values():
+        if a["county_code"] == str(code).zfill(2):
+            return a["county"]
+    return None
+
+
+def build_input(case_id: str, find: dict | None, qualification: dict | None, authorization: dict | None, consent: dict | None = None,
                 homeowner_submissions: list | None = None, prior_review: dict | None = None, appeal_type: str = "vab_just_value",
-                deadlines: dict | None = None) -> dict:
+                deadlines: dict | None = None, county_code: str | None = None, county: str | None = None, tax_year: int | None = None,
+                parcel_id: str | None = None) -> dict:
+    find = find or {}
     j = find.get("jurisdiction") or {}
     inp = {"schema": INPUT_SCHEMA, "case_id": case_id,
-           "appeal": {"tax_year": j.get("tax_year"), "appeal_type": appeal_type,
-                      "jurisdiction": {"state": j.get("state", "FL"), "county": j.get("county"), "county_code": j.get("county_code")}},
-           "property": {"parcel_id": (find.get("property") or {}).get("parcel_id"), "address": (find.get("property") or {}).get("address")},
+           "appeal": {"tax_year": j.get("tax_year") or tax_year, "appeal_type": appeal_type,
+                      "jurisdiction": {"state": j.get("state", "FL"), "county": j.get("county") or county,
+                                       "county_code": j.get("county_code") or county_code}},
+           "property": {"parcel_id": (find.get("property") or {}).get("parcel_id") or parcel_id, "address": (find.get("property") or {}).get("address")},
            "find": find, "qualification": qualification or {}, "authorization": authorization or {}, "consent": consent or {},
            "homeowner_submissions": homeowner_submissions or []}
     if prior_review:

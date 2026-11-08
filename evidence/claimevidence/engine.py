@@ -107,7 +107,7 @@ def _deadlines(inp: dict, find: dict, county: str, year: int, today: dt.date) ->
 
 
 def run(inp: dict, out_root: Path | str, data_dir: Path | str | None = None, today: dt.date | None = None,
-        params: CompParams | None = None) -> dict:
+        params: CompParams | None = None, as_of: dt.date | None = None) -> dict:
     if inp.get("schema") != INPUT_SCHEMA:
         raise ValueError(f"input must declare schema {INPUT_SCHEMA}")
     params = params or CompParams()
@@ -116,7 +116,8 @@ def run(inp: dict, out_root: Path | str, data_dir: Path | str | None = None, tod
     today = today or dt.date.today()
     intake = run_intake(inp, today)
     cycle = intake["cycle_id"] or f"invalid/{inp.get('case_id')}"
-    key = sha256_obj({"input": inp, "method": METHOD_VERSION, "code": __version__, "params": params.__dict__})
+    key = sha256_obj({"input": inp, "method": METHOD_VERSION, "code": __version__, "params": params.__dict__,
+                      "as_of": as_of.isoformat() if as_of else None})
     cdir = out_root / cycle.replace("/", "__")
     rdir = cdir / key[:16]
     done = rdir / "result.json"
@@ -127,12 +128,12 @@ def run(inp: dict, out_root: Path | str, data_dir: Path | str | None = None, tod
     lock = cdir / ".lock"
     owner = _lock(lock)
     try:
-        return _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params, today)
+        return _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params, today, as_of)
     finally:
         _unlock(lock, owner)
 
 
-def _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params, today):
+def _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params, today, as_of=None):
     rdir.mkdir(parents=True, exist_ok=True)
     run_id = "evr_" + key[:12] + "_" + uuid.uuid4().hex[:6]
     find = inp.get("find") or {}
@@ -155,7 +156,9 @@ def _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params, today):
     base["proceeding"] = {k: fm.get(k) for k in ("proceeding_id", "label", "kind", "supported", "authority", "notes")}
     base["proceeding"]["county_adapter"] = fm.get("county")
     rules = rules_for(county, appeal.get("appeal_type"), fm.get("proceeding_id"))
-    deadlines = _deadlines(inp, find, county, year, today) if isinstance(year, int) else {}
+    deadlines = _deadlines(inp, find, county, year, as_of or today) if isinstance(year, int) else {}
+    if as_of:
+        base["replay"] = {"as_of": as_of.isoformat(), "note": "deadlines are judged as of this date for a demonstration replay, not as of today"}
     ctx = {"forum": fm, "today": today, "find": find}
     if intake["status"] == "blocked":
         return _finish(base, run_id, started, "completed", errors, rules, deadlines, items, None, None, [], [], None, inp, intake, cdir, rdir, ctx)
@@ -339,6 +342,8 @@ def _finish(base, run_id, started, processing, errors, rules, deadlines, items, 
         reasons.append(f"petition deadline {pet.get('date')} has passed; a late petition needs a written good-cause request (R. 12D-9.015(14))")
     elif not pet.get("verified"):
         reasons.append("petition deadline is not verified from the county's own publication")
+    if base.get("replay"):
+        reasons.append(f"replay: deadlines judged as of {base['replay']['as_of']}, not today; never a basis for a real filing")
     ready = processing == "completed" and package_complete and outcome == "supports_reduction" and not reasons
     prior = inp.get("prior_review") or {}
     packet_hash = (gen or {}).get("sha256")

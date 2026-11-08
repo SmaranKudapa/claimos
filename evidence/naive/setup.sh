@@ -3,7 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 command -v naive >/dev/null || { echo "install the CLI: npm i -g @usenaive-sdk/cli"; exit 1; }
 command -v jq >/dev/null || { echo "needs jq"; exit 1; }
-: "${EVIDENCE_AGENT_NAME:?set EVIDENCE_AGENT_NAME to the agent name the coordinator uses for the evidence step}"
+EVIDENCE_AGENT_NAME="${EVIDENCE_AGENT_NAME:-evidence}"
 naive whoami >/dev/null
 echo "1/4 bundle"
 rm -f /tmp/claimos-evidence.zip
