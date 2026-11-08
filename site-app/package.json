@@ -1,0 +1,22 @@
+{
+  "name": "claimos-site",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'static site, nothing to build'",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "@usenaive-sdk/managed-agents": "0.12.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  },
+  "type": "module"
+}

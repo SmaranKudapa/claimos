@@ -1,0 +1,6 @@
+{
+  "framework": null,
+  "outputDirectory": "public",
+  "cleanUrls": true,
+  "functions": { "api/**/*.ts": { "maxDuration": 60 } }
+}

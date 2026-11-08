@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About Claim OS</title>
+<meta name="description" content="Claim OS is a small team built at the Naïve Autonomous Company Hackathon at Y Combinator. Agents scan county rolls and draft the work; people approve every email and every filing. A private company, not a government agency and not a law firm.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+/* About-only: plain lists inside the agents/people card and the team row. */
+.split ul { margin-top: 14px; display: grid; gap: 10px; font-size: 15px; line-height: 1.45; }
+.split li { display: flex; gap: 12px; }
+.split li::before { content: ""; flex: none; width: 6px; height: 6px; margin-top: 8px; border-radius: 50%; background: var(--ink); }
+.split .stat-foot p { font-size: 14px; }
+.contact .btn { margin-top: 28px; }
+.contact p { margin-top: 20px; font-size: 18px; color: rgba(255, 255, 255, .62); max-width: 54ch; text-wrap: pretty; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <header class="nav wrap">
+    <a class="wordmark" href="/">Claim OS</a>
+    <nav class="nav-links" aria-label="Site">
+      <a href="/workflow">Workflow</a>
+      <a href="/how-it-works">How it works</a>
+      <a href="/pricing">How we get paid</a>
+      <a href="/faq">FAQ</a>
+      <a href="/about" aria-current="page">About</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="pill" href="/track"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>Track my claim</a>
+      <a class="btn" href="/check">Check my property</a>
+    </div>
+    <details class="menu">
+      <summary>Menu</summary>
+      <nav aria-label="Site">
+        <a href="/check">Check my property</a>
+        <a href="/track">Track my claim</a>
+        <a href="/how-it-works">How it works</a>
+        <a href="/pricing">How we get paid</a>
+        <a href="/faq">FAQ</a>
+        <a href="/about" aria-current="page">About</a>
+      </nav>
+    </details>
+  </header>
+
+  <section class="hero compact wrap">
+    <div>
+      <h1>A small team, mostly software.</h1>
+      <p class="sub">Claim OS was built at the Naïve Autonomous Company Hackathon at Y Combinator in November 2026. Agents do the scanning, drafting and follow-up; people approve every email that goes out and every filing.</p>
+    </div>
+  </section>
+</div>
+
+<section class="block wrap split" style="padding-top:0">
+  <div class="head">
+    <h2>Who does what</h2>
+    <p class="sub">The software does the volume. A person signs off on anything that reaches you or the county.</p>
+  </div>
+  <div class="card stat dual" style="max-width:760px">
+    <div>
+      <span class="label">Agents do</span>
+      <ul>
+        <li>Scan public county rolls for homes valued above similar recent sales</li>
+        <li>Compare each case with neighbours' assessments and drop the weak ones</li>
+        <li>Draft the emails you receive and the evidence packet we file</li>
+        <li>Chase the county for hearing dates and decisions</li>
+      </ul>
+    </div>
+    <div>
+      <span class="label">People do</span>
+      <ul>
+        <li>Read and approve every email before it leaves our inbox</li>
+        <li>Confirm your parcel against the county roll by hand</li>
+        <li>Sign the petition and any form the county asks for</li>
+        <li>Answer you when the question is hard</li>
+      </ul>
+    </div>
+    <div class="stat-foot full"><p>Nothing is sent and nothing is filed on your home without a person looking at it first.</p></div>
+  </div>
+</section>
+
+<section class="block wrap team" style="padding-top:0">
+  <div class="head">
+    <h2>Four people, one loop each</h2>
+  </div>
+  <div class="grid grid-4">
+    <div class="card step flat"><h3>Nick</h3><span class="label">Find</span><p>Scans the county rolls and flags homes valued above comparable sales.</p></div>
+    <div class="card step flat"><h3>Smaran</h3><span class="label">Qualify</span><p>Checks each flagged home against neighbours and sales, and drops the weak cases.</p></div>
+    <div class="card step flat"><h3>Tarang</h3><span class="label">File</span><p>Files the petition with the county before its deadline and runs the case records.</p></div>
+    <div class="card step flat"><h3>Francesco</h3><span class="label">Evidence and outreach</span><p>Assembles the evidence packet, writes to you and to the county, and built this site.</p></div>
+  </div>
+  <p class="caption" style="margin-top:16px">Built on Naïve, AgentMail and Vercel.</p>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="head">
+      <h2>Rules we hold ourselves to</h2>
+      <p class="sub">Written down so you can hold us to them.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card step flat"><h3>A private company</h3><p>Claim OS is not affiliated with any government agency, county property appraiser or value adjustment board, and it is not a law firm.</p></div>
+      <div class="card step flat"><h3>No fee outside the agreement you sign</h3><p>We are paid a share of the first year's savings, only if your value goes down. The share is in the agreement, nowhere else.</p></div>
+      <div class="card step flat"><h3>No promised outcomes</h3><p>Every figure on this site is an estimate from public records. The county decides your value, and we say so every time we show a number.</p></div>
+      <div class="card step flat"><h3>No cold calls or texts</h3><p>We write by email. We call only when you wrote your number down and asked us to.</p></div>
+      <div class="card step flat"><h3>Public records plus what you typed, nothing more</h3><p>We hold the county's roll data on your parcel and what you entered on this site. We never buy, sell or share it.</p></div>
+      <div class="card step flat"><h3>The county's dates, never ours</h3><p>The only deadlines we mention are the county's own. There is no countdown and no offer that expires.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band dark contact">
+  <div class="wrap" style="max-width:760px">
+    <h2>Write to us.</h2>
+    <p>We reply by email from claimos@agentmail.to, usually within a day or two, and we only call when you asked us to.</p>
+    <a class="btn btn-light" href="mailto:claimos@agentmail.to">Email claimos@agentmail.to</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <span class="label">Product</span>
+        <ul>
+          <li><a href="/check">Check my property</a></li>
+          <li><a href="/track">Track my claim</a></li>
+<li><a href="/workflow">Recorded workflow</a></li>
+<li><a href="/filing">Where and how to file</a></li>
+          <li><a href="/how-it-works">How it works</a></li>
+          <li><a href="/pricing">How we get paid</a></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label">Company</span>
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="mailto:claimos@agentmail.to">claimos@agentmail.to</a></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label">Legal</span>
+        <ul>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="foot-note">Claim OS is a private company and is not affiliated with any government agency, county property appraiser or value adjustment board. Claim OS is not a law firm and does not give legal advice. Estimates come from public county records and may be out of date; only the county decides your value, and nothing here is a promise of a lower bill.</p>
+    <p class="foot-copy">© 2026 Claim OS</p>
+  </div>
+</footer>
+
+</body>
+</html>

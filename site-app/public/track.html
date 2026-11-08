@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Track my claim — Claim OS</title>
+<meta name="description" content="Enter the email you signed up with and we email you a link to your case page: where your property tax appeal stands, the county's value against ours, the filing deadline, and what we need from you.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/progress.css">
+<style>
+/* /track only. The case card is one card with ruled sections, never a card inside a card. */
+#cases { padding-bottom: 96px; display: grid; gap: 16px; }
+#cases > * { max-width: 760px; }
+.case { padding: 0; }
+.case > * { padding: 22px 24px; }
+.case > * + * { border-top: 1px solid var(--line); }
+.case-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.case-head h2 { font-size: 22px; letter-spacing: -.3px; }
+.case-head .caption { margin-top: 4px; }
+.case .tracker { padding-top: 16px; }
+.case .stat.dual { padding: 0; }
+/* Both cells carry the same padding so their labels sit on one line; the list pulls back by that amount. */
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 0 8px; margin: -14px -16px; }
+.facts > div { padding: 14px 16px; border-radius: var(--radius-s); }
+.facts dd { margin: 6px 0 0; font-size: 15px; font-variant-numeric: tabular-nums; }
+.facts .need { background: var(--surface); }
+.history ul { margin-top: 12px; display: grid; gap: 8px; }
+.history li { display: flex; gap: 14px; font-size: 14px; }
+.history time { flex: none; min-width: 96px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hero .thanks { margin-top: 8px; }
+@media (max-width: 720px) {
+  #cases { padding-bottom: 64px; }
+  .case > * { padding: 18px 20px; }
+  .facts { grid-template-columns: 1fr; gap: 4px 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <header class="nav wrap">
+    <a class="wordmark" href="/">Claim OS</a>
+    <nav class="nav-links" aria-label="Site">
+      <a href="/workflow">Workflow</a>
+      <a href="/how-it-works">How it works</a>
+      <a href="/pricing">How we get paid</a>
+      <a href="/faq">FAQ</a>
+      <a href="/about">About</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="pill" href="/track" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>Track my claim</a>
+      <a class="btn" href="/check">Check my property</a>
+    </div>
+    <details class="menu">
+      <summary>Menu</summary>
+      <nav aria-label="Site">
+        <a href="/check">Check my property</a>
+        <a href="/track" aria-current="page">Track my claim</a>
+        <a href="/how-it-works">How it works</a>
+        <a href="/pricing">How we get paid</a>
+        <a href="/faq">FAQ</a>
+        <a href="/about">About</a>
+      </nav>
+    </details>
+  </header>
+
+  <section class="hero compact wrap" id="ask">
+    <div>
+      <h1>Where is my claim?</h1>
+      <p class="sub">Enter the email you signed up with. We send a link that opens your cases.</p>
+      <form class="bar" id="link-form" novalidate>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        <input class="address" name="email" type="email" placeholder="you@example.com" aria-label="Email" autocomplete="email" autofocus required>
+        <button class="btn" type="submit">Email me a link</button>
+      </form>
+      <p class="bar-err" role="alert"></p>
+      <div class="thanks" id="sent" hidden>
+        <h2 tabindex="-1">Check your inbox.</h2>
+        <ul>
+          <li>If we have cases for that email, a link is on its way from claimos@agentmail.to. It works for 24 hours.</li>
+          <li>Add claimos@agentmail.to to your contacts so the link isn't filtered.</li>
+        </ul>
+        <div class="pills"><button class="pill" type="button" id="again">Send another link</button><a class="pill" href="/check">Check my property</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero compact wrap" id="yours" hidden>
+    <div>
+      <h1>Your claims</h1>
+      <p class="sub" id="who">Opening your cases…</p>
+    </div>
+  </section>
+</div>
+
+<section id="cases" class="wrap" aria-live="polite" hidden></section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <span class="label">Product</span>
+        <ul>
+          <li><a href="/check">Check my property</a></li>
+          <li><a href="/track">Track my claim</a></li>
+<li><a href="/workflow">Recorded workflow</a></li>
+<li><a href="/filing">Where and how to file</a></li>
+          <li><a href="/how-it-works">How it works</a></li>
+          <li><a href="/pricing">How we get paid</a></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label">Company</span>
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="mailto:claimos@agentmail.to">claimos@agentmail.to</a></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label">Legal</span>
+        <ul>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="foot-note">Claim OS is a private company and is not affiliated with any government agency, county property appraiser or value adjustment board. Claim OS is not a law firm and does not give legal advice. Estimates come from public county records and may be out of date; only the county decides your value, and nothing here is a promise of a lower bill.</p>
+    <p class="foot-copy">© 2026 Claim OS</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const money = (n) => (n == null || isNaN(Number(n)) ? '—' : '$' + Math.round(Number(n)).toLocaleString('en-US'));
+  const title = (s) => String(s || '').trim().replace(/\s+/g, ' ').toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+  const date = (s) => (s ? new Date(s.length <= 10 ? s + 'T00:00:00' : s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '');
+  const STAGES = ['find', 'qualify', 'signup', 'evidence', 'file', 'chase', 'escalate', 'collect'];
+  const NAMES = ['Find', 'Qualify', 'Sign up', 'Evidence', 'File', 'Chase', 'Escalate', 'Collect'];
+
+  const ask = $('#ask'), yours = $('#yours'), who = $('#who'), list = $('#cases'), form = $('#link-form'), err = $('.bar-err', ask), sent = $('#sent');
+  const showForm = (on) => { form.hidden = !on; $('h1', ask).hidden = !on; $('.sub', ask).hidden = !on; sent.hidden = on; };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.textContent = '';
+    const email = form.email.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Enter the email you signed up with.'; form.email.focus(); return; }
+    const btn = $('button', form);
+    btn.disabled = true;
+    try {
+      const r = await fetch('/api/track-request', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) err.textContent = r.status === 400 && d.error ? d.error : 'We could not send the link right now. Try again in a minute, or email claimos@agentmail.to and we will send it by hand.';
+      else { showForm(false); $('h2', sent).focus(); }
+    } catch { err.textContent = 'We could not send the link right now. Try again in a minute, or email claimos@agentmail.to and we will send it by hand.'; }
+    btn.disabled = false;
+  });
+  $('#again').addEventListener('click', () => { showForm(true); form.email.value = ''; form.email.focus(); });
+
+  const caseCard = (c) => {
+    const el = document.createElement('article');
+    el.className = 'card case rise';
+    const i = STAGES.indexOf(c.stage), closed = c.status === 'stopped' || c.status === 'REJECTED';
+    const known = new Map((c.workflow?.steps || []).map(s => [s.stage, s]));
+    const hist = (c.history || []).map((h) => (typeof h === 'string' ? { line: h } : { date: h.date || h.at || h.ts || '', line: h.line || h.text || h.note || h.event || '' }))
+      .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+    el.innerHTML = `
+      <div class="case-head"><div><h2></h2><p class="caption"></p></div>${closed ? '<span class="badge" data-tone="gray">Closed</span>' : ''}</div>
+      <ol class="tracker${closed ? ' is-closed' : ''}">${NAMES.map((n, k) => { const event = known.get(STAGES[k]); return `<li class="${k === i ? 'is-current' : event ? 'is-recorded' : ''}"${k === i ? ' aria-current="step"' : ''}>${n}${event ? `<small>${event.mode === 'replay' ? 'Replay' : event.mode === 'synthetic' ? 'Test fixture' : 'Recorded'}</small>` : ''}</li>`; }).join('')}</ol>
+      <div class="stat dual">
+        <div><span class="label">County's value</span><strong class="figure">${money(c.county_value)}</strong><span class="stat-sub">From the county roll</span></div>
+        <div><span class="label">Our requested value</span><strong class="figure">${money(c.requested_value)}</strong><span class="stat-sub">Est. saving ${money(c.annual_savings)} / yr</span></div>
+      </div>
+      <dl class="facts">
+        <div><dt class="label">Filing deadline</dt><dd>${c.filing_deadline ? date(c.filing_deadline) : 'Not set yet'}</dd></div>
+        <div${c.needs_from_owner ? ' class="need"' : ''}><dt class="label">What we need from you</dt><dd></dd></div>
+      </dl>
+      ${hist.length ? '<div class="history"><span class="label">History</span><ul></ul></div>' : ''}`;
+    $('h2', el).textContent = title(c.address) || 'Your property';
+    $('.caption', el).textContent = [c.county && c.county + ' County', 'Case ' + c.case_id].filter(Boolean).join(' · ');
+    el.querySelectorAll('.facts dd')[1].textContent = c.needs_from_owner || 'Nothing right now.';
+    if (hist.length) $('.history ul', el).replaceChildren(...hist.map((h) => {
+      const li = document.createElement('li'), t = document.createElement('time'), s = document.createElement('span');
+      t.textContent = date(h.date); s.textContent = h.line; li.append(t, s); return li;
+    }));
+    const progress = document.createElement('section'); progress.className = 'case-workflow';
+    const heading = document.createElement('h3'); heading.textContent = 'Recorded progress'; progress.append(heading);
+    const state = document.createElement('p'); state.className = 'caption';
+    state.textContent = c.workflow ? (c.workflow.mode === 'replay' ? 'Historical replay — this does not establish current filing eligibility.' : c.workflow.mode === 'synthetic' ? 'Test fixture — not a customer filing.' : 'Based on recorded case activity.') : 'No newer linked workflow result is available yet.';
+    progress.append(state);
+    if (c.workflow?.steps?.length) { const ul = document.createElement('ul'); for (const step of c.workflow.steps) {const li = document.createElement('li');li.textContent = `${step.stage}: ${step.label}${step.mode === 'replay' ? ' (replay)' : ''}`;ul.append(li);}progress.append(ul); }
+    const guide = document.createElement('a');guide.className = 'btn';guide.href = '/filing?county=' + encodeURIComponent(c.county || '');guide.textContent = 'Where and how to file →';progress.append(guide);
+    const receipt = document.createElement('p');receipt.className = 'caption';receipt.textContent = c.workflow?.filing_recorded ? 'A filing receipt is recorded; clerk acceptance must still be verified.' : 'No filing receipt is recorded. A prepared draft is not a submitted petition.';progress.append(receipt);
+    el.append(progress);
+    return el;
+  };
+
+  const emptyCard = (d) => {
+    const el = document.createElement('div');
+    el.className = 'card step rise';
+    const s = d.signups[0];
+    el.innerHTML = '<h3></h3><p></p><div class="pills"><a class="pill" href="/check">Check another address</a></div>';
+    if (s) {
+      $('h3', el).textContent = 'Nothing yet.';
+      $('p', el).textContent = `We have your sign-up for ${title(s.address)}${s.city ? ', ' + title(s.city) : ''}${s.zip ? ' ' + s.zip : ''}` +
+        (d.signups.length > 1 ? ` and ${d.signups.length - 1} more` : '') + ' and are checking the parcel against the county roll by hand; this page fills in as we go.';
+    } else {
+      $('h3', el).textContent = 'Nothing under this email yet.';
+      $('p', el).textContent = `We have no sign-up or case for ${d.email}. If you used a different email, request a new link with it.`;
+      $('.pills', el).insertAdjacentHTML('afterbegin', '<a class="pill" href="/track">Request a new link</a>');
+    }
+    return el;
+  };
+
+  async function open(t) {
+    ask.hidden = true; yours.hidden = false;
+    let r;
+    try { r = await fetch('/api/track?t=' + encodeURIComponent(t)); } catch { who.textContent = 'We could not reach our records. Please reload to try again.'; return; }
+    if (r.status === 401) {
+      history.replaceState(null, '', '/track');
+      yours.hidden = true; ask.hidden = false;
+      err.textContent = 'This link has expired. Request a new one.';
+      form.email.focus();
+      return;
+    }
+    if (!r.ok) { who.textContent = 'We could not reach our records. Please reload to try again.'; return; }
+    const d = await r.json();
+    who.textContent = `Everything we hold for ${d.email}.` + (d.workflow_sync?.observed_at ? ` Workflow checked ${new Date(d.workflow_sync.observed_at).toLocaleString()}.` : '') + (!d.workflow_sync?.automatic_refresh ? ' Automatic workflow updates are currently unavailable.' : d.workflow_sync?.stale ? ' Showing the last available workflow snapshot.' : ' Updates automatically.');
+    list.hidden = false;
+    list.replaceChildren(...(d.cases.length ? d.cases.map(caseCard) : [emptyCard(d)]));
+  }
+
+  const t = new URLSearchParams(location.search).get('t');
+  if (t) { open(t); setInterval(() => { if (!document.hidden && !yours.hidden) open(t); }, 30_000); }
+})();
+</script>
+</body>
+</html>
