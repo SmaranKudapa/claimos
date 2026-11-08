@@ -3,10 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": "24.x" },
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "build": "echo 'functions only, nothing to build'",
     "test": "node --import tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pdf-lib": "1.17.1"
   }
 }

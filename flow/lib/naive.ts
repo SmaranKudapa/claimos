@@ -63,6 +63,12 @@ export class Naive {
   }
 
   cards(board: string) { return this.pages<Card>(`/v1/boards/${board}/cards`); }
+  async download(id: string): Promise<string> {
+    const r = await this.fetch(`${this.base}/v1/files/${id}?download=true`, { headers: { authorization: `Bearer ${this.key}` } });
+    if (!r.ok) throw new NaiveError(`file ${id}: Naive answered ${r.status}.`, r.status, null);
+    return r.text();
+  }
+  appRows<T>(app: string, table: string, query: string) { return this.call<T[]>('GET', `/v1/apps/${app}/db/rest/${table}?${query}`); }
   comments(board: string, card: string) { return this.pages<Comment>(`/v1/boards/${board}/cards/${card}/comments`, {}, 5); }
   files() { return this.pages<FileRow>('/v1/files', {}, 3); }
   agents() { return this.pages<AgentRow>('/v1/agents', {}, 2); }
