@@ -66,6 +66,9 @@ def card_note(res: dict, published: dict | None = None) -> dict:
     lines = [" · ".join(parts)]
     if published:
         lines.append("Files: " + ", ".join(f"{k} {val}" for k, val in published.items()))
+    weak = [x["detail"] for x in (res.get("validation") or {}).get("checks", []) if x["id"] == "V-COMPS-QUALITY" and x["status"] != "pass"]
+    if weak:
+        lines.append("Reviewer, look closely: " + weak[0])
     reasons = c.get("not_ready_reasons") or []
     if reasons:
         lines.append("Open items: " + "; ".join(reasons)[:900])

@@ -238,3 +238,13 @@ def test_a_packet_that_requests_nothing_is_titled_not_for_submission(tmp_path, p
     first = _pages(res)[0]
     assert first.startswith("Evidence review, not for submission") or "Evidence review, not for submission" in first[:200]
     assert "Not for submission." in first
+
+
+def test_a_comparable_set_needing_large_adjustments_is_flagged_for_the_reviewer(tmp_path, patched):
+    from claimevidence.cli import card_note
+    res = run(envelope(), tmp_path, today=TODAY)
+    q = [c for c in res["validation"]["checks"] if c["id"] == "V-COMPS-QUALITY"]
+    assert len(q) == 1 and q[0]["status"] in ("pass", "warn")
+    res["validation"]["checks"] = [dict(c, status="warn", detail="weak comparable set for a hearing: 4 of 6 sales need large adjustments")
+                                   if c["id"] == "V-COMPS-QUALITY" else c for c in res["validation"]["checks"]]
+    assert "Reviewer, look closely: weak comparable set" in card_note(res)["note"]

@@ -90,6 +90,19 @@ def validate(doc: Doc, pdf: Path | None, render_info: dict | None, base: dict, c
                 bad.append(f"sale {i + 1} is not county-qualified")
         _check(out, "V-CALC-COMPS", "calculation", not bad, "; ".join(bad) or f"{len(sel)} sales recomputed: adjustments, adjusted prices, dates and qualification",
                "FL-VAL-01, FL-ADM-04")
+        eff = int(s.get("EFF_YR_BLT") or 0)
+        flagged = sum(1 for c in sel if c.get("flags"))
+        gmax = max(c["gross_adjustment_pct"] for c in sel)
+        gap = max(abs((c.get("effective_year_built") or eff) - eff) for c in sel)
+        weak = []
+        if flagged * 2 >= len(sel):
+            weak.append(f"{flagged} of {len(sel)} sales need large adjustments")
+        if gmax > 0.30:
+            weak.append(f"the largest gross adjustment is {gmax:.0%} of price")
+        if gap > 10:
+            weak.append(f"a sale is {gap} years apart in effective age, which is not adjusted for")
+        _check(out, "V-COMPS-QUALITY", "calculation", not weak, "comparable sales are close to the subject" if not weak else
+               "weak comparable set for a hearing: " + "; ".join(weak), "internal", "warn")
         med = statistics.median(c["indicated_value"] for c in sel)
         _check(out, "V-CALC-MEDIAN", "calculation", abs(med - val["market_value_indication"]) <= 1,
                f"median of adjusted prices {med:,.0f} vs reported {val['market_value_indication']:,}", "internal")
