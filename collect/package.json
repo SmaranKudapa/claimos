@@ -1,0 +1,31 @@
+{
+  "name": "taxappeal-collect",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ClaimOS Collect step: verifies the corrected bill, invoices the agreed fee and follows up, fully automatically",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "collect": "dist/src/cli.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "collect": "tsx src/cli.ts",
+    "sample-data": "tsx scripts/make-samples.ts",
+    "demo": "node -e \"require('fs').rmSync('out/demo-results.json',{force:true})\" && tsx scripts/make-samples.ts && tsx src/cli.ts run --cases data/cases.sample.json --config config/collect.placeholder.json --today 2026-12-15 --out out/demo-results.json --audit out/demo-audit.jsonl && tsx src/cli.ts cases --results out/demo-results.json --export out/demo-cases.json",
+    "verify": "npm run typecheck && npm test && npm run demo",
+    "bundle:agent": "npx --yes esbuild@0.24.0 src/cli.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist-agent/taxappeal-collect/collect.mjs --banner:js=\"import { createRequire as __cr } from 'module'; const require = __cr(import.meta.url);\" && node -e \"require('fs').cpSync('config','dist-agent/taxappeal-collect/config',{recursive:true})\""
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

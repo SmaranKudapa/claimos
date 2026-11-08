@@ -1,0 +1,29 @@
+{
+  "_note": "PLACEHOLDER collect config. Every number here is made up so the pipeline runs.",
+  "version": "collect-placeholder-2026.1",
+  "jurisdictionId": "placeholder",
+  "fee": {
+    "basis": "first_year_savings",
+    "defaultPct": 0.3,
+    "minFee": 25,
+    "maxFee": 5000,
+    "currency": "usd"
+  },
+  "invoice": {
+    "dueDays": 30,
+    "reminderDays": [
+      14,
+      30,
+      45
+    ],
+    "writeOffDays": 60,
+    "numberPrefix": "PH"
+  },
+  "bill": {
+    "required": true,
+    "recheckDays": 14,
+    "maxWaitDays": 120,
+    "valueToleranceUsd": 1,
+    "minReadConfidence": 0.7
+  }
+}
