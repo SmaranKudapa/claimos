@@ -1,0 +1,44 @@
+import argparse
+import json
+import sys
+from pathlib import Path
+from .core import prepare, fetch_form, record_receipt, record_notice, FORM_URL
+
+
+def main():
+    parser = argparse.ArgumentParser(prog="taxfile")
+    commands = parser.add_subparsers(dest="command", required=True)
+    draft = commands.add_parser("prepare")
+    draft.add_argument("input")
+    draft.add_argument("--out", default=".taxfile/cases")
+    draft.add_argument("--template")
+    receipt = commands.add_parser("record-receipt")
+    receipt.add_argument("manifest")
+    receipt.add_argument("receipt")
+    receipt.add_argument("--confirmation", required=True)
+    receipt.add_argument("--parcel", required=True)
+    receipt.add_argument("--notice")
+    receipt.add_argument("--response-due")
+    notice = commands.add_parser("record-notice")
+    notice.add_argument("manifest")
+    notice.add_argument("notice")
+    notice.add_argument("--response-due", required=True)
+    commands.add_parser("status")
+    args = parser.parse_args()
+    try:
+        if args.command == "prepare":
+            template = Path(args.template or ".taxfile/forms/dr486.pdf")
+            if not args.template:
+                fetch_form(template)
+            manifest, out = prepare(args.input, args.out, template)
+            print(json.dumps({"case_id": manifest["case_id"], "status": manifest["status"], "submitted": False, "holds": manifest["holds"], "directory": str(out), "manifest": str(out / "manifest.json"), "petition": manifest["petition"]}, indent=2))
+        elif args.command == "record-receipt":
+            print(json.dumps(record_receipt(args.manifest, args.receipt, args.confirmation, args.parcel, args.notice, args.response_due), indent=2))
+        elif args.command == "record-notice":
+            print(json.dumps(record_notice(args.manifest, args.notice, args.response_due), indent=2))
+        else:
+            print(json.dumps({"step": "file", "form": FORM_URL, "submission": "requires_authorized_operator_and_official_county_route", "automatic_outreach": False}))
+    except (ValueError, KeyError, OSError, TypeError) as error:
+        print(json.dumps({"status": "blocked", "error": str(error)}), file=sys.stderr)
+        return 1
+    return 0

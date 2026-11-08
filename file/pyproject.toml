@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claimos-file"
+version = "0.1.1"
+description = "File desk: validated handoffs, official petition drafts, receipt ledger and notice deadlines."
+requires-python = ">=3.9"
+dependencies = ["pypdf>=6.21,<7"]
+
+[project.scripts]
+taxfile = "taxfile.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["taxfile*"]
