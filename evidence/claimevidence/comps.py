@@ -17,6 +17,7 @@ class CompParams:
     land_band: float = 0.50
     min_comps: int = 3
     max_comps: int = 6
+    older_gap_years: int = 3
     outlier_iqr: float = 3.0
     gross_adjustment_flag: float = 0.25
     net_adjustment_flag: float = 0.15
@@ -34,6 +35,7 @@ class CompParams:
             "gross_adjustment_flag": "A comparable whose gross adjustments exceed 25% of its price is flagged for review (a common residential appraisal guideline, applied here as a screening heuristic, not a legal rule).",
             "net_adjustment_flag": "A comparable whose net adjustment exceeds 15% of its price is flagged for review (same guideline).",
             "cod_max": "If the adjusted indications vary by more than a 25% coefficient of dispersion, the comparables do not agree and the result is insufficient evidence.",
+            "older_gap_years": "Internal screen: age is not adjusted, so if half or more of the sales are more than 3 years older (effective year) than the subject, the indication is likely biased low and the case goes to review instead of supporting a value.",
         }
 
 
@@ -115,7 +117,10 @@ def analyze(cd: CountyData, subject: pd.Series, p: CompParams | None = None) -> 
                "sqft": as_int(x.sqft), "effective_year_built": as_int(x.eff), "actual_year_built": as_int(getattr(x, "ACT_YR_BLT", None)),
                "county_land_value": as_int(x.land), "county_special_features_value": as_int(getattr(x, "SPEC_FEAT_VAL", 0) or 0),
                "county_just_value": as_int(x.JV), "location": TIER_LABEL[int(x.tier)], "time_factor": round(float(x.tadj), 4),
-               "similarity_score": round(c["score"], 3)}
+               "similarity_score": round(c["score"], 3),
+               "new_construction": bool(pd.notna(getattr(x, "ACT_YR_BLT", None)) and float(x.ACT_YR_BLT) >= int(x.ym) // 12 - 1),
+               "effective_age_gap": (as_int(x.eff) - as_int(subject.eff)) if pd.notna(x.eff) and pd.notna(subject.eff) else None,
+               "size_diff_pct": round(float(x.sqft) / float(subject.sqft) - 1, 4)}
         if not include:
             rec["excluded_because"] = [{"code": k, "detail": d} for k, d in c["reasons"]]
         return rec
@@ -127,7 +132,9 @@ def analyze(cd: CountyData, subject: pd.Series, p: CompParams | None = None) -> 
               "exclusion_counts": pd.Series([k for c in excluded for k, _ in c["reasons"]]).value_counts().to_dict() if excluded else {},
               "excluded_nearest": [comp_record(c, False) for c in excluded[:12]],
               "subsequent_sales": [{"parcel_id": x.PARCEL_ID, "address": as_str(x.PHY_ADDR1) or "", "sale_month": ym_label(x.ym),
-                                    "sale_price": as_int(x.SALE_PRC), "sqft": as_int(x.sqft), "location": TIER_LABEL[int(x.tier)]}
+                                    "sale_price": as_int(x.SALE_PRC), "sqft": as_int(x.sqft), "location": TIER_LABEL[int(x.tier)],
+                                    "time_factor": round(float(x.tadj), 4), "time_adjusted_price": as_int(float(x.SALE_PRC) * float(x.tadj)),
+                                    "effective_year_built": as_int(x.eff), "county_just_value": as_int(x.JV)}
                                    for x in sorted(subsequent, key=lambda r: (r.tier, abs(np.log(r.sqft / subject.sqft))))[:6]]}
     if len(selected) < p.min_comps:
         result.update({"selected": [comp_record(c, True) for c in selected], "indication": None,
@@ -162,9 +169,43 @@ def analyze(cd: CountyData, subject: pd.Series, p: CompParams | None = None) -> 
         if abs(net) / price > p.net_adjustment_flag:
             flags.append(f"net adjustment {net / price:+.0%} of price")
         rec = comp_record(c, True)
-        rec.update({"adjustments": adj, "net_adjustment": net,
+        feat_c = float(getattr(x, "SPEC_FEAT_VAL", 0) or 0)
+        detail = {
+            "time": {"amount": adj["time"], "formula": f"{price:,.0f} x ({float(x.tadj):.4f} - 1)",
+                     "support": "county-wide monthly median price per sq ft for this property use; a market trend, not a subdivision measurement"},
+            "land": {"amount": adj["land"], "formula": "condo: not adjusted" if condo else f"({land_s:,.0f} - {float(x.land):,.0f}) / {level:.4f}",
+                     "support": "the county's own land values on the roll, converted to market terms"},
+            "special_features": {"amount": adj["special_features"], "formula": f"({feat_s:,.0f} - {feat_c:,.0f}) / {level:.4f}",
+                                 "support": "the county's own special-feature values on the roll, converted to market terms"},
+            "living_area": {"amount": adj["living_area"], "formula": f"({float(subject.sqft):,.0f} - {float(x.sqft):,.0f}) x {building_rate:,.2f}",
+                            "support": "building rate extracted from these sales after removing county land and feature values"},
+        }
+        gap = rec["effective_age_gap"]
+        same, diff, unc = [], [], []
+        same.append(rec["location"])
+        if abs(rec["size_diff_pct"]) < 0.005:
+            same.append("same living area")
+        else:
+            diff.append(f"{abs(rec['size_diff_pct']):.0%} {'larger' if rec['size_diff_pct'] > 0 else 'smaller'}; adjusted")
+        if gap is not None:
+            if gap == 0:
+                same.append("same effective year built")
+            elif abs(gap) <= p.older_gap_years:
+                same.append(f"effective year within {abs(gap)} year{'s' if abs(gap) != 1 else ''}")
+            else:
+                diff.append(f"{abs(gap)} years {'newer' if gap > 0 else 'older'} (effective year); not adjusted")
+                unc.append("age difference is not adjusted; " + ("an older sale tends to understate the subject's value" if gap < 0 else "a newer sale tends to overstate it"))
+        if not condo and adj["land"]:
+            diff.append(f"county land value {'lower' if adj['land'] > 0 else 'higher'} by ${abs(float(x.land) - land_s):,.0f}; adjusted")
+        elif not condo:
+            same.append("same county land value")
+        if rec["new_construction"]:
+            unc.append("new-construction sale: builder incentives or upgrades are not in public records")
+        if abs(float(x.tadj) - 1) > 0.03:
+            unc.append(f"time adjustment of {float(x.tadj) - 1:+.1%} rests on a county-wide index")
+        rec.update({"adjustments": adj, "adjustment_detail": detail, "net_adjustment": net,
                     "gross_adjustment_pct": round(gross / price, 4), "net_adjustment_pct": round(net / price, 4),
-                    "indicated_value": indicated, "flags": flags})
+                    "indicated_value": indicated, "flags": flags, "similarities": same, "differences": diff, "uncertainty": unc})
         rows.append(rec)
     ind = np.array([r["indicated_value"] for r in rows], dtype=float)
     med = float(np.median(ind))
@@ -183,6 +224,34 @@ def analyze(cd: CountyData, subject: pd.Series, p: CompParams | None = None) -> 
     downgrade = sensitivity is not None and (abs(sensitivity["shift"]) > 0.10 or sensitivity["comparables_used"] < p.min_comps)
     if downgrade and reliability == "good":
         reliability = "acceptable"
+    older = [r for r in rows if r["effective_age_gap"] is not None and r["effective_age_gap"] < -p.older_gap_years]
+    bias = None
+    if len(older) * 2 >= len(rows):
+        bias = (f"{len(older)} of {len(rows)} sales are more than {p.older_gap_years} years older than the subject (effective year) and age is not "
+                "adjusted, so the indication is likely biased low")
+        reliability = "insufficient"
+    order = sorted(rows, key=lambda r: r["indicated_value"])
+    k = len(order)
+    brackets = [order[(k - 1) // 2], order[k // 2]]
+    w = np.array([1.0 / max(r["gross_adjustment_pct"], 0.02) for r in rows])
+    weighted = float(np.sum(w * ind) / np.sum(w))
+    price_raw = np.array([r["sale_price"] for r in rows], dtype=float)
+    no_time = np.array([r["sale_price"] + r["net_adjustment"] - r["adjustments"]["time"] for r in rows], dtype=float)
+    time_only = np.array([r["sale_price"] + r["adjustments"]["time"] for r in rows], dtype=float)
+    reconciliation = {
+        "method": "median of the adjusted prices: each sale counts once and no single sale can move the result far",
+        "median_between": [r["parcel_id"] for r in brackets],
+        "weights": {r["parcel_id"]: round(float(wi / w.sum()), 3) for r, wi in zip(rows, w)},
+        "weighted_cross_check": int(round(weighted)),
+        "weighted_basis": "mean of adjusted prices weighted by 1 / gross adjustment (floor 2%), as a cross-check only",
+        "sensitivity": {"recorded_prices_median": int(np.median(price_raw)), "time_adjustment_only_median": int(round(np.median(time_only))),
+                        "without_time_adjustment_median": int(round(np.median(no_time))), "adjusted_median": int(round(med))},
+    }
+    uc_idx = cd.time_index.get(uc, {})
+    recent = [uc_idx[m] for m in sorted(uc_idx) if vym - 12 <= m < vym]
+    steps = [abs(b / a - 1) for a, b in zip(recent, recent[1:])] if len(recent) > 1 else []
+    time_note = (f"county-wide monthly index for this use; the largest month-to-month move in the year before the valuation date is "
+                 f"{max(steps):.1%}" if steps else "no time adjustment: too few sales near the valuation date")
     result.update({
         "sensitivity": sensitivity,
         "selected": rows,
@@ -197,9 +266,12 @@ def analyze(cd: CountyData, subject: pd.Series, p: CompParams | None = None) -> 
         },
         "indication": {"market_value": int(round(med)), "low": int(ind.min()), "high": int(ind.max()),
                        "method": "median of adjusted comparable indications", "comparables": len(rows)},
+        "reconciliation": reconciliation,
+        "time_index_note": time_note,
+        "systematic_bias": bias,
         "dispersion_cod": round(cod, 4),
         "reliability": reliability,
-        "reliability_reason": f"coefficient of dispersion {cod:.1%} across {len(rows)} adjusted sales"
+        "reliability_reason": (bias if bias else f"coefficient of dispersion {cod:.1%} across {len(rows)} adjusted sales")
                               + ("; downgraded because the result depends on heavily adjusted sales" if downgrade else ""),
     })
     return result

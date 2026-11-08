@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import statistics
+
 from .records import as_int
 
 ASSUMED_SCHOOL_MILLS = 5.5
@@ -32,15 +34,23 @@ def conclude(subject, analysis: dict, peers: dict, own_sales: list[dict], find_p
         indications["market_less_cost_of_sale"] = {"value": as_int(market * (1 - rate)),
                                                     "formula": f"market value indication {as_int(market):,} x (1 - {rate:.0%} cost of sale)",
                                                     "basis": f"the county's DR-493 eighth-criterion adjustment of {rate:.0%} to recorded sale prices ({cost_of_sale['section']})",
-                                                    "source": cost_of_sale["source"], "rule": cost_of_sale.get("rule")}
+                                                    "source": cost_of_sale["source"], "rule": cost_of_sale.get("rule"), "role": "statutory conversion"}
+    if market is not None and analysis.get("selected"):
+        ratios = [c["county_just_value"] / c["sale_price"] for c in analysis["selected"] if c.get("county_just_value") and c.get("sale_price")]
+        if len(ratios) >= 3:
+            r = statistics.median(ratios)
+            indications["comparables_own_assessment_ratio"] = {
+                "value": as_int(market * r), "formula": f"market value indication {as_int(market):,} x {r:.4f}",
+                "basis": "the median ratio of the county's own values for these same sold homes to their sale prices", "role": "cross-check"}
     if market is not None:
         indications["market_at_county_level"] = {"value": as_int(market * level),
                                                   "formula": f"market value indication {as_int(market):,} x county level {level:.4f}",
-                                                  "basis": "puts the subject at the same ratio of just value to sale price that the county applies to its typical qualified sale"}
+                                                  "basis": "puts the subject at the same ratio of just value to sale price that the county applies to its typical qualified sale",
+                                                  "role": "alternative conversion"}
     if peers.get("peers", 0) >= 8 and peers.get("median_value_per_sqft"):
         indications["assessment_uniformity"] = {"value": as_int(peers["median_value_per_sqft"] * float(subject.sqft)),
                                                 "formula": f"peer median ${peers['median_value_per_sqft']:,.2f}/sq ft x {float(subject.sqft):,.0f} sq ft",
-                                                "basis": "the county's own value per sq ft for similar homes in the same peer group"}
+                                                "basis": "the county's own value per sq ft for similar homes in the same peer group", "role": "cross-check"}
     contradiction = None
     for s in own_sales:
         if s["qualified"] and s["before_valuation_date"] and s["time_adjusted_price"]:
@@ -49,8 +59,11 @@ def conclude(subject, analysis: dict, peers: dict, own_sales: list[dict], find_p
                 contradiction = {"sale_month": s["sale_month"], "sale_price": s["sale_price"], "implied_just_value": as_int(implied),
                                  "detail": "the subject's own qualified sale before the valuation date supports the county's value"}
     proposed = None
-    if indications:
-        proposed = round_value(max(v["value"] for v in indications.values()))
+    primary = {k: v for k, v in indications.items() if v.get("role") in ("statutory conversion", "alternative conversion")}
+    cross_above = []
+    if primary:
+        proposed = round_value(max(v["value"] for v in primary.values()))
+        cross_above = [k for k, v in indications.items() if k not in primary and v["value"] > proposed]
     reduction = max(0.0, jv - proposed) if proposed is not None else None
     if analysis.get("reliability") == "insufficient" or ind is None:
         outcome, why = "insufficient_evidence", analysis.get("reliability_reason") or "no reliable market indication"
@@ -61,13 +74,60 @@ def conclude(subject, analysis: dict, peers: dict, own_sales: list[dict], find_p
                                              f"{as_int(jv):,}, so the evidence does not support a material reduction")
     else:
         outcome, why = "supports_reduction", f"the supported value {proposed:,} is {reduction / jv:.1%} below the county's {as_int(jv):,}"
-    out = {"method_version": "fl-value/1", "county_values": county, "market_value_indication": as_int(market) if market else None,
+    bridge, later, conversion = None, None, None
+    rec = (analysis.get("reconciliation") or {}).get("sensitivity") or {}
+    if market is not None and rec:
+        conv = indications.get("market_less_cost_of_sale") or indications.get("market_at_county_level")
+        best = max(primary.items(), key=lambda kv: kv[1]["value"])
+        bridge = {"steps": [
+            {"label": "Recorded sale prices, median", "value": rec["recorded_prices_median"]},
+            {"label": "After moving each sale to January 1", "value": rec["time_adjustment_only_median"]},
+            {"label": "After land, feature and living-area adjustments (market value indication)", "value": as_int(market)},
+            {"label": "After converting market value to just value", "value": conv["value"], "how": conv["formula"]},
+            {"label": f"Requested just value: highest indication ({best[0].replace('_', ' ')}), rounded", "value": proposed},
+        ],
+            "county_just_value": as_int(jv),
+            "county_value_to_market_indication": round(jv / market, 4),
+            "gap": {"total": as_int(jv - proposed) if proposed is not None else None,
+                    "county_value_above_market_indication": as_int(jv - market),
+                    "just_value_conversion": as_int(market - best[1]["value"]),
+                    "rounding": as_int(best[1]["value"] - proposed) if proposed is not None else None}}
+        conversion = {"statute": "s. 193.011(8), Florida Statutes: net proceeds of sale after usual costs of sale",
+                      "dr493_rate": cost_of_sale["rate"] if cost_of_sale else None,
+                      "dr493_source": f"{cost_of_sale['source']} ({cost_of_sale['section']})" if cost_of_sale else None,
+                      "measured_level": round(level, 4),
+                      "base": "the market value indication built from recorded sale prices; recorded prices carry no cost-of-sale deduction",
+                      "applied": "once per indication; the DR-493 rate and the county's measured level are alternatives, never stacked",
+                      "not_applied_to": ["the assessment comparison, which is already on the just-value basis",
+                                         "land and feature adjustments, which are converted from just value to market terms by dividing by the county level"],
+                      "distinct_from": "exemptions and assessment caps, which act on assessed and taxable value after just value is set",
+                      "applies": bool(cost_of_sale),
+                      "note": None if cost_of_sale else "no verified DR-493 rate for this county, year and use; only the measured level is used"}
+    subs = analysis.get("subsequent_sales") or []
+    sq = float(subject.sqft) if subject.get("sqft") == subject.get("sqft") and subject.get("sqft") else None
+    similar = [x for x in subs if sq and x.get("sqft") and abs(x["sqft"] / sq - 1) <= 0.10 and x.get("time_adjusted_price")]
+    if similar:
+        rows = []
+        for x in similar:
+            eq = as_int(x["time_adjusted_price"] * level)
+            rel = "supports the county value" if eq >= jv else ("consistent with the request" if proposed and eq <= proposed * 1.10 else "between the two")
+            rows.append({**x, "just_value_equivalent": eq, "relation": rel})
+        contrary = [r for r in rows if r["relation"] == "supports the county value"]
+        later = {"sales": rows, "count": len(rows),
+                 "median_price": as_int(statistics.median(r["sale_price"] for r in rows)),
+                 "median_time_adjusted": as_int(statistics.median(r["time_adjusted_price"] for r in rows)),
+                 "median_just_value_equivalent": as_int(statistics.median(r["just_value_equivalent"] for r in rows)),
+                 "contrary": len(contrary), "conflict": len(contrary) * 2 >= len(rows),
+                 "use": "a check on the January 1 indication, never the basis for it (DOR bulletin PTO 08-02)"}
+    out = {"method_version": "fl-value/2", "county_values": county, "market_value_indication": as_int(market) if market else None,
            "county_level": round(level, 4), "cost_of_sale": ({"rate": cost_of_sale["rate"], "source": cost_of_sale["source"],
                                                                "section": cost_of_sale["section"]} if cost_of_sale else None),
            "just_value_indications": indications,
            "proposed_just_value": proposed if outcome == "supports_reduction" else None,
-           "proposed_rule": "the higher (more conservative) of the available just value indications, rounded to the nearest $100",
-           "outcome": outcome, "outcome_reason": why, "contradiction": contradiction}
+           "proposed_rule": "the higher of the market-to-just-value conversions (DR-493 cost of sale or the county's measured ratio), rounded to the nearest $100; cross-checks are reported and flagged if they point higher",
+           "cross_checks_above_request": cross_above,
+           "outcome": outcome, "outcome_reason": why, "contradiction": contradiction,
+           "bridge": bridge if outcome == "supports_reduction" else None, "conversion": conversion, "later_sales": later}
     if outcome != "supports_reduction":
         out["effects"] = None
         out["tax_estimate"] = None

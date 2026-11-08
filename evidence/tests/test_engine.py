@@ -26,7 +26,7 @@ def test_end_to_end_signed_case_produces_a_packet_and_a_structured_result(tmp_pa
     assert res["validation"]["status"] == "validated_against_configured_requirements"
     rd = res["readiness"]
     assert rd["generation"] == "generated" and rd["human_review"] == "not_reviewed" and rd["approval"] == "not_approved"
-    assert set(rd["delivery"].values()) <= {"not_sent", "not_filed"}
+    assert set(rd["delivery"].values()) <= {"not_sent", "not_filed", "not_received"}
     assert json.load(open(res["file_handoff"]["evidence_json"]))["status"] == "incomplete"
     for item in res["inventory"]:
         assert item["evidence_id"].startswith("ev-") and item["source"]

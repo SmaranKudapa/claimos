@@ -115,7 +115,24 @@ def validate(doc: Doc, pdf: Path | None, render_info: dict | None, base: dict, c
         else:
             _check(out, "V-CALC-COS", "calculation", False, "no verified DR-493 cost-of-sale rate is configured for this county and year; "
                    "the just value rests on the measured level alone", "FL-VAL-05", "warn")
-        exp = round_value(max(v["value"] for v in jvi.values()))
+        lvl = jvi.get("market_at_county_level")
+        if lvl:
+            exp_l = round(val["market_value_indication"] * val["county_level"])
+            _check(out, "V-CALC-LEVEL", "calculation", abs(exp_l - lvl["value"]) <= 2,
+                   f"measured-ratio conversion applied once: {exp_l:,} vs {lvl['value']:,}", "FL-VAL-05")
+        unsupported = sorted({k for c in sel for k, amt in c["adjustments"].items()
+                              if amt and not ((c.get("adjustment_detail") or {}).get(k) or {}).get("support")})
+        _check(out, "V-ADJ-SUPPORT", "calculation", not unsupported, "every non-zero adjustment states its basis and support" if not unsupported else
+               f"adjustments without a stated basis: {', '.join(unsupported)}", "internal")
+        lat = val.get("later_sales") or {}
+        _check(out, "V-LATER-CONFLICT", "calculation", not lat.get("conflict"),
+               "sales after January 1 do not contradict the request" if not lat.get("conflict") else
+               f"{lat['contrary']} of {lat['count']} similar sales after January 1 point to the county's value or higher", "FL-POST-01", "warn")
+        prim = [v["value"] for v in jvi.values() if v.get("role") in ("statutory conversion", "alternative conversion")]
+        exp = round_value(max(prim)) if prim else None
+        above = val.get("cross_checks_above_request") or []
+        _check(out, "V-CROSS-CHECK", "calculation", not above, "every cross-check is at or below the requested value" if not above else
+               f"cross-checks point higher than the request: {', '.join(x.replace('_', ' ') for x in above)}", "internal", "warn")
         _check(out, "V-CALC-PROPOSED", "calculation", exp == val["proposed_just_value"] and val["effects"]["just_value_reduction"] == cv["just_value"] - exp,
                f"requested value is the highest indication rounded to $100 ({exp:,}); reduction {cv['just_value'] - exp:,}", "internal")
     _check(out, "V-EXH-REFS", "exhibits", not unresolved, "every exhibit reference resolves" if not unresolved else f"unresolved references: {unresolved}", "internal")
@@ -170,7 +187,25 @@ def validate(doc: Doc, pdf: Path | None, render_info: dict | None, base: dict, c
     _check(out, "V-FMT-COVER", "delivery", not cover_missing,
            "cover page has petition number and telephone for a remote-hearing upload" if not cover_missing else
            f"before any remote-hearing upload add: {', '.join(cover_missing)}", "FL-HRG-02", "warn")
+    if pages:
+        heads = [b[1] for b in doc.blocks if b[0] == "h1"] + [f"{e['id']}: {e['title']}" for e in doc.exhibits]
+        orphans = []
+        for i, t in enumerate(pages):
+            body = t.split("Version ")[0].rstrip() if "Version " in t else t.rstrip()
+            if any(body.endswith(h) for h in heads):
+                orphans.append(i + 1)
+        _check(out, "V-LAYOUT-ORPHAN", "presentation", not orphans, "no heading is stranded at the bottom of a page" if not orphans else
+               f"heading stranded at the bottom of page(s) {orphans}", "CO-FMT-01")
+        sparse = [i + 1 for i, t in enumerate(pages[:-1]) if len(t) < 500]
+        _check(out, "V-LAYOUT-SPARSE", "presentation", not sparse, "no mostly empty pages before the last" if not sparse else
+               f"mostly empty page(s): {sparse}", "CO-FMT-01", "warn")
+    for c in out:
+        c["kind"] = "presentation" if c["category"] in ("format", "presentation") else "substance"
     fails = [c for c in out if c["status"] == "fail"]
     warns = [c for c in out if c["status"] == "warn"]
+    part = {k: "passed" if not [c for c in fails if c["kind"] == k] else "failed" for k in ("presentation", "substance")}
     return {"status": "validated_against_configured_requirements" if not fails else "failed", "failures": len(fails), "warnings": len(warns),
-            "checks": out, "scope": "Checks Claim OS's configured requirements. It does not establish that a board will accept or admit the evidence."}
+            "presentation": part["presentation"], "substance": part["substance"],
+            "checks": out, "scope": "Checks Claim OS's configured requirements: presentation (layout, pagination, readability) and substance "
+                                    "(identity, arithmetic, exhibits, language, privacy) must both pass. It does not establish that a board will accept "
+                                    "or admit the evidence."}

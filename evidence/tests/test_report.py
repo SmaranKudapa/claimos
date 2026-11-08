@@ -6,9 +6,9 @@ import json
 from pypdf import PdfReader
 
 from claimevidence.engine import run
-from claimevidence.forums import forum
+from claimevidence.jurisdictions.florida import forum
 from claimevidence.report import Doc
-from claimevidence.rules import cost_of_sale, deadlines_for, exchange_due, remote_upload_due, rules_for
+from claimevidence.jurisdictions.florida import cost_of_sale, deadlines_for, exchange_due, remote_upload_due, rules_for
 from claimevidence.validate import validate
 
 from .conftest import envelope, find_payload

@@ -35,10 +35,18 @@ VAB = ("fl_vab_value_petition",)
 ALLP = ("fl_vab_value_petition", "fl_informal_conference", "fl_circuit_court_value")
 
 
+EFFECTIVE = {"FL-EVX-01": "2025-09-01", "FL-EVX-02": "2025-09-01", "FL-EVX-03": "2026-11-02", "FL-EVX-04": "2026-11-02",
+             "FL-EVX-05": "2026-08-27", "FL-EVX-08": "2026-11-02", "FL-HRG-02": "2026-11-02", "FL-HRG-04": "2026-11-02",
+             "FL-SCOPE-04": "2026-08-27", "FL-ADM-02": "2026-08-27", "FL-FEE-01": "2025-07-01", "FL-FORM-01": "2026-11-02",
+             "FL-EVX-07": "2026-01-01", "HENDRY-REM-01": "2026-08-12", "BAY-PET-01": "2026-09-24"}
+ENDS = {"HENDRY-REM-01": "2027-06-01", "BAY-PET-01": "2027-06-01"}
+
+
 def R(id, jurisdiction, topic, summary, status, source, section, effective=None, proceedings=VAB, appeal_types=None,
-      applied_as="", automated=None, human_review=None, implementation="implemented", cite_in_packet=False):
+      applied_as="", automated=None, human_review=None, implementation="implemented", cite_in_packet=False, effective_from=None, effective_to=None):
     return {"id": id, "jurisdiction": jurisdiction, "topic": topic, "summary": summary, "status": status, "source": source,
-            "section": section, "effective": effective, "retrieved": RETRIEVED, "proceedings": list(proceedings),
+            "section": section, "effective": effective, "effective_from": effective_from or EFFECTIVE.get(id),
+            "effective_to": effective_to or ENDS.get(id), "retrieved": RETRIEVED, "proceedings": list(proceedings),
             "appeal_types": list(appeal_types) if appeal_types else None, "applied_as": applied_as, "automated": automated,
             "human_review": human_review, "implementation": implementation, "cite_in_packet": cite_in_packet}
 
@@ -76,6 +84,9 @@ RULES: list[dict] = [
     R("FL-EVX-02", "FL", "evidence_exchange_appraiser", "At least 15 days before the hearing the property appraiser must give the petitioner its evidence, including the property record card, without a request. If late, the hearing is rescheduled unless the petitioner waives.",
       "mandatory", FS, "s. 194.011(4)(b); R. 12D-9.020(1)(a)2; PTO 25-02", effective="2025-09-01; rule 2026-11-02",
       applied_as="Tracked as an expected incoming delivery; a missing appraiser exchange is flagged for the reviewer.", implementation="partial"),
+    R("FL-EVX-02-PRE2025", "FL", "evidence_exchange_appraiser", "Before September 1, 2025 the property appraiser had to provide its evidence only on the petitioner's written request, 7 days before the hearing.",
+      "superseded", UPPM, "former R. 12D-9.020(2)-(3)", effective="through 2025-08-31", effective_to="2025-09-01",
+      applied_as="Applies only to hearings before September 1, 2025; kept so older cases are judged by the rule then in force.", implementation="documented"),
     R("FL-EVX-03", "FL", "exchange_counting", "Count calendar days backward from the hearing, the day before the hearing being day 1. If day 15 is a Saturday, Sunday or legal holiday, use the previous non-holiday weekday. Provided means received.",
       "mandatory", CAB, "R. 12D-9.020(1)(b), (2)", effective="2026-11-02",
       applied_as="exchange_due() implements the count with a conservative holiday list; the date is a receipt date, so mail time must be added.", automated="D-EXCHANGE"),
@@ -217,10 +228,13 @@ def cost_of_sale(county: str | None, year: int | None, use: str | None) -> dict 
     return None
 
 
-def rules_for(county: str | None, appeal_type: str | None, proceeding: str | None = None) -> list[dict]:
+def rules_for(county: str | None, appeal_type: str | None, proceeding: str | None = None, on: dt.date | str | None = None) -> list[dict]:
     c = _norm(county)
+    day = on.isoformat() if isinstance(on, dt.date) else on
     out = []
     for r in RULES:
+        if day and ((r.get("effective_from") and day < r["effective_from"]) or (r.get("effective_to") and day >= r["effective_to"])):
+            continue
         j = r["jurisdiction"]
         if j not in ("FL", "ClaimOS") and _norm(j.split(":", 1)[-1]) != c:
             continue
@@ -313,12 +327,24 @@ COUNTY_DEADLINES = {
 }
 
 
+RECIPIENT = {"petition_filing": "VAB clerk", "evidence_exchange_petitioner": "property appraiser", "evidence_exchange_appraiser": "petitioner",
+             "remote_appearance_request": "VAB clerk", "remote_evidence_upload": "VAB clerk", "hearing_notice": "petitioner",
+             "hearing": "special magistrate", "written_decision": "petitioner", "circuit_court": "circuit court clerk"}
+HOLIDAYS = ("counted back in calendar days; a day that falls on a Saturday, Sunday or legal holiday moves to the previous working day. "
+            "Legal holidays are not defined in the rule; Claim OS uses federal holidays plus the day after Thanksgiving, which can only move a date earlier")
+
+
 def deadlines_for(county: str | None, year: int, hearing: str | None = None, today: dt.date | None = None) -> dict:
+    from .forums import forum
+    tz = ((forum("vab_just_value", county) or {}).get("county") or {}).get("timezone")
     out = {}
     for k in DEADLINE_KEYS:
         spec = DEADLINE_SPECS.get(k, {})
         out[k] = {"date": None, "verified": False, "source": spec.get("source"), "rule": spec.get("rule"),
-                  "trigger": spec.get("trigger"), "computation": spec.get("computation"), "basis": spec.get("basis")}
+                  "trigger": spec.get("trigger"), "computation": spec.get("computation"), "basis": spec.get("basis"),
+                  "recipient": RECIPIENT.get(k), "timezone": tz or "unknown: county not configured", "legal": True,
+                  "holiday_treatment": HOLIDAYS if k in ("evidence_exchange_petitioner", "evidence_exchange_appraiser", "remote_appearance_request",
+                                                         "remote_evidence_upload") else None}
     for k, v in COUNTY_DEADLINES.get((_norm(county), year), {}).items():
         out[k].update(v)
     if hearing:
@@ -327,6 +353,14 @@ def deadlines_for(county: str | None, year: int, hearing: str | None = None, tod
         ex = exchange_due(h).isoformat()
         for k in ("evidence_exchange_petitioner", "evidence_exchange_appraiser"):
             out[k].update({"date": ex, "verified": True, "basis": f"computed from the {h.isoformat()} hearing; a receipt date, so allow for delivery time"})
+        target = dt.date.fromisoformat(ex)
+        n = 0
+        while n < 3:
+            target -= dt.timedelta(days=1)
+            if is_business_day(target):
+                n += 1
+        out["evidence_exchange_petitioner"]["internal_target"] = {"date": target.isoformat(), "legal": False,
+                                                                   "basis": "Claim OS target: three working days before the legal date, to allow for delivery; never a substitute for it"}
         out["remote_appearance_request"].update({"date": remote_request_due(h).isoformat(), "verified": True, "basis": "computed; only if appearing remotely"})
         up = remote_upload_due(h)
         out["remote_evidence_upload"].update({"date": up.date().isoformat(), "time": "09:00", "verified": True,
@@ -340,10 +374,11 @@ def deadlines_for(county: str | None, year: int, hearing: str | None = None, tod
 
 
 def matrix_markdown() -> str:
-    head = "| ID | Requirement | Jurisdiction / proceeding | Source | Status | Applies | Automated check | Human review | Implementation |\n|---|---|---|---|---|---|---|---|---|\n"
+    head = "| ID | Requirement | Jurisdiction / proceeding | Source | Effective | Status | Applies | Automated check | Human review | Implementation |\n|---|---|---|---|---|---|---|---|---|---|\n"
     rows = []
     for r in RULES:
-        rows.append("| {id} | {summary} | {j} / {p} | [{sec}]({src}) | {status} | {applied} | {auto} | {hr} | {impl} |".format(
+        eff = (r.get("effective_from") or "") + (" to " + r["effective_to"] if r.get("effective_to") else (" onward" if r.get("effective_from") else ""))
+        rows.append("| {id} | {summary} | {j} / {p} | [{sec}]({src}) | {eff} | {status} | {applied} | {auto} | {hr} | {impl} |".format(eff=eff or (r.get("effective") or "-"),
             id=r["id"], summary=r["summary"].replace("|", "/"), j=r["jurisdiction"], p=", ".join(r["proceedings"]),
             sec=r["section"], src=r["source"] if str(r["source"]).startswith("http") else "#", status=r["status"],
             applied=r["applied_as"].replace("|", "/"), auto=r["automated"] or "-", hr=r["human_review"] or "-", impl=r["implementation"]))

@@ -18,13 +18,14 @@ from .model import INPUT_SCHEMA, METHOD_VERSION, RESULT_SCHEMA, Item, SourceUnav
 from .delivery import build as build_delivery
 from .delivery import readiness as build_readiness
 from .filehandoff import write as write_file_handoff
-from .forums import forum as forum_for
 from .packet import render_internal
 from .records import as_int, as_str, load_county
 from .render import to_html, to_markdown, to_pdf
 from .report import build as build_report
 from .requirements import build_matrix, homeowner_tasks
-from .rules import cost_of_sale, deadlines_for, rules_for
+from .jurisdictions import resolve as resolve_jurisdiction
+from .jurisdictions.florida import cost_of_sale, deadlines_for, rules_for
+from .jurisdictions.florida import forum as forum_for
 from .validate import validate
 from .valuation import conclude
 
@@ -153,11 +154,17 @@ def _run(inp, intake, cycle, key, cdir, rdir, data_dir, started, params, today, 
                                "qualification_ref": (inp.get("qualification") or {}).get("ref"),
                                "authorization_ref": (inp.get("authorization") or {}).get("document_ref")},
             "intake": intake}
-    fm = forum_for(appeal.get("appeal_type"), county)
+    jur = resolve_jurisdiction(juris.get("state"))
+    base["jurisdiction_support"] = {k: jur.get(k) for k in ("status", "state", "ruleset", "reason")}
+    if jur["status"] != "supported":
+        fm = {"proceeding_id": None, "supported": "unsupported", "authority": None, "label": None, "kind": None, "notes": jur["reason"], "county": {}}
+    else:
+        fm = forum_for(appeal.get("appeal_type"), county)
     base["proceeding"] = {k: fm.get(k) for k in ("proceeding_id", "label", "kind", "supported", "authority", "notes")}
     base["proceeding"]["county_adapter"] = fm.get("county")
-    rules = rules_for(county, appeal.get("appeal_type"), fm.get("proceeding_id"))
-    deadlines = _deadlines(inp, find, county, year, as_of or today) if isinstance(year, int) else {}
+    on = appeal.get("hearing_date") or (as_of or today).isoformat()
+    rules = rules_for(county, appeal.get("appeal_type"), fm.get("proceeding_id"), on) if jur["status"] == "supported" else []
+    deadlines = _deadlines(inp, find, county, year, as_of or today) if isinstance(year, int) and jur["status"] == "supported" else {}
     if as_of:
         base["replay"] = {"as_of": as_of.isoformat(), "note": "deadlines are judged as of this date for a demonstration replay, not as of today"}
     ctx = {"forum": fm, "today": today, "find": find}
@@ -245,7 +252,8 @@ def _generate(base, col, a, val, items, fm, inp, intake, cdir, rdir, today, cos)
     redactions = [x for x in inp.get("redactions") or [] if isinstance(x, str) and x.strip()]
     petitioner = _petitioner(inp, intake)
     synthetic = bool(inp.get("synthetic"))
-    draft = build_report(base, col, a, val, items, fm, {"number": 0, "fingerprint": "0" * 64}, "2000-01-01", petitioner, sub, synthetic)
+    refs = {"authorization": {k: (inp.get("authorization") or {}).get(k) for k in ("status", "instrument", "signed_at")}}
+    draft = build_report(base, col, a, val, items, fm, {"number": 0, "fingerprint": "0" * 64}, "2000-01-01", petitioner, sub, synthetic, refs)
     draft.resolve()
     draft.redact(redactions)
     fingerprint = sha256_obj({"text": draft.text(), "code": __version__})
@@ -256,7 +264,7 @@ def _generate(base, col, a, val, items, fm, inp, intake, cdir, rdir, today, cos)
         _write(vfile, json.dumps(versions, indent=1))
     version = versions[fingerprint]["version"]
     report_date = versions[fingerprint]["report_date"]
-    doc = build_report(base, col, a, val, items, fm, {"number": version, "fingerprint": fingerprint}, report_date, petitioner, sub, synthetic)
+    doc = build_report(base, col, a, val, items, fm, {"number": version, "fingerprint": fingerprint}, report_date, petitioner, sub, synthetic, refs)
     unresolved = doc.resolve()
     redacted = doc.redact(redactions)
     pdf, info = rdir / "packet.pdf", None
@@ -379,7 +387,9 @@ def _finish(base, run_id, started, processing, errors, rules, deadlines, items, 
     witness_gaps = [c["detail"] for c in (validation or {}).get("checks", []) if c["id"] == "V-WITNESS" and c["status"] != "pass"]
     manifest = None
     if fm.get("supported") == "packet":
-        manifest = build_delivery(fm, deadlines or {}, packet_meta, review, (gen or {}).get("submission") or inp.get("submission") or {},
+        sub_d = dict((gen or {}).get("submission") or inp.get("submission") or {})
+        sub_d.setdefault("hearing_format", (inp.get("appeal") or {}).get("hearing_format"))
+        manifest = build_delivery(fm, deadlines or {}, packet_meta, review, sub_d,
                                   inp.get("delivery_events") or [], bool(inp.get("synthetic")), {"exchange_property_appraiser": witness_gaps})
     if manifest:
         _write(rdir / "delivery.json", json.dumps(manifest, indent=1, default=str))

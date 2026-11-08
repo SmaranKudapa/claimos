@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 RESULT_SCHEMA = "claimos.evidence.result/1"
 INPUT_SCHEMA = "claimos.evidence.input/1"
-METHOD_VERSION = "fl-sales-comparison/1"
+METHOD_VERSION = "fl-sales-comparison/2"
 
 APPEAL_TYPES = {
     "vab_just_value": "Petition contesting the just (market) value of a residential parcel",

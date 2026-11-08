@@ -18,7 +18,7 @@ def find_record(jsonl: Path | str, county_code: str, tax_year: int, parcel_id: s
 
 
 def county_name(code) -> str | None:
-    from .forums import COUNTY_ADAPTERS
+    from .jurisdictions.florida import COUNTY_ADAPTERS
     for a in COUNTY_ADAPTERS.values():
         if a["county_code"] == str(code).zfill(2):
             return a["county"]

@@ -1,4 +1,4 @@
 from .model import RESULT_SCHEMA, INPUT_SCHEMA, METHOD_VERSION
 
 __all__ = ["RESULT_SCHEMA", "INPUT_SCHEMA", "METHOD_VERSION"]
-__version__ = "0.2.0"
+__version__ = "0.3.0"
