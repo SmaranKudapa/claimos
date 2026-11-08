@@ -21,7 +21,7 @@ body { font-family: "Times New Roman", Times, serif; font-size: 11pt; line-heigh
 h1.t { font: bold 17pt Helvetica, Arial, sans-serif; margin: 0 0 4px; }
 .sub { font: 10pt Helvetica, Arial, sans-serif; color: #333; margin-bottom: 12px; }
 h2 { font: bold 13pt Helvetica, Arial, sans-serif; margin: 18px 0 6px; }
-h2.ex { break-before: page; }
+h2.ex { margin-top: 22px; }
 table { border-collapse: collapse; width: 100%; margin: 4px 0 10px; font: 8.5pt Helvetica, Arial, sans-serif; }
 thead { display: table-header-group; }
 th, td { border: 0.5pt solid #808080; padding: 2px 4px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }

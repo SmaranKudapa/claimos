@@ -44,7 +44,7 @@ def to_pdf(doc: Doc, path: Path, footer_left: str, title: str, subject: str = ""
         "title": ParagraphStyle("title", fontName=SANS_B, fontSize=17, leading=21, spaceAfter=4),
         "subtitle": ParagraphStyle("subtitle", fontName=SANS, fontSize=10, leading=13, textColor=colors.HexColor("#333333"), spaceAfter=12),
         "h1": ParagraphStyle("h1", fontName=SANS_B, fontSize=13, leading=16, spaceBefore=12, spaceAfter=6, keepWithNext=1),
-        "exhibit": ParagraphStyle("exhibit", fontName=SANS_B, fontSize=13, leading=16, spaceAfter=8, keepWithNext=1),
+        "exhibit": ParagraphStyle("exhibit", fontName=SANS_B, fontSize=11.5, leading=14, spaceBefore=4, spaceAfter=6, keepWithNext=1),
         "p": ParagraphStyle("p", fontName=FONT, fontSize=BODY_PT, leading=BODY_PT * 1.32, spaceAfter=6, alignment=TA_LEFT),
         "lead": ParagraphStyle("lead", fontName=FONT, fontSize=BODY_PT, leading=BODY_PT * 1.32, spaceAfter=6, alignment=TA_LEFT, keepWithNext=1),
         "note": ParagraphStyle("note", fontName=FONT, fontSize=10, leading=13, spaceBefore=8, borderPadding=6,
@@ -99,7 +99,9 @@ def to_pdf(doc: Doc, path: Path, footer_left: str, title: str, subject: str = ""
                     out.append(Paragraph(_esc(x), st["bullet"], bulletText="•"))
             elif kind == "table":
                 t = table(b[1], b[2], b[3], b[4])
-                lead = [out.pop()] if out and getattr(out[-1], "style", None) is st["lead"] else []
+                lead = []
+                while out and getattr(out[-1], "style", None) in (st["lead"], st["h1"], st["exhibit"]):
+                    lead.insert(0, out.pop())
                 if len(b[2]) <= 12:
                     out.append(KeepTogether(lead + [t]))
                 else:
@@ -110,7 +112,11 @@ def to_pdf(doc: Doc, path: Path, footer_left: str, title: str, subject: str = ""
             elif kind == "pagebreak":
                 out.append(PageBreak())
             elif kind == "exhibit":
-                out.append(PageBreak())
+                if b[2] == "Exhibit 1":
+                    out.append(PageBreak())
+                    out.append(Anchored("Exhibits", st["h1"], key="sec_exhibits", level=0, label="Exhibits"))
+                else:
+                    out.append(Spacer(1, 10))
                 out.append(Anchored(_esc(f"{b[2]}: {b[3]}"), st["exhibit"], key=b[1], level=1, label=f"{b[2]}: {b[3]}"))
             elif kind == "image":
                 img = Image(b[1])

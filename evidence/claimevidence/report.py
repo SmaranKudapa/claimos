@@ -191,6 +191,8 @@ def build(base: dict, col: dict, a: dict | None, val: dict, items: list[dict], f
     if synthetic:
         d.add("note", "This document is built from synthetic test records. It describes no real property and must never be sent to a county.")
     d.add("h1", "Summary")
+    d.add("p", f"Issue: whether the {year} just value exceeds the property's just value, meaning its market value, on January 1, {year} "
+               "(s. 193.011, Florida Statutes).")
     if supports:
         jvi = val["just_value_indications"]
         d.add("p", f"The property appraiser set the {year} just value of this {use} at {m(cv['just_value'])} ({R('roll')}).")
@@ -212,7 +214,6 @@ def build(base: dict, col: dict, a: dict | None, val: dict, items: list[dict], f
                    f"The evidence gathered so far does not support a requested value. Reason: {val['outcome_reason']}.")
     d.add("h1", "Evidence index")
     d.add("index")
-    d.add("pagebreak")
     d.add("h1", "Subject property")
     facts = [["Just value", m(cv["just_value"]), "County roll", R("roll")],
              ["Assessed value, school / non-school", f"{m(cv['assessed_value_school'])} / {m(cv['assessed_value_non_school'])}", "County roll", R("roll")],
