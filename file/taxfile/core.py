@@ -1,6 +1,7 @@
 import hashlib
 import html
 import json
+import math
 import re
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -8,6 +9,7 @@ from urllib.parse import urlparse
 from urllib.request import urlopen
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader, PdfWriter
+from pypdf.generic import NameObject, NumberObject, TextStringObject
 
 FORM_URL = "https://floridarevenue.com/property/Documents/dr486.pdf"
 ROUTES = {
@@ -87,6 +89,10 @@ def assess(envelope, candidate, root, today=None):
         holds.append("Unsupported jurisdiction: verify county filing instructions before preparing a submission.")
     if candidate.get("tier") not in ("strong", "possible"):
         holds.append("Find did not classify this case as strong or possible.")
+    mailing = candidate["owner"].get("mailing_address")
+    values = mailing.values() if isinstance(mailing, dict) else [mailing]
+    if not any(isinstance(value, str) and value.strip() for value in values):
+        holds.append("A mailing address for notices is required before operator review.")
     window = candidate.get("filing_window") or {}
     if not isinstance(window, dict):
         window = {}
@@ -128,7 +134,7 @@ def assess(envelope, candidate, root, today=None):
         holds.append("A valid verified filing deadline is required.")
     if filing.get("method") not in ROUTES.get(county, {}).get("methods", []):
         holds.append("Choose a filing method supported by the county's verified instructions.")
-    if not isinstance(filing.get("fee_usd"), (int, float)) or isinstance(filing.get("fee_usd"), bool) or filing.get("fee_usd", -1) < 0 or filing.get("fee_verified") is not True:
+    if not isinstance(filing.get("fee_usd"), (int, float)) or isinstance(filing.get("fee_usd"), bool) or not math.isfinite(filing["fee_usd"]) or filing.get("fee_usd", -1) < 0 or filing.get("fee_verified") is not True:
         holds.append("The actual filing fee or documented exemption must be verified.")
     authorization = envelope.get("authorization") if isinstance(envelope.get("authorization"), dict) else {}
     if authorization.get("representation_mode") not in ("owner", "licensed_representative", "unlicensed_compensated", "unlicensed_uncompensated"):
@@ -175,7 +181,14 @@ def prepare(input_path, output_root, template):
         data["Representative"] = str(envelope["filing"]["representative_name"])
     writer = PdfWriter()
     writer.append(reader, pages=(0, min(2, len(reader.pages))))
-    writer.update_page_form_field_values(writer.pages[0], data, auto_regenerate=False)
+    for annotation_ref in writer.pages[0].get("/Annots", []):
+        annotation = annotation_ref.get_object()
+        if annotation.get("/T") in data and annotation.get("/FT") == "/Tx":
+            annotation[NameObject("/DA")] = TextStringObject("/Helv 0 Tf 0 g")
+        if annotation.get("/T") in ("Mailing Address", "Parcel ID and Pyshical Address"):
+            annotation[NameObject("/Ff")] = NumberObject(int(annotation.get("/Ff", 0)) | 4096)
+    fitted = {name: (value, "/Helv", 0) if fields.get(name, {}).get("/FT") == "/Tx" else value for name, value in data.items()}
+    writer.update_page_form_field_values(writer.pages[0], fitted, auto_regenerate=False)
     writer.add_metadata({"/Title": "DRAFT — " + candidate["case_id"], "/Subject": "Unsigned preparation copy; not filed"})
     for artifact in artifacts:
         source_path = Path(artifact["path"])
@@ -197,78 +210,89 @@ def prepare(input_path, output_root, template):
     return manifest, out
 
 
-def record_receipt(manifest_path, receipt_path, confirmation_id, parcel_id, notice_path=None, response_due=None):
-    manifest_path, receipt_path = Path(manifest_path), Path(receipt_path)
-    manifest = json.loads(manifest_path.read_text())
-    if manifest.get("status") not in ("ready_for_operator_review", "receipt_recorded"):
-        raise ValueError("Resolve filing holds before recording a submission receipt.")
-    normalize = lambda value: re.sub(r"[^A-Za-z0-9]", "", str(value)).lower()
-    if normalize(parcel_id) != normalize(manifest["property"]["parcel_id"]):
-        raise ValueError("Receipt parcel does not match this case.")
-    if not confirmation_id.strip() or not receipt_path.is_file():
-        raise ValueError("A real receipt file and confirmation number are required.")
-    if not receipt_path.resolve().is_relative_to(manifest_path.parent.resolve()):
-        raise ValueError("Save the receipt inside this case directory first.")
-    content = receipt_path.read_bytes()
-    if not content or len(content) > 25_000_000:
-        raise ValueError("Receipt is empty or oversized.")
-    text = "\n".join(page.extract_text() or "" for page in PdfReader(receipt_path).pages) if content.startswith(b"%PDF") else content.decode("utf-8")
-    if normalize(confirmation_id) not in normalize(text) or normalize(parcel_id) not in normalize(text):
-        raise ValueError("Receipt contents must identify both the confirmation number and parcel.")
-    receipt_hash = digest(content)
-    ledger_path = manifest_path.parent / "receipts.jsonl"
-    ledger = [json.loads(line) for line in ledger_path.read_text().splitlines()] if ledger_path.exists() else []
-    for row in ledger:
-        if row["sha256"] == receipt_hash:
-            if response_due:
-                notice = record_notice(manifest_path, notice_path, response_due)
-                return {**row, "response_due": response_due, "notice": notice}
-            return row
-    if response_due:
-        if not notice_path or not Path(notice_path).is_file() or not Path(notice_path).resolve().is_relative_to(manifest_path.parent.resolve()):
-            raise ValueError("A response deadline needs the actual notice artifact.")
-        due = date.fromisoformat(response_due)
-        notice_bytes = Path(notice_path).read_bytes()
-        notice_text = "\n".join(page.extract_text() or "" for page in PdfReader(notice_path).pages) if notice_bytes.startswith(b"%PDF") else notice_bytes.decode("utf-8")
-        choices = [due.isoformat(), due.strftime("%m/%d/%Y"), f"{due.month}/{due.day}/{due.year}", due.strftime("%B ") + str(due.day) + ", " + str(due.year)]
-        if not any(choice.lower() in notice_text.lower() for choice in choices):
-            raise ValueError("The supplied response date was not found in the notice; do not infer a deadline.")
-    saved = manifest_path.parent / ("receipt-" + receipt_hash[:16] + (".pdf" if content.startswith(b"%PDF") else ".txt"))
-    saved.write_bytes(content)
-    row = {"case_id": manifest["case_id"], "status": "receipt_recorded", "confirmation_id": confirmation_id, "parcel_id": parcel_id, "path": str(saved), "sha256": receipt_hash, "recorded_at": datetime.now(timezone.utc).isoformat(), "response_due": response_due, "deadline_source_sha256": digest(Path(notice_path).read_bytes()) if notice_path else None, "next_action": "verify_clerk_acceptance_and_fee_receipt" if response_due else "obtain_clerk_notice_and_response_deadline"}
-    ledger.append(row)
-    ledger_path.write_text("".join(json.dumps(item) + "\n" for item in ledger))
-    manifest.update(status="receipt_recorded", receipt=row, response_deadline=response_due)
-    manifest_path.write_text(json.dumps(manifest, indent=2))
-    if response_due:
-        row["notice"] = record_notice(manifest_path, notice_path, response_due)
-    return row
+def normalize_identifier(value):
+    return re.sub(r"[^A-Za-z0-9]", "", str(value)).lower()
 
 
-def record_notice(manifest_path, notice_path, response_due):
+def notice_details(manifest_path, notice_path, response_due, receipt, case_id):
+    if not notice_path or not response_due:
+        raise ValueError("A notice and its explicit response date are both required.")
     manifest_path, notice_path = Path(manifest_path), Path(notice_path)
-    manifest = json.loads(manifest_path.read_text())
-    receipt = manifest.get("receipt")
-    if not isinstance(receipt, dict):
-        raise ValueError("Record the case receipt before attaching its response notice.")
-    if not notice_path.resolve().is_relative_to(manifest_path.parent.resolve()):
+    if not notice_path.resolve().is_relative_to(manifest_path.parent.resolve()) or not notice_path.is_file():
         raise ValueError("Save the notice inside this case directory first.")
     content = notice_path.read_bytes()
     if not content or len(content) > 25_000_000:
         raise ValueError("Notice is empty or oversized.")
     body = "\n".join(page.extract_text() or "" for page in PdfReader(notice_path).pages) if content.startswith(b"%PDF") else content.decode("utf-8")
-    normalized = re.sub(r"[^A-Za-z0-9]", "", body).lower()
-    references = [receipt["confirmation_id"], receipt["parcel_id"]]
-    if not any(re.sub(r"[^A-Za-z0-9]", "", value).lower() in normalized for value in references):
+    normalized = normalize_identifier(body)
+    references = [normalize_identifier(receipt[key]) for key in ("confirmation_id", "parcel_id")]
+    if not any(reference and reference in normalized for reference in references):
         raise ValueError("Notice does not identify this case.")
     due = date.fromisoformat(response_due)
     choices = [due.isoformat(), due.strftime("%m/%d/%Y"), f"{due.month}/{due.day}/{due.year}", due.strftime("%B ") + str(due.day) + ", " + str(due.year)]
-    if not any(choice.lower() in body.lower() for choice in choices):
+    if not any(re.search(r"(?<![0-9])" + re.escape(choice) + r"(?![0-9])", body, re.IGNORECASE) for choice in choices):
         raise ValueError("The supplied response deadline does not appear in the notice.")
     sha = digest(content)
     saved = manifest_path.parent / ("notice-" + sha[:16] + (".pdf" if content.startswith(b"%PDF") else ".txt"))
+    return {"case_id": case_id, "status": "notice_recorded", "response_due": response_due, "timezone": "America/New_York", "path": str(saved), "sha256": sha, "recorded_at": datetime.now(timezone.utc).isoformat()}, content
+
+
+def record_receipt(manifest_path, receipt_path, confirmation_id, parcel_id, notice_path=None, response_due=None):
+    manifest_path, receipt_path = Path(manifest_path), Path(receipt_path)
+    manifest = json.loads(manifest_path.read_text())
+    if manifest.get("status") not in ("ready_for_operator_review", "receipt_recorded"):
+        raise ValueError("Resolve filing holds before recording a submission receipt.")
+    if not normalize_identifier(parcel_id) or normalize_identifier(parcel_id) != normalize_identifier(manifest["property"]["parcel_id"]):
+        raise ValueError("Receipt parcel does not match this case.")
+    if not normalize_identifier(confirmation_id) or not receipt_path.is_file():
+        raise ValueError("A real receipt file and confirmation number are required.")
+    if not receipt_path.resolve().is_relative_to(manifest_path.parent.resolve()):
+        raise ValueError("Save the receipt inside this case directory first.")
+    if bool(notice_path) != bool(response_due):
+        raise ValueError("Supply both the notice artifact and its response date, or neither.")
+    content = receipt_path.read_bytes()
+    if not content or len(content) > 25_000_000:
+        raise ValueError("Receipt is empty or oversized.")
+    text = "\n".join(page.extract_text() or "" for page in PdfReader(receipt_path).pages) if content.startswith(b"%PDF") else content.decode("utf-8")
+    if normalize_identifier(confirmation_id) not in normalize_identifier(text) or normalize_identifier(parcel_id) not in normalize_identifier(text):
+        raise ValueError("Receipt contents must identify both the confirmation number and parcel.")
+    receipt_hash = digest(content)
+    ledger_path = manifest_path.parent / "receipts.jsonl"
+    ledger = [json.loads(line) for line in ledger_path.read_text().splitlines()] if ledger_path.exists() else []
+    notice, notice_content = None, None
+    if response_due:
+        notice, notice_content = notice_details(manifest_path, notice_path, response_due, {"confirmation_id": confirmation_id, "parcel_id": parcel_id}, manifest["case_id"])
+    for row in ledger:
+        if row["sha256"] == receipt_hash:
+            if normalize_identifier(row["confirmation_id"]) != normalize_identifier(confirmation_id):
+                raise ValueError("The saved receipt has a different confirmation number; review it instead of replacing it.")
+            if notice:
+                record_notice(manifest_path, notice_path, response_due)
+            current = json.loads(manifest_path.read_text())
+            return {**row, "response_due": current.get("response_deadline"), "notice": current.get("notice")}
+    saved = manifest_path.parent / ("receipt-" + receipt_hash[:16] + (".pdf" if content.startswith(b"%PDF") else ".txt"))
     saved.write_bytes(content)
-    notice = {"case_id": manifest["case_id"], "status": "notice_recorded", "response_due": response_due, "timezone": "America/New_York", "path": str(saved), "sha256": sha, "recorded_at": datetime.now(timezone.utc).isoformat()}
-    manifest.update(response_deadline=response_due, notice=notice)
+    if notice:
+        Path(notice["path"]).write_bytes(notice_content)
+        manifest["notice"] = notice
+    deadline = response_due or manifest.get("response_deadline")
+    row = {"case_id": manifest["case_id"], "status": "receipt_recorded", "confirmation_id": confirmation_id, "parcel_id": parcel_id, "path": str(saved), "sha256": receipt_hash, "recorded_at": datetime.now(timezone.utc).isoformat(), "response_due": deadline, "deadline_source_sha256": manifest.get("notice", {}).get("sha256"), "next_action": "verify_clerk_acceptance_and_fee_receipt" if deadline else "obtain_clerk_notice_and_response_deadline"}
+    ledger.append(row)
+    ledger_path.write_text("".join(json.dumps(item) + "\n" for item in ledger))
+    manifest.update(status="receipt_recorded", receipt=row, response_deadline=deadline)
+    manifest_path.write_text(json.dumps(manifest, indent=2))
+    return {**row, "notice": manifest.get("notice")}
+
+
+def record_notice(manifest_path, notice_path, response_due):
+    manifest_path = Path(manifest_path)
+    manifest = json.loads(manifest_path.read_text())
+    receipt = manifest.get("receipt")
+    if not isinstance(receipt, dict):
+        raise ValueError("Record the case receipt before attaching its response notice.")
+    notice, content = notice_details(manifest_path, notice_path, response_due, receipt, manifest["case_id"])
+    Path(notice["path"]).write_bytes(content)
+    receipt.update(response_due=response_due, deadline_source_sha256=notice["sha256"], next_action="verify_clerk_acceptance_and_fee_receipt")
+    manifest.update(response_deadline=response_due, notice=notice, receipt=receipt)
     manifest_path.write_text(json.dumps(manifest, indent=2))
     return notice

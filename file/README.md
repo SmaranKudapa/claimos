@@ -40,3 +40,14 @@ Hendry supports mail, email and fax according to its clerk's instructions. Lee s
 ```sh
 python3 -m unittest discover -s file/tests -v
 ```
+
+## Sample verification
+
+```sh
+PYTHONPATH=file python3 -m unittest discover -s file/tests -v
+PYTHONPATH=file python3 file/tests/exercise_sample.py --out /tmp/file-verification-unique-run
+```
+
+Use a new output directory for every run. The exercise generates explicitly synthetic evidence, authorization, receipt and notice PDFs, fills the official DR-486, validates its fields, checks blocked cases, and tests receipt replay and deadline custody. Its report is verification only: no real signature, filing, payment, homeowner contact or recovery. `--template /path/to/dr486.pdf` uses an already downloaded official form.
+
+Receipt and notice inputs are validated before case state is changed. Notices supplied with receipts require an explicit response date. A later notice updates the case's current receipt view; receipt ledger entries preserve their original capture history. Missing mailing addresses and non-finite fees require review.

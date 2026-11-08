@@ -11,3 +11,5 @@ For each assigned case:
 Use the official Florida DR-486 and current county instructions. Distinguish tax year, valuation date, document generation date, filing deadline and hearing dates. Never fabricate savings, comparables, signatures, completed submissions or revenue. Keep secrets out of source, chat and logs. Calls remain unconfigured. Publish only this case's necessary artifacts within the company.
 
 Report briefly: case ID, packet state, actual files produced, remaining holds, receipt state and deadline source. New code and commits use the real November 7 Pacific clock; feature-focused docs and commit subjects, no code comments or changelogs.
+
+Trusted package bootstrap: claimos-file 0.1.2 is company file fil_9emzktfst573e7fb1tndpj8xt2. Its ZIP SHA-256 is 6a52ddb23127b8e6f5425bf5d0225337985f2e6a18b2a247993c9dc48102b9be. On a new computer or if the installed version differs, fetch this exact file, verify the ZIP digest, extract it into a new directory, and install ./file. Do not use an older chat attachment. Synthetic verification lives in tests/exercise_sample.py and must never be counted as real company work.

@@ -9,7 +9,7 @@ from taxfile.core import assess, load_handoff, local_artifact, record_receipt, r
 
 
 def candidate():
-    return {"schema_version": 1, "case_id": "FL-26-2026-TEST", "desk": "property_tax", "jurisdiction": {"state": "FL", "county": "Hendry", "tax_year": 2026}, "property": {"parcel_id": "TEST", "address": "Test fixture", "use": "single_family"}, "owner": {"name": "Fixture only", "mailing_address": {}}, "source": {"run_id": "fixture"}, "tier": "strong", "filing_window": {"status": "closed", "closes": "2026-09-09"}}
+    return {"schema_version": 1, "case_id": "FL-26-2026-TEST", "desk": "property_tax", "jurisdiction": {"state": "FL", "county": "Hendry", "tax_year": 2026}, "property": {"parcel_id": "TEST", "address": "Test fixture", "use": "single_family"}, "owner": {"name": "Fixture only", "mailing_address": {"line1": "100 Example Way", "city": "Test City", "state": "FL", "zip": "00000"}}, "source": {"run_id": "fixture"}, "tier": "strong", "filing_window": {"status": "closed", "closes": "2026-09-09"}}
 
 
 class FileTests(unittest.TestCase):
@@ -90,6 +90,82 @@ class FileTests(unittest.TestCase):
             self.assertEqual(result["response_due"], "2026-12-15")
             self.assertTrue(Path(result["path"]).exists())
             self.assertEqual(json.loads(manifest.read_text())["response_deadline"], "2026-12-15")
+
+
+    def test_invalid_combined_notice_does_not_change_case(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            manifest = root / "manifest.json"
+            initial = {"case_id": "fixture", "status": "ready_for_operator_review", "property": {"parcel_id": "PARCEL-123"}}
+            manifest.write_text(json.dumps(initial))
+            receipt = root / "clerk.txt"
+            receipt.write_text("Confirmation VAB-123 Parcel PARCEL-123")
+            notice = root / "notice.txt"
+            notice.write_text("OTHER-CASE response deadline: December 15, 2026")
+            before = manifest.read_bytes()
+            with self.assertRaises(ValueError):
+                record_receipt(manifest, receipt, "VAB-123", "PARCEL-123", notice, "2026-12-15")
+            self.assertEqual(manifest.read_bytes(), before)
+            self.assertFalse((root / "receipts.jsonl").exists())
+            self.assertEqual(list(root.glob("receipt-*")), [])
+
+    def test_notice_without_date_cannot_be_silently_attached(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            manifest = root / "manifest.json"
+            manifest.write_text(json.dumps({"case_id": "fixture", "status": "ready_for_operator_review", "property": {"parcel_id": "PARCEL-123"}}))
+            receipt = root / "clerk.txt"
+            receipt.write_text("Confirmation VAB-123 Parcel PARCEL-123")
+            with self.assertRaises(ValueError):
+                record_receipt(manifest, receipt, "VAB-123", "PARCEL-123", root / "missing.txt")
+            self.assertFalse((root / "receipts.jsonl").exists())
+
+    def test_empty_normalized_confirmation_is_rejected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            manifest = root / "manifest.json"
+            manifest.write_text(json.dumps({"case_id": "fixture", "status": "ready_for_operator_review", "property": {"parcel_id": "PARCEL-123"}}))
+            receipt = root / "clerk.txt"
+            receipt.write_text("Parcel PARCEL-123; no confirmation yet")
+            with self.assertRaises(ValueError):
+                record_receipt(manifest, receipt, "---", "PARCEL-123")
+
+    def test_nonfinite_fee_and_empty_mailing_address_are_held(self):
+        c = candidate()
+        c["owner"]["mailing_address"] = {}
+        for fee in (float("nan"), float("inf")):
+            with self.subTest(fee=fee):
+                _, holds, _ = assess({"filing": {"fee_usd": fee, "fee_verified": True}}, c, ".", date(2026, 11, 7))
+                self.assertTrue(any("fee" in item for item in holds))
+                self.assertTrue(any("mailing" in item.lower() for item in holds))
+
+
+    def test_combined_valid_receipt_and_notice_are_consistent(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            manifest = root / "manifest.json"
+            manifest.write_text(json.dumps({"case_id": "fixture", "status": "ready_for_operator_review", "property": {"parcel_id": "PARCEL-123"}}))
+            receipt = root / "clerk.txt"
+            receipt.write_text("Confirmation VAB-123 Parcel PARCEL-123")
+            notice = root / "notice.txt"
+            notice.write_text("VAB-123 response deadline: December 15, 2026")
+            row = record_receipt(manifest, receipt, "VAB-123", "PARCEL-123", notice, "2026-12-15")
+            saved = json.loads(manifest.read_text())
+            self.assertEqual(saved["response_deadline"], "2026-12-15")
+            self.assertEqual(row["notice"]["sha256"], saved["notice"]["sha256"])
+            again = record_receipt(manifest, receipt, "VAB-123", "PARCEL-123")
+            self.assertEqual(again["response_due"], "2026-12-15")
+            self.assertEqual(len((root / "receipts.jsonl").read_text().splitlines()), 1)
+
+    def test_notice_date_must_not_match_a_longer_year(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            manifest = root / "manifest.json"
+            manifest.write_text(json.dumps({"case_id": "fixture", "receipt": {"confirmation_id": "VAB-123", "parcel_id": "PARCEL-123"}}))
+            notice = root / "notice.txt"
+            notice.write_text("VAB-123 response deadline: December 15, 20260")
+            with self.assertRaises(ValueError):
+                record_notice(manifest, notice, "2026-12-15")
 
 
 if __name__ == "__main__":
