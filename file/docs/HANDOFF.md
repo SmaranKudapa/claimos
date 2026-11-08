@@ -18,7 +18,7 @@ File outputs `manifest.json`, `DRAFT-DR-486.pdf`, `petition-data.json` and `revi
 
 The Naïve File agent publishes generated artifacts and reports the real returned file IDs. Chase receives the same case ID plus the receipt and notice artifacts. Missing acceptance or deadline is an explicit follow-up task.
 
-The final Evidence adapter awaits an actual native Evidence output. No upstream completion, signature or document may be inferred from a missing handoff.
+The Evidence bridge consumes the published claimos.evidence.result/1 result plus its file-handoff/evidence.json and actual hashed files. No upstream completion, signature or document is inferred from a missing handoff.
 
 ## Find schema 2
 
@@ -35,3 +35,11 @@ The parent Evidence object must match the case and tax year and be complete. Eve
 The manifest preserves `candidate_schema_version` and the full `candidate`; `candidate.json` is the same original object. Its estimates are not recovered revenue. Condo units and property locality are included in the draft address. Bay candidates can be ingested and reviewed, but remain blocked because the currently reviewed filing adapters cover Lee and Hendry only.
 
 A Find run summary, flattened CSV, `handoff.status: delivered`, or retry-file path is not a completed Evidence packet. Supply one actual candidate JSON object (or its board JSON block) within the case-matched handoff. Board cards omit Find's raw comparable arrays; the Evidence desk needs the full candidate data or separately obtained supporting records.
+
+## Qualify → Evidence → File bridge
+
+`taxfile evidence-input --candidate candidate.json --qualify handoff.json --out evidence-input.json` selects exactly one matching `find_case_id`, preserves the original Qualify entry, and translates `QUALIFIED` to Evidence's `decision: qualified`. A changed case, county, year, duplicate decision, non-qualified status or unsupported route is rejected. Historical judgment dates and replay translator notes remain replay markers even if a batch flag is cleared. This command creates no owner authorization or contact consent.
+
+`taxfile evidence-handoff --candidate candidate.json --qualify handoff.json --result result.json --evidence file-handoff/evidence.json --out file-input/case-handoff.json` copies the packet and verified supporting artifacts into an isolated directory, retaining their hashes and the complete original result. Optional `--context filing-context.json` supplies independently obtained authorization and filing details; it never comes from a guessed deadline or a replay assumption.
+
+Native Evidence handoffs require the matching original result. The run must have completed, validation must have passed, the packet must support a reduction and be complete, and a recorded reviewer must approve that exact hash for `file_handoff`. Synthetic, replay, missing authorization, stale review, changed packet and unresolved verification states remain holds. Evidence review is separate from approval to submit the petition.

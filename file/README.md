@@ -53,3 +53,14 @@ Use a new output directory for every run. The exercise generates explicitly synt
 Receipt and notice inputs are validated before case state is changed. Notices supplied with receipts require an explicit response date. A later notice updates the case's current receipt view; receipt ledger entries preserve their original capture history. Missing mailing addresses and non-finite fees require review.
 
 The sample exercise also accepts `--schema-version 2` for a complete schema-2 packet. Schema-2 verification requirements remain holds until Evidence supplies their matching hashed resolutions. Full original candidates are retained in the manifest and `candidate.json`.
+
+
+## Published handoff integration
+
+The `evidence-input` and `evidence-handoff` commands connect published Qualify and Evidence artifacts without editing them. See [the handoff contract](docs/HANDOFF.md). The pipeline exercise runs the unchanged installed Evidence engine on a matching original Find record and a Qualify replay result, then verifies that File preserves the artifacts and blocks live filing:
+
+```sh
+PYTHONPATH=file python3 file/tests/exercise_pipeline.py --find candidates.jsonl --qualify handoff.json --case-id ORIGINAL_CASE_ID --out /tmp/unique-pipeline-run
+```
+
+This exercise requires the existing `claimos-evidence` and `taxappeal-find` packages. It prepares public-record evidence and an unsigned blocked draft only; it does not send messages, file, sign, pay, or create agent-board cards.

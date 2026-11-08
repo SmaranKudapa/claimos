@@ -10,6 +10,7 @@ from urllib.request import urlopen
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import NameObject, NumberObject, TextStringObject
+from .handoff import RESULT_SCHEMA, evidence_holds
 
 FORM_URL = "https://floridarevenue.com/property/Documents/dr486.pdf"
 ROUTES = {
@@ -103,6 +104,13 @@ def assess(envelope, candidate, root, today=None):
     jurisdiction = candidate["jurisdiction"]
     county = str(jurisdiction.get("county", "")).lower().removesuffix(" county").strip()
     holds, artifacts = [], []
+    if envelope.get("replay") or (isinstance(envelope.get("qualification"), dict) and envelope["qualification"].get("replay")):
+        holds.append("Replay qualification cannot authorize a current filing.")
+    if envelope.get("synthetic"):
+        holds.append("Synthetic handoffs cannot authorize a real filing.")
+    ev = envelope.get("evidence") or {}
+    if isinstance(ev, dict) and ((ev.get("source") or {}).get("schema") == RESULT_SCHEMA or "evidence_result" in envelope):
+        holds.extend(evidence_holds(envelope.get("evidence_result"), ev, candidate))
     if jurisdiction.get("state") != "FL" or county not in ROUTES:
         holds.append("Unsupported jurisdiction: verify county filing instructions before preparing a submission.")
     if candidate.get("tier") not in ("strong", "possible"):

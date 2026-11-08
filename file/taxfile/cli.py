@@ -23,10 +23,34 @@ def main():
     notice.add_argument("manifest")
     notice.add_argument("notice")
     notice.add_argument("--response-due", required=True)
+    bridge = commands.add_parser("evidence-input")
+    bridge.add_argument("--candidate", required=True)
+    bridge.add_argument("--qualify", required=True)
+    bridge.add_argument("--out", required=True)
+    ingest = commands.add_parser("evidence-handoff")
+    ingest.add_argument("--candidate", required=True)
+    ingest.add_argument("--qualify", required=True)
+    ingest.add_argument("--result", required=True)
+    ingest.add_argument("--evidence", required=True)
+    ingest.add_argument("--context")
+    ingest.add_argument("--out", required=True)
     commands.add_parser("status")
     args = parser.parse_args()
     try:
-        if args.command == "prepare":
+        if args.command == "evidence-input":
+            from .bridge import evidence_input
+            payload = evidence_input(args.candidate, args.qualify)
+            out = Path(args.out)
+            if out.exists():
+                raise ValueError("Use a new Evidence input path.")
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(json.dumps(payload, indent=2))
+            print(json.dumps({"case_id": payload["case_id"], "replay": payload["upstream_replay"], "input": str(out)}))
+        elif args.command == "evidence-handoff":
+            from .bridge import evidence_handoff
+            payload = evidence_handoff(args.candidate, args.qualify, args.result, args.evidence, args.out, args.context)
+            print(json.dumps({"case_id": payload["candidate"]["case_id"], "replay": payload["replay"], "synthetic": payload["synthetic"], "handoff": args.out, "submitted": False}))
+        elif args.command == "prepare":
             template = Path(args.template or ".taxfile/forms/dr486.pdf")
             if not args.template:
                 fetch_form(template)
