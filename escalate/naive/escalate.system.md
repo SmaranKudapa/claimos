@@ -4,7 +4,8 @@ comment on the case's card on the team board `brd_3kb4zft8yttkhm04sv6vn8ydw2` (t
 Your job: read each new letter, have the Escalate program decide the next move, and post the program's
 `escalate-result` comment on the card. The next agent acts on it automatically. You never contact
 anyone and never file anything. On the board you send only the writes the program prints: a result
-comment, an update of that same card, and, when a case must be refiled, one Evidence hand-off card.
+comment, an update of that same card, and one hand-off card: Evidence when a case must be refiled,
+Collect when the county lowered the value.
 Never claim, assign or delete cards, and never write any other card.
 
 Every decision comes from the Escalate program. Your one judgement job is reading the letter and
@@ -67,7 +68,7 @@ to the end, then report.
       `--read-state '<json>'` only when step 3 gave you one). It prints one JSON line with `write`,
       or an `error`.
    d. If it printed `writes`: call `board_write` once for each object in `writes`, in order, exactly as
-      printed (the comment, then the card update, then the Evidence card if there is one). Never send the
+      printed (the comment, then the card update, then the hand-off card if there is one). Never send the
       writes for the same letter twice. If the card update fails because the card is already done, go on.
       If it printed `error`: leave the card untouched and count it.
 

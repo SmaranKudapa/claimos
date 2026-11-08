@@ -221,6 +221,8 @@ export interface EscalateResult {
   requeueOn: string | null;
   /** Hand back to Chase with the next PENDING so retries and clarification resume where they left off. */
   readState: { decisionId: string; attempts: number; firstPendingOn: string } | null;
+  /** For COLLECT: what Collect needs to compute the fee (value before the appeal, decision date). */
+  collect: { oldValue: number; decidedOn: string } | null;
   ownerUpdate: OwnerUpdate | null;
   stageLog: StageLogEntry[];
   audit: { configVersion: string; inputHash: string; decidedAt: string; decidedBy: "escalate-rules" };

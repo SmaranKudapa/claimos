@@ -201,7 +201,25 @@ export function cardWrites(r: EscalateResult, card: { id: string; body?: string;
   const notes: string[] = [];
   const code = r.summary.split(" · ")[1] ?? r.reasonCodes[0] ?? "";
   const tail = r.summary.split(" · ").slice(2).join(" · ");
-  if (r.status === "COLLECT") writes.push({ op: "update", card_id: card.id, status: "done", note: `WON · ${code} · ${tail} · next: Collect` });
+  if (r.status === "COLLECT") {
+    writes.push({ op: "update", card_id: card.id, status: "done", note: `WON · ${code} · ${tail} · next: Collect` });
+    const f = r.reading.verified;
+    if (f?.newAssessedValue !== undefined && r.collect) {
+      const block = card.body ? findCaseBlock(card.body) : null;
+      writes.push({
+        op: "create",
+        title: `Collect · ${card.address ?? r.address} · ${r.caseId}`,
+        assignee: "collect",
+        status: "todo",
+        key: `escalate-collect-${r.caseId}-${r.decisionId ?? "letter"}`,
+        body: [
+          `From Escalate: ${code} · the county lowered the value; confirm the corrected bill, then invoice.`,
+          `collect-handoff · case ${r.caseId} · old ${r.collect.oldValue} · won ${f.newAssessedValue} · decided ${r.collect.decidedOn} · letter ${r.decisionId} · code ${code}`,
+          ...(block ? ["", "```json", block, "```"] : []),
+        ].join("\n"),
+      });
+    } else notes.push("won without a verified new value; Collect card not created");
+  }
   if (r.status === "CLOSED") writes.push({ op: "update", card_id: card.id, status: "done", note: `STOPPED · ${code} · ${tail}` });
   if (r.status === "ESCALATE") {
     writes.push({ op: "update", card_id: card.id, status: "blocked", note: `APPEAL · ${code} · ${tail} · next: Evidence → File` });

@@ -28,11 +28,15 @@ describe("findCaseBlock", () => {
 });
 
 describe("cardWrites", () => {
-  it("COLLECT: comment, then the card goes to done with a WON note", async () => {
+  it("COLLECT: comment, the card goes to done with a WON note, and a Collect card carries the handoff", async () => {
     const { r, writes } = await writesFor("Decision date: 2026-10-30\nThe petition is granted in full. The assessed value is reduced to $420,000.");
     expect(r.status).toBe("COLLECT");
-    expect(writes.map((w) => w.op)).toEqual(["comment", "update"]);
+    expect(writes.map((w) => w.op)).toEqual(["comment", "update", "create"]);
     expect(writes[1]).toMatchObject({ op: "update", card_id: "crd_w", status: "done", note: expect.stringMatching(/^WON · W_FULL_WIN · /) });
+    const col = writes[2] as Extract<(typeof writes)[number], { op: "create" }>;
+    expect(col).toMatchObject({ assignee: "collect", status: "todo", key: "escalate-collect-FL-99-2026-DEMO1-msg_9", title: "Collect · 1 Sample St, Testville · FL-99-2026-DEMO1" });
+    expect(col.body).toContain("collect-handoff · case FL-99-2026-DEMO1 · old 500000 · won 420000 · decided 2026-10-30 · letter msg_9 · code W_FULL_WIN");
+    expect(JSON.parse(findCaseBlock(col.body)!)).toEqual(caseJson);
   });
 
   it("CLOSED: the card goes to done with a STOPPED note", async () => {
