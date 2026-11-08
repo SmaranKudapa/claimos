@@ -21,7 +21,8 @@
       "wonCode": "W_FULL_WIN",
       "decisionId": "D-1001"
     },
-    "bill": null
+    "bill": null,
+    "reading": null
   },
   {
     "case": {
@@ -45,7 +46,8 @@
       "wonCode": "W_FULL_WIN",
       "decisionId": "D-1002"
     },
-    "bill": null
+    "bill": null,
+    "reading": null
   },
   {
     "case": {
@@ -74,6 +76,31 @@
       "caseId": "case_placeholder_PH-1003",
       "receivedOn": "2026-12-05",
       "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1003\nBill date: 2026-12-01\nCorrected assessed value: $420,000\nOriginal tax amount: $10,000.00\nCorrected tax amount: $8,400.00"
+    },
+    "reading": {
+      "billDate": "2026-12-01",
+      "assessedValue": 420000,
+      "originalTax": 10000,
+      "correctedTax": 8400,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "billDate",
+          "quote": "Bill date: 2026-12-01"
+        },
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $420,000"
+        },
+        {
+          "field": "originalTax",
+          "quote": "Original tax amount: $10,000.00"
+        },
+        {
+          "field": "correctedTax",
+          "quote": "Corrected tax amount: $8,400.00"
+        }
+      ]
     }
   },
   {
@@ -103,6 +130,21 @@
       "caseId": "case_placeholder_PH-1004",
       "receivedOn": "2026-12-05",
       "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1004\nBill date: 2026-12-01\nCorrected assessed value: $420,000"
+    },
+    "reading": {
+      "billDate": "2026-12-01",
+      "assessedValue": 420000,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "billDate",
+          "quote": "Bill date: 2026-12-01"
+        },
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $420,000"
+        }
+      ]
     }
   },
   {
@@ -132,6 +174,16 @@
       "caseId": "case_placeholder_PH-1005",
       "receivedOn": "2026-12-05",
       "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1005\nCorrected assessed value: $440,000"
+    },
+    "reading": {
+      "assessedValue": 440000,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $440,000"
+        }
+      ]
     }
   },
   {
@@ -161,6 +213,16 @@
       "caseId": "case_placeholder_PH-1006",
       "receivedOn": "2026-12-05",
       "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1006\nCorrected assessed value: $500,000"
+    },
+    "reading": {
+      "assessedValue": 500000,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $500,000"
+        }
+      ]
     }
   },
   {
@@ -190,6 +252,16 @@
       "caseId": "case_placeholder_PH-1007",
       "receivedOn": "2026-12-05",
       "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1007\nCorrected assessed value: $497,500"
+    },
+    "reading": {
+      "assessedValue": 497500,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $497,500"
+        }
+      ]
     }
   },
   {
@@ -219,6 +291,16 @@
       "caseId": "case_placeholder_PH-1008",
       "receivedOn": "2026-12-05",
       "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1008\nCorrected assessed value: $3,000,000"
+    },
+    "reading": {
+      "assessedValue": 3000000,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $3,000,000"
+        }
+      ]
     }
   },
   {
@@ -248,6 +330,10 @@
       "caseId": "case_placeholder_PH-1009",
       "receivedOn": "2026-12-05",
       "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1009\nWe have updated your account. Details will follow."
+    },
+    "reading": {
+      "confidence": 0.2,
+      "evidence": []
     }
   },
   {
@@ -277,6 +363,31 @@
       "caseId": "case_placeholder_PH-1099",
       "receivedOn": "2026-12-05",
       "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1010\nBill date: 2026-12-01\nCorrected assessed value: $420,000\nOriginal tax amount: $10,000.00\nCorrected tax amount: $8,400.00"
+    },
+    "reading": {
+      "billDate": "2026-12-01",
+      "assessedValue": 420000,
+      "originalTax": 10000,
+      "correctedTax": 8400,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "billDate",
+          "quote": "Bill date: 2026-12-01"
+        },
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $420,000"
+        },
+        {
+          "field": "originalTax",
+          "quote": "Original tax amount: $10,000.00"
+        },
+        {
+          "field": "correctedTax",
+          "quote": "Corrected tax amount: $8,400.00"
+        }
+      ]
     }
   },
   {
@@ -308,7 +419,8 @@
         "reminders": []
       }
     },
-    "bill": null
+    "bill": null,
+    "reading": null
   },
   {
     "case": {
@@ -339,7 +451,8 @@
         "reminders": []
       }
     },
-    "bill": null
+    "bill": null,
+    "reading": null
   },
   {
     "case": {
@@ -370,7 +483,8 @@
         "reminders": []
       }
     },
-    "bill": null
+    "bill": null,
+    "reading": null
   },
   {
     "case": {
@@ -405,7 +519,8 @@
         }
       }
     },
-    "bill": null
+    "bill": null,
+    "reading": null
   },
   {
     "case": {
@@ -429,7 +544,8 @@
       "wonCode": "C_REFER_OUT",
       "decisionId": "D-1015"
     },
-    "bill": null
+    "bill": null,
+    "reading": null
   },
   {
     "case": {
@@ -458,6 +574,26 @@
       "caseId": "case_placeholder_PH-1016",
       "receivedOn": "2026-12-05",
       "text": "Placeholder County Tax Collector\nCorrected Tax Bill (synthetic sample)\nParcel: PH-1016\nCorrected assessed value: $470,000\nOriginal tax amount: $10,000.00\nCorrected tax amount: $9,400.00"
+    },
+    "reading": {
+      "assessedValue": 470000,
+      "originalTax": 10000,
+      "correctedTax": 9400,
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "field": "assessedValue",
+          "quote": "Corrected assessed value: $470,000"
+        },
+        {
+          "field": "originalTax",
+          "quote": "Original tax amount: $10,000.00"
+        },
+        {
+          "field": "correctedTax",
+          "quote": "Corrected tax amount: $9,400.00"
+        }
+      ]
     }
   }
 ]

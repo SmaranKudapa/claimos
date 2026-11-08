@@ -1,6 +1,7 @@
 /**
  * Synthetic won cases and corrected bills, one per Collect path. Every name, parcel and bill is
- * made up. `expect` is what the placeholder config decides on 2026-12-15 with the offline reader.
+ * made up. `reading` is what the Collect agent states it read off the bill, quote by quote. `expect` is
+ * what the placeholder config decides on 2026-12-15 with that reading.
  */
 export const SAMPLE_TODAY = "2026-12-15";
 
@@ -10,6 +11,7 @@ export interface Sample {
   title: string;
   case: Json;
   bill: Json | null;
+  reading: Json | null;
   expect: { status: string; code: string; flags?: string[]; fee?: number };
 }
 
@@ -45,12 +47,34 @@ function bill(n: number, lines: string[], over: Json = {}): Json {
   };
 }
 
+const fact = (field: string, value: number | string, quote: string) => ({ field, value, quote });
+function reading(confidence: number, facts: { field: string; value: number | string; quote: string }[]): Json {
+  return { ...Object.fromEntries(facts.map((f) => [f.field, f.value])), confidence, evidence: facts.map(({ field, quote }) => ({ field, quote })) };
+}
+const value = (v: number) => fact("assessedValue", v, `Corrected assessed value: $${v.toLocaleString("en-US")}`);
+const billDate = fact("billDate", "2026-12-01", "Bill date: 2026-12-01");
+const taxes = (before: number, after: number) => [
+  fact("originalTax", before, `Original tax amount: $${before.toLocaleString("en-US", { minimumFractionDigits: 2 })}`),
+  fact("correctedTax", after, `Corrected tax amount: $${after.toLocaleString("en-US", { minimumFractionDigits: 2 })}`),
+];
+const READINGS: Record<number, Json> = {
+  3: reading(0.95, [billDate, value(420_000), ...taxes(10_000, 8_400)]),
+  4: reading(0.95, [billDate, value(420_000)]),
+  5: reading(0.95, [value(440_000)]),
+  6: reading(0.95, [value(500_000)]),
+  7: reading(0.95, [value(497_500)]),
+  8: reading(0.95, [value(3_000_000)]),
+  9: reading(0.2, []),
+  10: reading(0.95, [billDate, value(420_000), ...taxes(10_000, 8_400)]),
+  16: reading(0.95, [value(470_000), ...taxes(10_000, 9_400)]),
+};
+
 const fullBill = ["Bill date: 2026-12-01", "Corrected assessed value: $420,000", "Original tax amount: $10,000.00", "Corrected tax amount: $8,400.00"];
 const invoice = (issuedOn: string, over: Json = {}): Json => ({ number: "PH-INV-1", issuedOn, dueOn: "2027-01-01", amount: 480, reminders: [], ...over });
 
 export function buildSamples(): Sample[] {
   const s: Sample[] = [];
-  const add = (n: number, title: string, c: Json, b: Json | null, expect: Sample["expect"]) => s.push({ n, title, case: c, bill: b, expect });
+  const add = (n: number, title: string, c: Json, b: Json | null, expect: Sample["expect"]) => s.push({ n, title, case: c, bill: b, reading: b ? READINGS[n] ?? null : null, expect });
   add(1, "Won, no corrected bill yet", makeCase(1), null, { status: "WAITING", code: "P_AWAIT_BILL" });
   add(2, "Won long ago, no bill within the wait limit", makeCase(2, { wonOn: "2026-07-01" }), null, { status: "CLOSED", code: "C_NO_PROOF" });
   add(3, "Corrected bill shows the tax amounts", makeCase(3), bill(3, fullBill), { status: "INVOICED", code: "V_INVOICE_ISSUED", flags: ["F_SAVINGS_FROM_BILL"], fee: 480 });

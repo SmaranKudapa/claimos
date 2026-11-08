@@ -5,15 +5,15 @@ import { describe, expect, it } from "vitest";
 import { applyPayment, caseFromCard, cardWrites, feeFromAuthorization, latestInvoiceState, parseBillComment, parseHandoff } from "../src/board.js";
 import { loadConfig, parseConfig } from "../src/config.js";
 import { collect, collectAll } from "../src/pipeline.js";
-import { MockBillReader } from "../src/reader/mock.js";
-import { ProvidedBillReader } from "../src/reader/provided.js";
+import { ProvidedBillReader, ReadingsByBill } from "../src/reader/provided.js";
 import { STATUSES, type CollectResult } from "../src/types.js";
 import { addDays } from "../src/util.js";
 import { buildSamples, SAMPLE_TODAY } from "../scripts/samples.js";
 
 const cfg = () => loadConfig("config/collect.placeholder.json");
-const ctx = (over: Record<string, unknown> = {}) => ({ config: cfg(), today: SAMPLE_TODAY, reader: new MockBillReader(), ...over });
 const samples = buildSamples();
+const sampleReader = () => new ReadingsByBill(Object.fromEntries(samples.filter((s) => s.bill && s.reading).map((s) => [(s.bill as { docId: string }).docId, s.reading])));
+const ctx = (over: Record<string, unknown> = {}) => ({ config: cfg(), today: SAMPLE_TODAY, reader: sampleReader(), ...over });
 const run = (n: number, over: Record<string, unknown> = {}) => {
   const s = samples.find((x) => x.n === n)!;
   return collect(s.case, s.bill, ctx(over));
@@ -44,6 +44,7 @@ describe("autonomy and money safety", () => {
   it("every sample and 200 random cases end in an automatic status; fees stay within bounds and need a bill", async () => {
     const r = rng(7);
     const items = [...samples.map((s) => ({ case: s.case, bill: s.bill }))];
+    const readings: Record<string, unknown> = Object.fromEntries(samples.filter((s) => s.bill && s.reading).map((s) => [(s.bill as { docId: string }).docId, s.reading]));
     for (let i = 0; i < 200; i++) {
       const base = samples[Math.floor(r() * samples.length)]!;
       const old = 100_000 + Math.floor(r() * 3_000_000);
@@ -51,9 +52,10 @@ describe("autonomy and money safety", () => {
       const c = { ...base.case, caseId: `rand-${i}`, oldAssessedValue: old, wonAssessedValue: won, feePct: r() * 0.4, taxRate: 0.005 + r() * 0.03, wonOn: addDays("2026-06-01", Math.floor(r() * 180)) };
       const shown = r() < 0.5 ? won : Math.floor(won + (old - won) * r() * 1.2);
       const bill = r() < 0.3 ? null : { docId: `B-${i}`, caseId: r() < 0.95 ? c.caseId : "other", receivedOn: "2026-12-01", text: r() < 0.15 ? "Account updated." : `Corrected assessed value: $${shown.toLocaleString("en-US")}` };
+      if (bill) readings[bill.docId] = bill.text.startsWith("Corrected") ? { assessedValue: shown, confidence: 0.95, evidence: [{ field: "assessedValue", quote: bill.text }] } : { confidence: 0.2, evidence: [] };
       items.push({ case: r() < 0.2 ? { ...c, invoice: { number: `I-${i}`, issuedOn: addDays(SAMPLE_TODAY, -Math.floor(r() * 90)), dueOn: SAMPLE_TODAY, amount: 100, reminders: [] } } : c, bill } as never);
     }
-    const rs = await collectAll(items, ctx());
+    const rs = await collectAll(items, ctx({ reader: new ReadingsByBill(readings) }));
     for (const x of rs) {
       expect(STATUSES).toContain(x.status);
       expect(x.reasonCodes.every((c) => /^[IDCVP]_/.test(c))).toBe(true);
@@ -127,7 +129,8 @@ describe("board hookup", () => {
   it("invoices, then records payment through the invoice state, ending PAID", async () => {
     const h = parseHandoff(body)!;
     const bill = { ...parseBillComment("tax-bill · case FL-99-2026-X · received 2026-12-05 · doc_1\nCorrected assessed value: $420,000")! };
-    const first = await collect(caseFromCard(h, q, cfg()), bill, ctx());
+    const stated = new ProvidedBillReader({ assessedValue: 420_000, confidence: 0.95, evidence: [{ field: "assessedValue", quote: "Corrected assessed value: $420,000" }] });
+    const first = await collect(caseFromCard(h, q, cfg()), bill, ctx({ reader: stated }));
     expect(first.status).toBe("INVOICED");
     expect(first.flags).toContain("F_DEFAULT_AUTHORIZATION");
     const w = cardWrites(first, "crd_c");
@@ -148,5 +151,12 @@ describe("payment links", () => {
     expect(r.paymentRequest).toMatchObject({ amountCents: 48000, reference: "PH-INV-1" });
     const linked = { ...s.case, invoice: { ...(s.case.invoice as object), paymentLink: { url: "https://pay.example/x" } } };
     expect((await collect(linked, null, ctx())).paymentRequest).toBeNull();
+  });
+});
+
+describe("bill readings are never guessed", () => {
+  it("a bill with no stated reading is refused", async () => {
+    const s = samples.find((x) => x.n === 3)!;
+    await expect(collect(s.case, s.bill, ctx({ reader: new ReadingsByBill({}) }))).rejects.toThrow(/no reading was given for bill BILL-1003/);
   });
 });

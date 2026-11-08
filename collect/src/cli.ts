@@ -23,8 +23,7 @@ import { toCaseRecordPatch, toCollectBeat } from "./case.js";
 import { CODES } from "./codes.js";
 import { loadConfig } from "./config.js";
 import { collect, collectAll, type CollectContext } from "./pipeline.js";
-import { MockBillReader } from "./reader/mock.js";
-import { ProvidedBillReader } from "./reader/provided.js";
+import { ProvidedBillReader, ReadingsByBill } from "./reader/provided.js";
 import type { CollectResult, InvoiceState } from "./types.js";
 import { todayIn } from "./util.js";
 
@@ -73,8 +72,9 @@ async function run() {
   const config = loadConfig(need(a.config, "config"));
   const today = a.today ?? todayIn(process.env.COLLECT_TIMEZONE);
   const items = readJson(need(a.cases, "cases"));
-  if (!Array.isArray(items)) fail("cases file must be a JSON array of { case, bill }");
-  const results = await collectAll(items, { config, today, reader: new MockBillReader() });
+  if (!Array.isArray(items)) fail("cases file must be a JSON array of { case, bill, reading }");
+  const readings = Object.fromEntries(items.filter((i: { bill?: { docId?: string } | null; reading?: unknown }) => i.bill?.docId && i.reading).map((i: { bill: { docId: string }; reading: unknown }) => [i.bill.docId, i.reading]));
+  const results = await collectAll(items, { config, today, reader: new ReadingsByBill(readings) });
   writeJson(a.out!, { runAt: new Date().toISOString(), today, configVersion: config.version, results });
   mkdirSync(dirname(a.audit!), { recursive: true });
   for (const r of results) appendFileSync(a.audit!, JSON.stringify({ at: r.audit.decidedAt, step: "collect", caseId: r.caseId, status: r.status, reasonCodes: r.reasonCodes, flags: r.flags, summary: r.summary, configVersion: r.audit.configVersion, inputHash: r.audit.inputHash }) + "\n");
@@ -132,7 +132,8 @@ async function fromBoard() {
   invoice = applyPayment(invoice, { link: a["payment-link"], linkId: a["payment-link-id"], paidOn: a["paid-on"], ref: a["payment-ref"] });
   const billParsed = a.bill ? parseBillComment(readFileSync(a.bill, "utf8")) : null;
   if (a.bill && !billParsed) return console.log(JSON.stringify({ card_id: card, error: "the bill file is not a tax-bill comment in the agreed shape; leave the card untouched" }));
-  const reader = a["bill-reading"] ? new ProvidedBillReader(readJson(a["bill-reading"])) : new MockBillReader();
+  if (billParsed && !a["bill-reading"]) return console.log(JSON.stringify({ card_id: card, error: "a tax-bill comment needs your reading in --bill-reading; leave the card untouched" }));
+  const reader = a["bill-reading"] ? new ProvidedBillReader(readJson(a["bill-reading"])) : new ReadingsByBill({});
   const ctx: CollectContext = { config, today, reader };
   const r = await collect(caseFromCard(h, q, config, { feePct, invoice }), billParsed, ctx);
   console.log(JSON.stringify({ card_id: card, case_id: r.caseId, status: r.status, reader: billParsed ? reader.name : "none", paymentRequest: r.paymentRequest, writes: cardWrites(r, card) }));
