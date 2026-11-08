@@ -55,12 +55,78 @@ export interface QualifyHandoffEntry {
   owner?: { names: string[]; type: string } | null;
 }
 
+/** The owner's choices Sign up records on the case card. */
+export interface SignedAuthorization {
+  caseId: string;
+  scope: string[];
+  feePct: number;
+  appealPartialIfRemainingAnnualAbove?: number;
+  acceptReopenRisk: boolean;
+  signedOn?: string;
+}
+
 /**
- * The Escalate case for a letter, from Qualify's handoff entry. Until Sign up records the owner's
- * authorization, the desk's narrow default is used and marked (authorizationSource: desk_default).
+ * Parse Sign up's authorization line, e.g.
+ *   authorization: case_id FL-13-2026-1 · scope vab_petition · fee 30% · partial_above 500 · reopen_risk no · signed 2026-09-01
+ * Fields may come in any order; scope is "all_levels" or a comma list. Returns null unless the line
+ * starts with "authorization:" and names a case id, a scope and a fee; anything unreadable → null
+ * (the caller then uses the desk's narrow default).
  */
-export function caseFromQualify(entry: QualifyHandoffEntry, letter: LetterComment, cfg: EscalateConfig, opts: { readAttempts?: unknown[]; contactChannel?: string } = {}): Record<string, unknown> {
+export function parseAuthorizationLine(text: string): SignedAuthorization | null {
+  const line = text.replace(/\r\n/g, "\n").split("\n").find((l) => /^\s*authorization\s*:/i.test(l));
+  if (!line) return null;
+  const fields = new Map<string, string>();
+  for (const part of line.replace(/^\s*authorization\s*:/i, "").split("·")) {
+    const m = part.trim().match(/^([a-z_]+)\s+(.+)$/i);
+    if (m) fields.set(m[1]!.toLowerCase(), m[2]!.trim());
+  }
+  const caseId = fields.get("case_id");
+  const scope = fields.get("scope")?.split(/[,\s]+/).filter(Boolean);
+  const feeM = fields.get("fee")?.match(/^(\d+(?:\.\d+)?)\s*%$/);
+  if (!caseId || !scope?.length || !feeM) return null;
+  const feePct = Number(feeM[1]) / 100;
+  if (!(feePct >= 0 && feePct <= 1)) return null;
+  const pa = fields.get("partial_above");
+  let appealPartialIfRemainingAnnualAbove: number | undefined;
+  if (pa && !/^none$/i.test(pa)) {
+    const n = Number(pa.replace(/[$,]/g, "").replace(/\/\s*(yr|year)$/i, ""));
+    if (!Number.isFinite(n) || n < 0) return null;
+    appealPartialIfRemainingAnnualAbove = n;
+  }
+  const rr = fields.get("reopen_risk");
+  if (rr && !/^(yes|no)$/i.test(rr)) return null;
+  const signed = fields.get("signed");
+  return {
+    caseId,
+    scope,
+    feePct,
+    ...(appealPartialIfRemainingAnnualAbove !== undefined ? { appealPartialIfRemainingAnnualAbove } : {}),
+    acceptReopenRisk: /^yes$/i.test(rr ?? "no"),
+    ...(signed && /^\d{4}-\d{2}-\d{2}$/.test(signed) ? { signedOn: signed } : {}),
+  };
+}
+
+/**
+ * The Escalate case for a letter, from Qualify's handoff entry. Uses the owner's signed
+ * authorization when Sign up recorded one for this case; otherwise the desk's narrow default,
+ * marked authorizationSource: desk_default.
+ */
+export function caseFromQualify(entry: QualifyHandoffEntry, letter: LetterComment, cfg: EscalateConfig, opts: { readAttempts?: unknown[]; contactChannel?: string; signed?: SignedAuthorization | null } = {}): Record<string, unknown> {
   const auth = cfg.defaultAuthorization;
+  const signed = opts.signed && opts.signed.caseId === entry.find_case_id ? opts.signed : null;
+  const authorization = signed
+    ? {
+        signedOn: signed.signedOn ?? entry.judgedAsOf ?? letter.receivedOn,
+        feePct: signed.feePct,
+        scope: signed.scope,
+        escalation: {
+          ...(signed.appealPartialIfRemainingAnnualAbove !== undefined ? { appealPartialIfRemainingAnnualAbove: signed.appealPartialIfRemainingAnnualAbove } : {}),
+          acceptReopenRisk: signed.acceptReopenRisk,
+        },
+      }
+    : auth
+      ? { signedOn: entry.judgedAsOf ?? letter.receivedOn, feePct: auth.feePct, scope: auth.scope }
+      : undefined;
   return {
     caseId: entry.find_case_id,
     parcelId: entry.parcelId,
@@ -73,8 +139,8 @@ export function caseFromQualify(entry: QualifyHandoffEntry, letter: LetterCommen
     ...(typeof entry.pWin === "number" ? { qualify: { pWin: entry.pWin } } : {}),
     currentLevel: letter.level ?? entry.route?.id,
     filings: [],
-    authorization: auth ? { signedOn: entry.judgedAsOf ?? letter.receivedOn, feePct: auth.feePct, scope: auth.scope } : undefined,
-    authorizationSource: "desk_default",
+    authorization,
+    authorizationSource: signed ? "signed" : "desk_default",
     readAttempts: opts.readAttempts ?? [],
   };
 }

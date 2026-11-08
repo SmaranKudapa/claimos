@@ -7,7 +7,7 @@
  *   escalate show   --results <file> --case <caseId> [--json]
  *   escalate cases  --results <file> --export <file>        (UI records with "Appeal again" beats)
  *   escalate from-board --card <card id> --letter <file> --qualify-handoff <handoff.json> --config <file>
- *                   [--reading <file>] [--read-state <json>] [--today YYYY-MM-DD]
+ *                   [--reading <file>] [--read-state <json>] [--authorization <file | line>] [--today YYYY-MM-DD]
  *                   (agent mode: one decision-letter comment in, the exact escalate-result comment out)
  *   escalate validate-config --config <file>
  *   escalate codes
@@ -19,7 +19,7 @@
  * Env: NAIVE_API_KEY (or VETTA_API_KEY), NAIVE_API_BASE_URL (or VETTA_API_BASE_URL),
  *      ESCALATE_MODEL, ESCALATE_ESCALATION_MODEL. Read from escalate/.env, then the repo-root .env.
  */
-import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { parseArgs } from "node:util";
 import { CODES, statusFor } from "./codes.js";
@@ -29,7 +29,7 @@ import { escalateAll, type Delivery } from "./pipeline.js";
 import { MockReader } from "./reader/mock.js";
 import type { Reader } from "./reader/types.js";
 import { toAppealBeat, toCaseRecordPatch } from "./case.js";
-import { caseFromQualify, decisionFromComment, parseLetterComment, resultComment, type QualifyHandoffEntry } from "./board.js";
+import { caseFromQualify, decisionFromComment, parseAuthorizationLine, parseLetterComment, resultComment, type QualifyHandoffEntry } from "./board.js";
 import { ProvidedReader } from "./reader/provided.js";
 import type { EscalateResult } from "./types.js";
 import { todayIn } from "./util.js";
@@ -61,6 +61,7 @@ const { values: a } = parseArgs({
     "qualify-handoff": { type: "string" },
     reading: { type: "string" },
     "read-state": { type: "string" },
+    authorization: { type: "string" },
     json: { type: "boolean" },
   },
   allowPositionals: false,
@@ -177,10 +178,13 @@ async function fromBoard() {
   const reader = a.reading ? new ProvidedReader(readJson(a.reading)) : new MockReader();
   const ctx: EscalateContext = { config, today, reader };
   const decision = decisionFromComment(letter, entry?.route?.id ?? null);
-  const caseRaw = entry ? caseFromQualify(entry, letter, config, { readAttempts }) : { caseId: letter.caseId ?? "unknown" };
+  const authText = a.authorization ? (existsSync(a.authorization) ? readFileSync(a.authorization, "utf8") : a.authorization) : "";
+  const signed = authText ? parseAuthorizationLine(authText) : null;
+  const caseRaw = entry ? caseFromQualify(entry, letter, config, { readAttempts, signed }) : { caseId: letter.caseId ?? "unknown" };
   let [r] = await escalateAll([{ case: caseRaw, decision }], ctx);
   if (!entry) r = { ...r!, reasonCodes: ["I_CASE_NOT_FOUND"], summary: `INCOMPLETE · I_CASE_NOT_FOUND · no Qualify record for case ${letter.caseId ?? "unknown"}`, stageLog: [{ stage: "E0", outcome: "stop", detail: "I_CASE_NOT_FOUND" }] };
-  console.log(JSON.stringify({ card_id: card, case_id: r!.caseId, status: r!.status, reader: reader.name, write: resultComment(r!, card) }));
+  const authorization = signed && signed.caseId === r!.caseId ? "signed" : authText ? "unreadable or for another case; desk default used" : "desk default";
+  console.log(JSON.stringify({ card_id: card, case_id: r!.caseId, status: r!.status, reader: reader.name, authorization, write: resultComment(r!, card) }));
 }
 
 async function main() {

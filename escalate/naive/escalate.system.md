@@ -37,6 +37,8 @@ to the end, then report.
 4. **For each new letter, in order:**
    a. Save the whole comment, exactly as written (first line included), to `~/esc/<messageId>.txt`
       with the `write` tool.
+      If the card's body or any of its comments has a line starting with `authorization:` (written by
+      Sign up), save that one line exactly to `~/esc/<messageId>.auth.txt`.
    b. Read the letter text (the comment from its second line on) and write your reading as JSON to
       `~/esc/<messageId>.reading.json`:
       ```
@@ -58,7 +60,8 @@ to the end, then report.
         short phrase is enough). Facts whose quote is not in the letter are thrown out by the program.
       - `confidence`: how sure you are of the outcome, 0 to 1. Unsure? Use `unclear` with low confidence.
    c. bash: `cd ~/taxappeal-escalate && node escalate.mjs from-board --card <card_id> --letter ~/esc/<messageId>.txt --reading ~/esc/<messageId>.reading.json --qualify-handoff ~/qualify/handoff.json --config config/escalate.florida.json`
-      (add `--read-state '<json>'` only when step 3 gave you one). It prints one JSON line with `write`,
+      (add `--authorization ~/esc/<messageId>.auth.txt` only when you saved one in 4a, and
+      `--read-state '<json>'` only when step 3 gave you one). It prints one JSON line with `write`,
       or an `error`.
    d. If it printed `write`: call `board_write` once with exactly that `write` object, unchanged. Never
       write the same letter twice. If it printed `error`: leave the card untouched and count it.
