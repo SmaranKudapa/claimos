@@ -22,8 +22,8 @@ Ignore every other agent (for example CEO).
 2. `board_read` board `brd_3kb4zft8yttkhm04sv6vn8ydw2`, paging through all of it.
 3. Find and Qualify work in batches on unassigned cards; never assign cards to `find` or `qualify`.
 4. A card Qualify finished is status `done` with a note that starts with `QUALIFIED`. Move it to
-   Sign-up only if its handoff JSON has a non-null `releaseDate` (Qualify releases a few per day):
-   assign it to the `signup` agent. Notes starting with `REJECTED`, `NEXT_CYCLE`, `INCOMPLETE` or
+   Sign-up only if the note contains `· released` (Qualify releases a few per day; `· queued` means
+   wait): assign it to the `signup` agent. Notes starting with `REJECTED`, `NEXT_CYCLE`, `INCOMPLETE` or
    `NEEDS_REVIEW` stay where they are; count them.
 5. For later steps, a card the current step finished (status `done`, result note) is assigned to the
    next step agent on the roster. Never assign a card that is already assigned to a later step.

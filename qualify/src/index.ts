@@ -11,3 +11,4 @@ export { toCaseRecord, toQualifyBeat, formatDeadline, type CaseRecord, type Case
 export type { QualifyContext } from "./draft.js";
 export * from "./types.js";
 export { translateRecord, translateRun, deskConfigFor, parseCardBody, parseJsonl, jurisdictionIdFor, type FindRecord, type FindBatch, type TranslateOptions } from "./adapters/find-v2.js";
+export { cardWrites } from "./adapters/card-writes.js";
