@@ -1,0 +1,31 @@
+Meet Claim OS: a property-tax appeal company run by agents, built on Naïve.
+
+It finds over-assessed homes, checks the economics, and prioritizes promising cases.
+
+Then it finds relevant public contacts and prepares personalized outreach.
+
+Every message and reply stays attached to the case.
+
+Owners speak their name, review the document, and confirm their signature.
+
+The filing agent fills the petition and assembles the evidence.
+
+It submits the packet and saves the receipt for the next step.
+
+Chase keeps following up and updating the case until resolution.
+
+When someone requests a licensed professional through the website,
+
+our briefing agent automatically creates a personalized presentation for their property.
+
+It explains the numbers, evidence and next steps.
+
+Once a reduction is verified against the revised tax bill, Collect takes over.
+
+We only earn a success fee when the owner wins and their tax bill goes down.
+
+We invoice through Stripe and collect thirty percent of the verified savings.
+
+The owner keeps seventy percent. No win, no success fee.
+
+Claim OS. We win when homeowners win.
