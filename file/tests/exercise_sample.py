@@ -1,11 +1,11 @@
 import argparse
 import copy
 import json
-from datetime import date, timedelta
+from datetime import timedelta
 from pathlib import Path
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
-from taxfile.core import FORM_URL, digest, fetch_form, prepare, record_notice, record_receipt
+from taxfile.core import FORM_URL, digest, fetch_form, filing_today, prepare, record_notice, record_receipt
 
 
 def sample_pdf(path, lines):
@@ -35,7 +35,7 @@ def exercise(out, template=None):
         fetch_form(template)
     sample = out / "input"
     sample.mkdir(exist_ok=True)
-    today = date.today()
+    today = filing_today()
     deadline = (today + timedelta(days=30)).isoformat()
     response_due = (today + timedelta(days=45)).isoformat()
     cid, parcel = "SYNTHETIC-LEE-" + str(today.year) + "-001", "SYNTHETIC-LEE-001"
@@ -104,6 +104,8 @@ def exercise(out, template=None):
     record_notice(manifest_path, notice, response_due)
     repeated = record_receipt(manifest_path, receipt, confirmation, parcel)
     assert repeated["response_due"] == response_due
+    assert repeated["next_action"] == "verify_clerk_acceptance_and_fee_receipt"
+    assert repeated["deadline_source_sha256"] == repeated["notice"]["sha256"]
     assert len((case_dir / "receipts.jsonl").read_text().splitlines()) == 1
     updated = json.loads(manifest_path.read_text())
     assert updated["receipt"]["response_due"] == updated["response_deadline"] == response_due

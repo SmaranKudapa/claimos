@@ -79,8 +79,12 @@ def local_artifact(entry, root):
     return {"path": str(path), "sha256": digest(content), "bytes": len(content)}
 
 
+def filing_today():
+    return datetime.now(timezone.utc).astimezone(ZoneInfo("America/New_York")).date()
+
+
 def assess(envelope, candidate, root, today=None):
-    today = today or datetime.now(ZoneInfo("America/New_York")).date()
+    today = today or filing_today()
     cid = candidate["case_id"]
     jurisdiction = candidate["jurisdiction"]
     county = str(jurisdiction.get("county", "")).lower().removesuffix(" county").strip()
@@ -269,7 +273,7 @@ def record_receipt(manifest_path, receipt_path, confirmation_id, parcel_id, noti
             if notice:
                 record_notice(manifest_path, notice_path, response_due)
             current = json.loads(manifest_path.read_text())
-            return {**row, "response_due": current.get("response_deadline"), "notice": current.get("notice")}
+            return {**row, "response_due": current.get("response_deadline"), "notice": current.get("notice"), "deadline_source_sha256": current.get("notice", {}).get("sha256"), "next_action": "verify_clerk_acceptance_and_fee_receipt" if current.get("response_deadline") else "obtain_clerk_notice_and_response_deadline"}
     saved = manifest_path.parent / ("receipt-" + receipt_hash[:16] + (".pdf" if content.startswith(b"%PDF") else ".txt"))
     saved.write_bytes(content)
     if notice:

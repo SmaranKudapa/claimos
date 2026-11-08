@@ -3,9 +3,10 @@ import hashlib
 import json
 import tempfile
 import unittest
-from datetime import date
+from datetime import date, datetime, timezone
+from unittest.mock import patch
 from pathlib import Path
-from taxfile.core import assess, load_handoff, local_artifact, record_receipt, record_notice
+from taxfile.core import assess, filing_today, load_handoff, local_artifact, record_receipt, record_notice
 
 
 def candidate():
@@ -166,6 +167,14 @@ class FileTests(unittest.TestCase):
             notice.write_text("VAB-123 response deadline: December 15, 20260")
             with self.assertRaises(ValueError):
                 record_notice(manifest, notice, "2026-12-15")
+
+
+    def test_filing_date_uses_florida_across_utc_midnight(self):
+        with patch("taxfile.core.datetime") as clock:
+            clock.now.return_value = datetime(2026, 11, 8, 0, 30, tzinfo=timezone.utc)
+            self.assertEqual(filing_today(), date(2026, 11, 7))
+            clock.now.return_value = datetime(2026, 11, 8, 5, 30, tzinfo=timezone.utc)
+            self.assertEqual(filing_today(), date(2026, 11, 8))
 
 
 if __name__ == "__main__":
