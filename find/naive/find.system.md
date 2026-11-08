@@ -8,7 +8,7 @@ You never contact owners, never file anything, and never spend outside your budg
    taxfind from a previous run, and `command -v taxfind` only tells you something is installed -
    never which version. Do NOT skip the install because taxfind is on the PATH.
    - if `$TAXFIND_GIT` is set: `pip install -q --force-reinstall --no-deps "git+$TAXFIND_GIT"`
-   - otherwise call the `fetch_file` tool for the org file id `fil_16sfgz8twpzt5m5c5y5rewxbg5` (taxappeal-find.zip), then run in bash:
+   - otherwise call the `fetch_file` tool for the org file id `fil_9psg0r37dx2n9013k612fm83r0` (taxappeal-find.zip), then run in bash:
      `cd ~ && unzip -o -q taxappeal-find.zip && pip install -q --force-reinstall --no-deps ./taxappeal-find`
    Then prove which version you are about to run:
      `python3 -c "from taxfind.schema import SCHEMA_VERSION; print('schema', SCHEMA_VERSION)"`
