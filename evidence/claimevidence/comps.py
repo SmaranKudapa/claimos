@@ -228,7 +228,7 @@ def analyze(cd: CountyData, subject: pd.Series, p: CompParams | None = None) -> 
     older = [r for r in rows if r["effective_age_gap"] is not None and r["effective_age_gap"] < -p.older_gap_years]
     bias = None
     if len(older) * 2 >= len(rows):
-        bias = (f"{len(older)} of {len(rows)} sales are more than {p.older_gap_years} years older than the subject (effective year) and age is not "
+        bias = (f"{len(older)} of {len(rows)} sales are more than {p.older_gap_years} years older than the subject by effective year built (an internal Claim OS screen) and age is not "
                 "adjusted, so the indication is likely biased low")
         reliability = "insufficient"
     order = sorted(rows, key=lambda r: r["indicated_value"])
@@ -254,6 +254,7 @@ def analyze(cd: CountyData, subject: pd.Series, p: CompParams | None = None) -> 
     time_note = (f"county-wide monthly index for this use; the largest month-to-month move in the year before the valuation date is "
                  f"{max(steps):.1%}" if steps else "no time adjustment: too few sales near the valuation date")
     result.update({
+        "time_index_table": index_table(cd, uc),
         "sensitivity": sensitivity,
         "selected": rows,
         "building_rate_per_sqft": round(building_rate, 2),
@@ -294,15 +295,35 @@ def subject_sales(cd: CountyData, subject: pd.Series, p: CompParams | None = Non
     return out
 
 
+def index_table(cd: CountyData, uc: str, min_month: int = 40) -> dict:
+    if not str(cd.time_method.get(uc) or "").startswith("monthly"):
+        return {}
+    g = cd.qualified[cd.qualified.DOR_UC == uc]
+    counts, med = g.groupby("ym").size(), g.groupby("ym").ppsf.median()
+    ok = med[counts >= min_month].sort_index()
+    if len(ok) < 4:
+        return {}
+    sm = ok.rolling(3, center=True, min_periods=1).median()
+    anchor = float(np.interp(cd.valuation_ym - 0.5, ok.index.to_numpy(float), sm.to_numpy(float)))
+    idx = cd.time_index.get(uc, {})
+    return {"anchor_ppsf": round(anchor, 2), "min_sales": min_month,
+            "rows": [{"month": f"{int(m) // 12}-{int(m) % 12 + 1:02d}", "sales": int(counts[m]), "median_ppsf": round(float(ok[m]), 2),
+                      "smoothed_ppsf": round(float(sm[m]), 2), "factor": round(float(idx.get(int(m), anchor / float(sm[m]))), 4)} for m in ok.index]}
+
+
 def assessment_peers(cd: CountyData, subject: pd.Series, size_band: float = 0.20, k: int = 8) -> dict:
     g = cd.homes[(cd.homes.DOR_UC == subject.DOR_UC) & (cd.homes.NBRHD_CD == subject.NBRHD_CD) & (cd.homes.PARCEL_ID != subject.PARCEL_ID)]
     g = g[np.abs(np.log(g.sqft / subject.sqft)) <= size_band]
     if g.empty:
         return {"peers": 0, "median_value_per_sqft": None, "subject_value_per_sqft": round(float(subject.ppsf), 2), "ratio": None, "examples": []}
     med = float(g.ppsf.median())
-    near = g.assign(d=np.abs(np.log(g.sqft / subject.sqft))).sort_values("d").head(k)
+    se = subject.eff if subject.get("eff") == subject.get("eff") else None
+    near = g.assign(d=np.abs(np.log(g.sqft / subject.sqft)).round(3),
+                    e=(np.abs(g.eff - se) if se is not None else 0)).sort_values(["d", "e", "PARCEL_ID"], kind="stable").head(k)
     return {"peers": int(len(g)), "median_value_per_sqft": round(med, 2), "subject_value_per_sqft": round(float(subject.ppsf), 2),
             "ratio": round(float(subject.ppsf) / med, 4) if med else None,
             "basis": "county just value per sq ft of homes in the same county neighborhood within 20% of the subject's living area",
+            "examples_basis": f"the {min(k, len(g))} closest in living area and then in effective year built",
+            "quartiles_per_sqft": [round(float(g.ppsf.quantile(0.25)), 2), round(float(g.ppsf.quantile(0.75)), 2)],
             "examples": [{"parcel_id": r.PARCEL_ID, "address": as_str(r.PHY_ADDR1) or "", "sqft": as_int(r.sqft),
                           "county_just_value": as_int(r.JV), "value_per_sqft": round(float(r.ppsf), 2)} for r in near.itertuples()]}

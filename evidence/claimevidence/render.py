@@ -24,7 +24,8 @@ STYLE_DEFAULTS = {"page": "US Letter, 1 inch margins", "font": "Helvetica, the P
 
 
 def _esc(t) -> str:
-    return H.escape(str(t), quote=False)
+    t = re.sub(r"(?<=[\d)]) x (?=[\d($])", " \u00d7 ", str(t))
+    return H.escape(t, quote=False).replace("§ ", "§\u00a0").replace("R. 12D", "R.\u00a012D")
 
 
 def page_ranges(doc: Doc, starts: dict, total: int | None) -> dict:
@@ -58,7 +59,7 @@ def to_pdf(doc: Doc, path: Path, footer_left: str, title: str, subject: str = ""
         "court": ParagraphStyle("court", fontName=BOLD, fontSize=14, leading=18, alignment=TA_CENTER, spaceAfter=14),
         "title": ParagraphStyle("title", fontName=BOLD, fontSize=12, leading=15, alignment=TA_CENTER, spaceAfter=2),
         "draft": ParagraphStyle("draft", fontName=BOLD, fontSize=11, leading=lead, alignment=TA_CENTER, borderWidth=1,
-                                borderColor=colors.black, borderPadding=6, spaceBefore=10, spaceAfter=12),
+                                borderColor=colors.black, borderPadding=6, leftIndent=6, rightIndent=6, spaceBefore=6, spaceAfter=16),
         "h1": ParagraphStyle("h1", fontName=BOLD, fontSize=14, leading=17, spaceBefore=12, spaceAfter=6, keepWithNext=1),
         "h2": ParagraphStyle("h2", fontName=BOLD, fontSize=11, leading=13.5, spaceBefore=8, spaceAfter=4, keepWithNext=1),
         "exhibit": ParagraphStyle("exhibit", fontName=BOLD, fontSize=11, leading=13.5, spaceBefore=10, spaceAfter=4, keepWithNext=1),
@@ -124,7 +125,7 @@ def to_pdf(doc: Doc, path: Path, footer_left: str, title: str, subject: str = ""
                 t = table(b[1], b[2], b[3], b[4]) if kind == "table" else table(INDEX_HEAD, _index_rows(doc, ranges), INDEX_W, "index")
                 rows = len(b[2]) if kind == "table" else len(doc.exhibits)
                 held = []
-                if out and getattr(out[-1], "style", None) is st["p"] and rows <= 14:
+                if out and getattr(out[-1], "style", None) is st["p"] and rows <= 14 and len(getattr(out[-1], "text", "")) <= 240:
                     held.insert(0, out.pop())
                 while out and getattr(out[-1], "style", None) in (st["lead"], st["h1"], st["h2"], st["exhibit"]):
                     held.insert(0, out.pop())
@@ -153,7 +154,7 @@ def to_pdf(doc: Doc, path: Path, footer_left: str, title: str, subject: str = ""
         def __init__(self, fh, **kw):
             super().__init__(fh, **kw)
             self.found, self.outline = {}, []
-            frame = Frame(self.leftMargin, self.bottomMargin, self.width, self.height, id="f")
+            frame = Frame(self.leftMargin, self.bottomMargin, self.width, self.height, id="f", leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0)
             self.addPageTemplates([PageTemplate(id="p", frames=[frame], onPage=self.chrome)])
             self.total = None
 
@@ -164,7 +165,7 @@ def to_pdf(doc: Doc, path: Path, footer_left: str, title: str, subject: str = ""
             pg = canv.getPageNumber()
             text = f"{doc.case_label} | Page {pg} of {self.total}" if self.total else f"{doc.case_label} | Page {pg}"
             if doc.draft:
-                text = "DRAFT - NOT FOR SUBMISSION | " + text
+                text = "DRAFT \u2014 NOT FOR SUBMISSION | " + text
             canv.drawCentredString(letter[0] / 2, 0.6 * inch, text)
             canv.restoreState()
 

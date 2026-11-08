@@ -37,7 +37,7 @@ def test_every_index_entry_points_at_the_page_that_holds_the_exhibit(tmp_path, p
 
 def test_the_identification_page_never_invents_a_petition_number_and_shows_one_when_supplied(tmp_path, patched):
     a = run(envelope(), tmp_path, today=TODAY)
-    assert "Petition number Pending (not yet assigned)" in _pages(a)[0] and "DRAFT - NOT FOR SUBMISSION" in _pages(a)[0]
+    assert "Petition number Pending (not yet assigned)" in _pages(a)[0] and "DRAFT \u2014 NOT FOR SUBMISSION" in _pages(a)[0]
     b = run(envelope(submission={"petition_number": "2026-0042", "contact_phone": "850-555-0100",
                                  "submitting_party": "Test Owner, petitioner"}), tmp_path, today=TODAY)
     first = _pages(b)[0]
@@ -193,7 +193,7 @@ def test_an_incomplete_case_still_renders_but_requests_nothing_and_stays_blocked
     res = run(envelope(), tmp_path, today=TODAY)
     assert res["conclusions"]["argument_support"] == "insufficient_evidence"
     first = _pages(res)[0]
-    assert "Value requested No value is requested" in first and "EVIDENCE REVIEW, NOT FOR SUBMISSION" in first
+    assert "Value requested No value is requested" in first and "EVIDENCE REVIEW \u2014 NOT FOR SUBMISSION" in first
     assert res["validation"]["status"] == "validated_against_configured_requirements"
     assert res["readiness"]["portal_status"]["code"] == "insufficient_evidence"
     assert json.load(open(res["file_handoff"]["evidence_json"]))["status"] == "incomplete"
@@ -239,7 +239,7 @@ def test_a_packet_that_requests_nothing_is_titled_not_for_submission(tmp_path, p
     patched["county"] = build_county(n_sales=2)
     res = run(envelope(), tmp_path, today=TODAY)
     first = _pages(res)[0]
-    assert "EVIDENCE REVIEW, NOT FOR SUBMISSION" in first and "DRAFT - NOT FOR SUBMISSION" in first
+    assert "EVIDENCE REVIEW \u2014 NOT FOR SUBMISSION" in first and "DRAFT \u2014 NOT FOR SUBMISSION" in first
 
 
 def test_a_comparable_set_needing_large_adjustments_is_flagged_for_the_reviewer(tmp_path, patched):

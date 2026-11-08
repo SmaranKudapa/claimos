@@ -194,7 +194,7 @@ def validate(doc: Doc, pdf: Path | None, render_info: dict | None, base: dict, c
         heads = [b[1] for b in doc.blocks if b[0] == "h1"] + [f"{e['id']}: {e['title']}" for e in doc.exhibits]
         orphans = []
         for i, t in enumerate(pages):
-            body = re.sub(r"(DRAFT - NOT FOR SUBMISSION \| )?Parcel \S+ \| \d{4} \| Page \d+ of \d+", "", t).strip()
+            body = re.sub(r"(DRAFT \u2014 NOT FOR SUBMISSION \| )?Parcel \S+ \| \d{4} \| Page \d+ of \d+", "", t).strip()
             if any(body.endswith(h) for h in heads):
                 orphans.append(i + 1)
         _check(out, "V-LAYOUT-ORPHAN", "presentation", not orphans, "no heading is stranded at the bottom of a page" if not orphans else

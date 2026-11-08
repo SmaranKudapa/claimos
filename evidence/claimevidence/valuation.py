@@ -110,8 +110,9 @@ def conclude(subject, analysis: dict, peers: dict, own_sales: list[dict], find_p
         rows = []
         for x in similar:
             eq = as_int(x["time_adjusted_price"] * level)
-            rel = ("supports the county value" if eq >= jv else "consistent with the request" if proposed and eq <= proposed * 1.10
-                   else "between the two" if proposed else "below the county value")
+            req = proposed if outcome == "supports_reduction" else None
+            rel = ("supports the county value" if eq >= jv else "consistent with the request" if req and eq <= req * 1.10
+                   else "between the two" if req else "below the county value")
             rows.append({**x, "just_value_equivalent": eq, "relation": rel})
         contrary = [r for r in rows if r["relation"] == "supports the county value"]
         later = {"sales": rows, "count": len(rows),

@@ -15,6 +15,8 @@ ROLL_COLUMNS = ("PARCEL_ID", "DOR_UC", "NBRHD_CD", "NBRHD_ORIG", "MKT_AR", "peer
                 "TAX_AUTH_CD", "TWN", "RNG", "SEC", "sqft", "eff", "land", "homestead", "ppsf")
 DEFAULT_LEVEL = {"001": 0.84, "004": 0.80}
 
+MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
 
 @dataclass
 class CountyData:
@@ -89,8 +91,8 @@ def load_county(county_code: str, tax_year: int, data_dir: Path | str | None = N
         g = pre[pre.DOR_UC == uc]
         if len(g) >= 30:
             level[uc] = float((g.JV / (g.SALE_PRC * g.tadj)).median())
-            src[uc] = (f"median county value / time-adjusted sale price over {len(g)} qualified sales "
-                       f"{int(g.ym.min()) // 12}-{int(g.ym.min()) % 12 + 1:02d} to {int(g.ym.max()) // 12}-{int(g.ym.max()) % 12 + 1:02d}")
+            src[uc] = (f"median county value / time-adjusted sale price over {len(g):,} qualified sales "
+                       f"{MONTHS[int(g.ym.min()) % 12]} {int(g.ym.min()) // 12} to {MONTHS[int(g.ym.max()) % 12]} {int(g.ym.max()) // 12}")
         else:
             level[uc] = fallback
             src[uc] = "statewide default: too few local qualified sales to measure"
