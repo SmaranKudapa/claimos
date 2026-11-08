@@ -17,6 +17,6 @@ Use `src/domain.ts` for shared case and handoff contracts. Keep source URLs and 
 
 - Write feature-focused documentation and commit subjects.
 - Do not add code comments, change narratives, changelogs or unsolicited GitHub conversation comments.
-- Use the real commit clock. Author and committer dates for this build must be November 7, 2026 in America/Los_Angeles. Never backdate commits or rewrite timestamps.
+- Use the real commit clock. Author and committer dates for this build must be November 7 or 8, 2026 in America/Los_Angeles. Never backdate commits or rewrite timestamps.
 - Keep secrets, local state, customer documents and generated evidence outside Git.
 - Verify with `npm run verify`, `npm run build` and `npm run check:provenance`.
