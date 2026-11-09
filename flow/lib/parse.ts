@@ -1,6 +1,6 @@
 import type { Card, Comment } from './naive.js';
 
-export type Kind = 'claim' | 'signup' | 'evidence' | 'file' | 'waiting' | 'collect' | 'billreq' | 'find' | 'other';
+export type Kind = 'claim' | 'signup' | 'evidence' | 'file' | 'waiting' | 'collect' | 'billreq' | 'briefing' | 'find' | 'other';
 
 export interface Parsed {
   card: Card;
@@ -32,6 +32,7 @@ export function kindOf(card: Card, json: any | null): Kind {
   if (t.startsWith('Waiting on')) return 'waiting';
   if (t.startsWith('Collect · ')) return 'collect';
   if (t.startsWith('County question · corrected tax bill · ')) return 'billreq';
+  if (t.startsWith('Briefing · ')) return 'briefing';
   if (json && (json.schema_version === 1 || json.schema_version === 2) && json.property) return 'find';
   return 'other';
 }

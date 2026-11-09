@@ -1,9 +1,26 @@
 import { timingSafeEqual } from 'node:crypto';
 import { Naive, NaiveError, type Fetch } from './naive.js';
 import { STEPS, type Step } from './engine.js';
-import { runStep } from './runtime.js';
+import { runStep, type Deps } from './runtime.js';
+import { restStore } from './store.js';
 
-export interface Env { VETTA_MCP_TOKEN?: string; NAIVE_API_KEY?: string; NAIVE_API_URL?: string; }
+export interface Env {
+  VETTA_MCP_TOKEN?: string; NAIVE_API_KEY?: string; NAIVE_API_URL?: string;
+  DATABASE_REST_URL?: string; DATABASE_SERVICE_KEY?: string;
+  NAIVE_FILES_READ_KEY?: string; FLOW_PUBLIC_URL?: string; BOOKING_URL?: string; PRESENTER_NAME?: string; PRESENTER_TITLE?: string; PRESENTER_LICENSE?: string; PRESENTER_EMAIL?: string; FEE_PCT?: string;
+}
+
+export function depsFrom(env: Env): Deps {
+  let store = null;
+  try { store = restStore(env); } catch {}
+  const fee = Number(env.FEE_PCT);
+  return {
+    store,
+    config: { publicUrl: env.FLOW_PUBLIC_URL || null, presenterEmail: env.PRESENTER_EMAIL || null, bookingUrl: env.BOOKING_URL || null },
+    presenter: { name: env.PRESENTER_NAME || null, title: env.PRESENTER_TITLE || 'Claim OS appeal specialist', license: env.PRESENTER_LICENSE || null },
+    feePct: fee > 0 && fee < 1 ? fee : 0.3,
+  };
+}
 
 export const tools = [
   {
@@ -49,8 +66,11 @@ export async function handle(message: any, env: Env, fetch?: Fetch, now?: Date):
       const extra = Object.keys(args).filter((k) => k !== 'step' && k !== 'dry_run');
       if (extra.length || !STEPS.includes(args.step)) return reply(id, toolText({ error: 'invalid_arguments', message: `step must be one of ${STEPS.join(', ')}.` }, true));
       try {
-        const naive = new Naive(env.NAIVE_API_KEY ?? '', env.NAIVE_API_URL || 'https://api.vetta.sh', fetch);
-        return reply(id, toolText(await runStep(naive, args.step as Step, args.dry_run === true, now)));
+        const base = env.NAIVE_API_URL || 'https://api.vetta.sh';
+        const naive = new Naive(env.NAIVE_API_KEY ?? '', base, fetch);
+        const deps = depsFrom(env);
+        if (env.NAIVE_FILES_READ_KEY) try { deps.files = new Naive(env.NAIVE_FILES_READ_KEY, base, fetch); } catch {}
+        return reply(id, toolText(await runStep(naive, args.step as Step, args.dry_run === true, now, deps)));
       } catch (e) {
         if (e instanceof NaiveError) return reply(id, toolText({ error: 'naive_refused', status: e.status, message: e.message, request_id: e.requestId }, true));
         return reply(id, toolText({ error: 'unavailable', message: 'The board could not be read.' }, true));

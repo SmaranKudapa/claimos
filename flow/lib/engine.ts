@@ -1,8 +1,12 @@
 import type { FileRow, SessionRow } from './naive.js';
 import { addDays, collectState, escalateResults, findAddress, firstLine, followUp, letters, lineValue, sameStreet, signupAddress, stripDemo, type Parsed } from './parse.js';
 
-export const STEPS = ['qualify', 'link', 'evidence', 'chase', 'escalate', 'collect', 'ledger'] as const;
+export const STEPS = ['qualify', 'intake', 'link', 'briefing', 'evidence', 'chase', 'escalate', 'collect', 'ledger'] as const;
 export type Step = typeof STEPS[number];
+
+export interface WebsiteSignup { id: string; created_at: string; address: string; city: string | null; zip: string | null; email: string; phone: string | null; call_ok: boolean | null; consent: boolean | null; case_id: string | null; notes: string | null; }
+export interface BriefingRow { case_id: string; token: string; version: number; has_evidence: boolean; }
+export interface FlowConfig { publicUrl: string | null; presenterEmail: string | null; bookingUrl: string | null; }
 
 export interface Snapshot {
   today: string;
@@ -11,7 +15,13 @@ export interface Snapshot {
   running: Record<string, SessionRow[]>;
   lastSession: Record<string, string | null>;
   awaitingApproval: { agent: string; session: string; since: string }[];
+  signups?: WebsiteSignup[];
+  briefings?: BriefingRow[];
+  evidenceReady?: string[];
+  config?: FlowConfig;
 }
+
+export interface Build { caseId: string; findCardId: string; signupCardId: string; version: number; }
 
 export type Write =
   | { op: 'comment'; card_id: string; body: string; why: string }
@@ -30,6 +40,7 @@ export interface Decision {
   writes: Write[];
   holds: Hold[];
   started_by_board: string[];
+  builds?: Build[];
 }
 
 export const MAX_ASSIGN = 10;
@@ -76,6 +87,9 @@ export function links(snap: Snapshot): Link[] {
   return byKind(snap, 'signup').filter((s) => s.card.status !== 'done').map((s) => {
     const done = s.comments.map((c) => firstLine(c.body).match(/^claim-link · case (.+?) · find (crd_\w+)$/)).filter(Boolean).at(-1);
     if (done) return { signup: s, find: finds.find((f) => f.card.id === done[2]) ?? null, caseId: done[1]!, problem: null };
+    const stated = s.card.body.match(/^case_id:\s*(.+?)\s*$/m)?.[1];
+    const byCase = stated ? finds.filter((f) => f.caseId === stated) : [];
+    if (byCase.length) { const find = byCase.find((h) => qualifyNote(h).verdict === 'QUALIFIED') ?? byCase[0]!; return { signup: s, find, caseId: stated!, problem: null }; }
     const addr = signupAddress(s);
     if (!addr) return { signup: s, find: null, caseId: null, problem: 'The owner has not given a full street address and city yet.' };
     const hits = finds.filter((f) => { const a = findAddress(f); return a && sameStreet(a.street, addr.street) && a.city === addr.city; });
@@ -316,8 +330,8 @@ export function claims(snap: Snapshot): Claim[] {
       }
     }
     if (signup) {
-      push(signup.card.created_at, `Owner wrote in (${signup.card.id})`);
-      for (const c of signup.comments) { const h = firstLine(c.body); if (/^(invoice-ready|invoice-sent|invoice-held) · /.test(h)) push(c.created_at, h); }
+      push(signup.card.created_at, `${/^source:\s*website/im.test(signup.card.body) ? 'Owner signed up on the website' : 'Owner wrote in'} (${signup.card.id})`);
+      for (const c of signup.comments) { const h = firstLine(c.body); if (/^(invoice-ready|invoice-sent|invoice-held|briefing-ready|briefing-sent|meeting-booked) · /.test(h)) push(c.created_at, h); }
     }
     events.sort((a, b) => a.at.localeCompare(b.at));
     const collect = mine.find((p) => p.kind === 'collect');
@@ -389,5 +403,103 @@ export function plan(step: Step, snap: Snapshot): Decision {
     case 'escalate': return planEscalate(snap);
     case 'collect': return planCollect(snap);
     case 'ledger': return planLedger(snap);
+    case 'intake': return planIntake(snap);
+    case 'briefing': return planBriefing(snap);
   }
+}
+
+export function signupTitle(row: WebsiteSignup) {
+  const where = [row.address, row.city].filter(Boolean).join(', ');
+  return `Sign up · ${where} (${row.email})`;
+}
+
+export function planIntake(snap: Snapshot): Decision {
+  const writes: Write[] = [];
+  const seen = new Set(byKind(snap, 'signup').map((s) => s.card.body.match(/^signup_id:\s*(\S+)/m)?.[1]).filter(Boolean));
+  const emails = new Set(byKind(snap, 'signup').map((s) => s.card.body.match(/^from:\s*(\S+)/im)?.[1]?.toLowerCase()).filter(Boolean));
+  const holds: Hold[] = [];
+  for (const row of snap.signups ?? []) {
+    if (seen.has(row.id)) continue;
+    if (!row.consent) continue;
+    if (emails.has(row.email.toLowerCase())) { holds.push({ case_id: row.case_id, card_id: `signup ${row.id}`, reason: `${row.email} already has a Sign up card; the website request ${row.id} needs a person to merge.` }); continue; }
+    if (writes.length >= MAX_ASSIGN) break;
+    const pro = /licensed tax professional/i.test(row.notes ?? '');
+    const find = row.case_id ? snap.cards.find((p) => p.kind === 'find' && p.caseId === row.case_id) : null;
+    writes.push({
+      op: 'create',
+      key: `flow-signup-${row.id}`,
+      title: signupTitle(row),
+      status: 'blocked',
+      assignee: null,
+      body: [
+        'source: website',
+        `signup_id: ${row.id}`,
+        `from: ${row.email}`,
+        `address: ${[row.address, row.city, row.zip ? `FL ${row.zip}` : null].filter(Boolean).join(', ')} (as entered on the website)`,
+        `phone: ${row.phone || 'none'}`,
+        `call_ok: ${row.call_ok ? 'yes' : 'no'}`,
+        `pro_call: ${pro ? 'yes' : 'no'}`,
+        'consent: yes (website form)',
+        `date: ${row.created_at}`,
+        ...(find && row.case_id ? [`case_id: ${row.case_id}`] : []),
+        ...(row.notes ? [`website_notes: ${row.notes}`] : []),
+      ].join('\n'),
+      why: `website sign-up ${row.id}${pro ? ' asked for a professional call' : ''}`,
+    });
+  }
+  return decision('intake', snap, { writes, holds, reason: `${writes.length} website sign-up(s) to put on the board.` });
+}
+
+export function wantsCall(p: Parsed) { return /^\s*pro_call:\s*yes\b/im.test(p.card.body) || p.comments.some((c) => /^\s*pro_call:\s*yes\b/im.test(c.body)); }
+
+export function briefingUrls(cfg: FlowConfig | undefined, token: string) {
+  const base = (cfg?.publicUrl ?? '').replace(/\/$/, '');
+  return { present: `${base}/b/${token}?present=1`, view: `${base}/b/${token}`, pdf: `${base}/b/${token}.pdf` };
+}
+
+export function planBriefing(snap: Snapshot): Decision {
+  const holds: Hold[] = [];
+  const builds: Build[] = [];
+  const decks = new Map((snap.briefings ?? []).map((b) => [b.case_id, b]));
+  const ready = new Set(snap.evidenceReady ?? []);
+  for (const s of byKind(snap, 'signup')) {
+    if (s.card.status === 'done' || !wantsCall(s)) continue;
+    if (s.comments.some((c) => /^STOP\b/.test(c.body))) continue;
+    const l = links(snap).find((x) => x.signup === s);
+    if (!l?.find || !l.caseId) { holds.push({ case_id: null, card_id: s.card.id, reason: `A professional call was requested, but ${l?.problem ?? 'no Find case is linked'}` }); continue; }
+    const deck = decks.get(l.caseId);
+    if (!deck) builds.push({ caseId: l.caseId, findCardId: l.find.card.id, signupCardId: s.card.id, version: 1 });
+    else if (!deck.has_evidence && ready.has(l.caseId)) builds.push({ caseId: l.caseId, findCardId: l.find.card.id, signupCardId: s.card.id, version: deck.version + 1 });
+    if (builds.length >= MAX_ASSIGN) break;
+  }
+  return decision('briefing', snap, { holds, builds, reason: builds.length ? `${builds.length} briefing deck(s) to build.` : 'No briefing deck to build.' });
+}
+
+export function briefingWrites(snap: Snapshot, b: Build, token: string): Write[] {
+  const s = snap.cards.find((p) => p.card.id === b.signupCardId)!;
+  const urls = briefingUrls(snap.config, token);
+  const sent = s.comments.some((c) => firstLine(c.body).startsWith('briefing-sent · '));
+  const website = /^source:\s*website/im.test(s.card.body);
+  const body = [
+    `case_id: ${b.caseId}`,
+    `signup_card: ${s.card.id}`,
+    `source: ${website ? 'website' : 'email'}`,
+    `to: ${s.card.body.match(/^from:\s*(\S+)/im)?.[1] ?? 'unknown'}`,
+    `reply_to_message: ${website ? 'none' : (s.card.body.match(/^message_id:\s*(\S+)/im)?.[1] ?? 'none')}`,
+    `deck_version: ${b.version}`,
+    `present_url: ${urls.present}`,
+    `pdf_url: ${urls.pdf}`,
+    `booking_url: ${snap.config?.bookingUrl ?? 'none'}`,
+    `presenter_email: ${snap.config?.presenterEmail ?? 'none'}`,
+    `update_only: ${sent ? 'yes' : 'no'}`,
+  ].join('\n');
+  const existing = byKind(snap, 'briefing').find((p) => p.caseId === b.caseId);
+  const address = snap.cards.find((p) => p.card.id === b.findCardId)?.json?.property;
+  const where = address ? `${String(address.address).replace(/\s+/g, ' ')}, ${address.city}` : b.caseId;
+  return [
+    { op: 'comment', card_id: s.card.id, body: `briefing-ready · v${b.version} · case ${b.caseId}\npresent: ${urls.present}\npdf: ${urls.pdf}`, why: `briefing deck v${b.version} for ${b.caseId}` },
+    existing
+      ? { op: 'update', card_id: existing.card.id, patch: { body, status: 'todo', assignee: 'briefing' }, why: `send briefing v${b.version}` }
+      : { op: 'create', key: `flow-briefing-${b.caseId}`, title: `${s.demo ? 'DEMO · ' : ''}Briefing · ${where} · ${b.caseId}`, body, status: 'todo', assignee: 'briefing', why: `send briefing v${b.version}` },
+  ];
 }

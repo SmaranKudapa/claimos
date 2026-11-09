@@ -1,6 +1,10 @@
 {
   "framework": null,
   "outputDirectory": "public",
-  "rewrites": [{ "source": "/mcp", "destination": "/api/mcp" }],
+  "rewrites": [
+    { "source": "/mcp", "destination": "/api/mcp" },
+    { "source": "/b/:token([A-Za-z0-9_-]+).pdf", "destination": "/api/briefing?t=:token&f=pdf" },
+    { "source": "/b/:token([A-Za-z0-9_-]+)", "destination": "/api/briefing?t=:token" }
+  ],
   "functions": { "api/**/*.ts": { "maxDuration": 60 } }
 }
