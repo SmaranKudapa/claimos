@@ -1,6 +1,6 @@
 <div align="center">
 
-# Claim OS
+# Claim OS - YC x Naïve Hackathon (4th Place)
 
 **Property-tax appeals, run by agents.**
 
