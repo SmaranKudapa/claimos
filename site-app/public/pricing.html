@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How we get paid — Claim OS</title>
+<meta name="description" content="Claim OS charges nothing upfront and keeps a share of the first year's savings only if the county lowers your value. What is included, what is not, and who files.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+/* Pricing only: site.css has no icon list, so the included / not-included lists live here. */
+.hero h1 span { display: block; text-wrap: balance; } /* each sentence balances on its own, so no orphan word at 375 */
+#included .grid { align-items: start; }
+.terms { margin-top: 16px; display: grid; gap: 12px; }
+.terms li { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; line-height: 1.5; }
+.terms svg { width: 18px; height: 18px; flex: none; margin-top: 3px; color: var(--ink); }
+.terms.no svg { color: var(--muted); }
+.terms small { display: block; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <header class="nav wrap">
+    <a class="wordmark" href="/">Claim OS</a>
+    <nav class="nav-links" aria-label="Site">
+      <a href="/workflow">Workflow</a>
+      <a href="/how-it-works">How it works</a>
+      <a href="/pricing" aria-current="page">How we get paid</a>
+      <a href="/faq">FAQ</a>
+      <a href="/about">About</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="pill" href="/track"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>Track my claim</a>
+      <a class="btn" href="/check">Check my property</a>
+    </div>
+    <details class="menu">
+      <summary>Menu</summary>
+      <nav aria-label="Site">
+        <a href="/check">Check my property</a>
+        <a href="/track">Track my claim</a>
+        <a href="/how-it-works">How it works</a>
+        <a href="/pricing" aria-current="page">How we get paid</a>
+        <a href="/faq">FAQ</a>
+        <a href="/about">About</a>
+      </nav>
+    </details>
+  </header>
+
+  <section class="hero wrap">
+    <div>
+      <h1><span>A share of the first year's savings.</span> <span>Only if the value goes down.</span></h1>
+      <p class="sub">Nothing upfront, and nothing if the county keeps the value where it is. The exact share is in the agreement you sign before we file.</p>
+
+      <form class="bar" action="/check" method="get">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input class="address" name="address" type="text" placeholder="123 Main St" aria-label="Street address" autocomplete="street-address" required>
+        <input class="zip" name="zip" type="text" placeholder="ZIP" aria-label="ZIP" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" required>
+        <button class="btn" type="submit">Check my property</button>
+      </form>
+
+      <div class="pills">
+        <a class="pill" href="#included"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>What's included</a>
+        <a class="pill" href="#typical"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>A typical strong case</a>
+        <a class="pill" href="/faq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7"/><path d="M12 17h.01"/></svg>FAQ</a>
+      </div>
+    </div>
+
+    <div class="float">
+      <aside class="card stat dual" aria-label="Example of how the share works">
+        <div><span class="label">Example · County's value</span><strong class="figure">$420,000</strong><span class="stat-sub">Agreed value after the appeal $360,000</span></div>
+        <div><span class="label">First-year saving</span><strong class="figure">$1,100</strong><span class="stat-sub">Our share comes out of this, once.</span></div>
+        <div class="stat-foot"><span class="badge" data-tone="green">Strong case</span><span>You keep the rest, and every year after.</span><span class="caption">Example figures, not a quote. The share itself is set in your agreement.</span></div>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<section class="block wrap" id="included">
+  <div class="head">
+    <h2>What the share covers</h2>
+    <p class="sub">Everything it takes to put a case in front of the county. Nothing you did not sign for.</p>
+  </div>
+  <div class="grid grid-2">
+    <div class="card step flat">
+      <h3>Included</h3>
+      <ul class="terms">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg><span>The parcel check against the county roll<small>Done by hand before we ask you to sign anything.</small></span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg><span>The evidence packet<small>Comparable sales, assessment ratios, and anything you send us, in one file.</small></span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg><span>The petition and its filing fee<small>Filed with the county's value adjustment board before its deadline. We pay the fee.</small></span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg><span>Representation at the hearing<small>A special magistrate hears both sides. We present the evidence.</small></span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg><span>An email at every step<small>From claimos@agentmail.to. No calls unless you asked for one.</small></span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg><span>A licensed tax professional, on request<small>Tick the box on the form and one will contact you.</small></span></li>
+      </ul>
+    </div>
+    <div class="card step flat">
+      <h3>Not included</h3>
+      <ul class="terms no">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg><span>Legal advice<small>Claim OS is not a law firm. If your case needs a lawyer, we say so.</small></span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg><span>Your tax bill itself<small>The county bills you. We work on the value behind the bill, not the bill.</small></span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg><span>Tax years already closed<small>Once the county's petition window has closed, we cannot file for that year.</small></span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg><span>Anything you did not sign for<small>The agreement lists the work and the share. Nothing is added later.</small></span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="block wrap" style="padding-top:0">
+  <div class="prose">
+    <h2>Who files, and in whose name</h2>
+    <p>Claim OS files as your agent, with a DR-486POA where the county requires one. The petition is in your name, and you can withdraw it before the hearing. If a case looks weak once we have checked the parcel, we drop it before filing and tell you why. Dropped or withdrawn, you owe nothing.</p>
+    <h2>Why there is no number on this page</h2>
+    <p>The share depends on the county and the tax year, so it lives in the agreement, where you can read it before you sign anything. We invoice it once, after the county's decision is final and your lower bill is real. If the value does not move, there is no invoice.</p>
+  </div>
+</section>
+
+<section class="band" id="typical">
+  <div class="wrap">
+    <div class="head">
+      <h2>What a typical strong case looks like</h2>
+      <p class="sub">From our latest scan of two Florida counties. Identified, not yet filed.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card stat flat"><span class="label">Median saving identified</span><strong class="figure">$1,037<small>/ yr</small></strong><span class="stat-sub">Per strong case, across 1,567 of them</span></div>
+      <div class="card stat flat"><span class="label">Average over-assessment</span><strong class="figure">$92,000</strong><span class="stat-sub">About a fifth above our defensible value</span></div>
+      <div class="card stat flat"><span class="label">Largest single case</span><strong class="figure">$13,205<small>/ yr</small></strong><span class="stat-sub">One home, one year</span></div>
+    </div>
+    <p class="caption" style="margin-top:16px;max-width:90ch">Hendry and Bay counties, public rolls and recorded sales, run 7 Nov 2026. These are estimates, not results: nothing here has been filed or decided, and the county decides every value.</p>
+  </div>
+</section>
+
+<section class="block wrap faq" id="faq">
+  <h2>Questions about money</h2>
+  <div class="grid" style="max-width:760px">
+    <details>
+      <summary>What does it cost?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+      <p>Nothing upfront. If your value goes down we keep a share of the first year's savings; the exact terms are in the agreement you sign before we file.</p>
+    </details>
+    <details>
+      <summary>When do I pay?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+      <p>After the county's decision is final and your lower bill is real. We invoice our share then, once. If the value does not move, there is no invoice.</p>
+    </details>
+    <details>
+      <summary>Can my value go up because I appealed?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+      <p>The board rules on the evidence; a value can in principle move either way, which is why we drop weak cases before filing and tell you when we do.</p>
+    </details>
+  </div>
+  <div class="pills"><a class="pill" href="/faq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>All questions</a></div>
+</section>
+
+<section class="band dark">
+  <div class="wrap" style="max-width:760px">
+    <h2>See what your home could save. It takes ten seconds.</h2>
+    <form class="bar" action="/check" method="get">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input class="address" name="address" type="text" placeholder="123 Main St" aria-label="Street address" autocomplete="street-address" required>
+      <input class="zip" name="zip" type="text" placeholder="ZIP" aria-label="ZIP" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" required>
+      <button class="btn" type="submit">Check my property</button>
+    </form>
+    <p class="caption" style="margin-top:16px">Claim OS is a private company, not a government agency.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <span class="label">Product</span>
+        <ul>
+          <li><a href="/check">Check my property</a></li>
+          <li><a href="/track">Track my claim</a></li>
+<li><a href="/workflow">Recorded workflow</a></li>
+<li><a href="/filing">Where and how to file</a></li>
+          <li><a href="/how-it-works">How it works</a></li>
+          <li><a href="/pricing">How we get paid</a></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label">Company</span>
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="mailto:claimos@agentmail.to">claimos@agentmail.to</a></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label">Legal</span>
+        <ul>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="foot-note">Claim OS is a private company and is not affiliated with any government agency, county property appraiser or value adjustment board. Claim OS is not a law firm and does not give legal advice. Estimates come from public county records and may be out of date; only the county decides your value, and nothing here is a promise of a lower bill.</p>
+    <p class="foot-copy">© 2026 Claim OS</p>
+  </div>
+</footer>
+
+</body>
+</html>

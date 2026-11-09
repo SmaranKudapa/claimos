@@ -1,0 +1,8 @@
+node_modules/
+.vercel/
+# the repo root ignores public/ for the prototype; this site's public/ is source
+!public/
+
+.impeccable/
+
+.build/

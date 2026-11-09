@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claim OS — Your property tax, appealed</title>
+<meta name="description" content="Claim OS checks public county records for over-assessed Florida homes, files the appeal, and keeps a share of the first year's savings — only if your value goes down.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+/* Home-only: the quiet built-at / built-on wall under the proof strip, and the live counter row in the final band. */
+.wall { padding-top: 48px; text-align: center; }
+.wall .row { justify-content: center; gap: 12px 40px; margin-top: 14px; font-size: 20px; font-weight: 600; letter-spacing: -.02em; color: var(--gray); }
+.live { margin-top: 20px; gap: 8px 28px; font-size: 14px; }
+.live strong { color: #fff; font-weight: 500; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <header class="nav wrap">
+    <a class="wordmark" href="/">Claim OS</a>
+    <nav class="nav-links" aria-label="Site">
+      <a href="/workflow">Workflow</a>
+      <a href="/how-it-works">How it works</a>
+      <a href="/pricing">How we get paid</a>
+      <a href="/faq">FAQ</a>
+      <a href="/about">About</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="pill" href="/track"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>Track my claim</a>
+      <a class="btn" href="/check">Check my property</a>
+    </div>
+    <details class="menu">
+      <summary>Menu</summary>
+      <nav aria-label="Site">
+        <a href="/check">Check my property</a>
+        <a href="/track">Track my claim</a>
+        <a href="/how-it-works">How it works</a>
+        <a href="/pricing">How we get paid</a>
+        <a href="/faq">FAQ</a>
+        <a href="/about">About</a>
+      </nav>
+    </details>
+  </header>
+
+  <section class="hero wrap">
+    <div>
+      <h1>Your property tax, appealed.<br>You pay only if it goes down.</h1>
+      <p class="sub">Claim OS checks public county records for over-assessed Florida homes, files the appeal, and keeps a share of the first year's savings — only if your value goes down. Terms in the agreement.</p>
+
+      <form class="bar" data-check novalidate>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input class="address" id="check-address" name="address" type="text" placeholder="123 Main St" aria-label="Street address" autocomplete="street-address" required>
+        <input class="zip" name="zip" type="text" placeholder="ZIP" aria-label="ZIP" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" required>
+        <button class="btn" type="submit">Check my property</button>
+      </form>
+      <p class="bar-err" role="alert"></p>
+
+      <div class="pills">
+        <a class="pill" href="/workflow">Recorded workflow</a><a class="pill" href="/how-it-works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>How it works</a>
+        <a class="pill" href="#trust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/><path d="m9 12 2 2 4-4"/></svg>Why trust us</a>
+        <a class="pill" href="/faq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7"/><path d="M12 17h.01"/></svg>FAQ</a>
+      </div>
+    </div>
+
+    <div class="float">
+      <aside class="card stat dual" aria-label="Example result">
+        <div><span class="label">Example · Over-assessed by</span><strong class="figure">$60,000</strong><span class="stat-sub">County's value $420,000 · Our defensible value $360,000</span></div>
+        <div><span class="label">You could save</span><strong class="figure">$1,100<small>/ yr</small></strong><span class="stat-sub">Estimated yearly tax saving</span></div>
+        <div class="stat-foot"><span class="badge" data-tone="green">Strong case</span><span class="caption">Example figures. Check your own address.</span></div>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<section id="result" class="wrap" aria-live="polite" hidden></section>
+
+<section class="band" id="stats" hidden>
+  <div class="wrap">
+    <div class="grid grid-4">
+      <div class="card stat flat"><span class="label">Homes screened</span><strong class="figure" id="s-screened">—</strong><span class="stat-sub">Every home on the public roll, checked against recent sales</span></div>
+      <div class="card stat flat"><span class="label">Counties scanned</span><strong class="figure" id="s-counties">—</strong><span class="stat-sub">Florida, public rolls</span></div>
+      <div class="card stat flat"><span class="label">Strong cases</span><strong class="figure" id="s-strong">—</strong><span class="stat-sub" id="s-strong-sub">Worth filing on the evidence</span></div>
+      <div class="card stat flat"><span class="label">Savings identified</span><strong class="figure" id="s-savings">—</strong><span class="stat-sub">A year, across the strong cases. Identified, not yet filed.</span></div>
+    </div>
+    <p class="caption" id="s-run" style="margin-top:16px"></p>
+  </div>
+</section>
+
+<section class="wall wrap">
+  <p class="caption">Built at the Naïve Autonomous Company Hackathon at Y Combinator, November 2026 — on Naïve, AgentMail and Vercel.</p>
+  <div class="row" aria-hidden="true"><span>Naïve</span><span>AgentMail</span><span>Vercel</span></div>
+</section>
+
+<section class="block wrap" id="how">
+  <div class="head">
+    <h2>Four things happen. You do one of them.</h2>
+  </div>
+  <div class="grid grid-4">
+    <div class="card step flat"><span class="num">1</span><h3>We find</h3><p>We scan public county rolls for homes valued above comparable sales.</p></div>
+    <div class="card step flat"><span class="num">2</span><h3>We check</h3><p>We compare your value with recent sales of similar homes nearby. If the case looks weak, we say so.</p></div>
+    <div class="card step flat"><span class="num">3</span><h3>We file</h3><p>We prepare the evidence and file the petition with the county before its own deadline. You sign; we do the paperwork.</p></div>
+    <div class="card step flat"><span class="num">4</span><h3>You save</h3><p>If the county lowers your value, your bill goes down. We keep a share of the first year's savings; terms in the agreement.</p></div>
+  </div>
+  <div class="pills"><a class="pill" href="/how-it-works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>See all eight steps</a></div>
+</section>
+
+<section class="band" id="savings">
+  <div class="wrap">
+    <div class="head">
+      <h2>Savings we've already identified</h2>
+      <p class="sub">Four real homes from our latest scan of Bay County: the county's value, our defensible value, and the yearly saving between them. Identified, not yet filed.</p>
+    </div>
+    <div class="grid grid-4">
+      <div class="card stat flat"><span class="label">Panama City Beach · Condo</span><strong class="figure">$2,668<small>/ yr</small></strong><span class="stat-sub">County's value $709,794 · Ours $531,933</span></div>
+      <div class="card stat flat"><span class="label">Panama City Beach · House</span><strong class="figure">$1,340<small>/ yr</small></strong><span class="stat-sub">County's value $447,217 · Ours $357,882</span></div>
+      <div class="card stat flat"><span class="label">Panama City Beach · Condo</span><strong class="figure">$1,384<small>/ yr</small></strong><span class="stat-sub">County's value $263,500 · Ours $171,216</span></div>
+      <div class="card stat flat"><span class="label">Panama City Beach · House</span><strong class="figure">$1,080<small>/ yr</small></strong><span class="stat-sub">County's value $570,851 · Ours $498,856</span></div>
+    </div>
+    <div class="card stat dual flat" style="margin-top:16px">
+      <div><span class="label">Median saving identified</span><strong class="figure">$1,037<small>/ yr</small></strong><span class="stat-sub">Per strong case, across 1,567 of them</span></div>
+      <div><span class="label">Largest single case</span><strong class="figure">$13,205<small>/ yr</small></strong><span class="stat-sub">One home, one year</span></div>
+      <div class="stat-foot full"><span class="badge">Identified, not yet filed</span><span class="caption">Hendry and Bay counties, public rolls and recorded sales, run 7 Nov 2026. Estimates, not results: nothing here has been filed or decided, and the county decides every value.</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="block wrap" id="trust">
+  <div class="head">
+    <h2>Why trust us</h2>
+  </div>
+  <div class="grid grid-3">
+    <div class="card step flat"><h3>Paid only on a win</h3><p>No upfront cost. If your value does not go down, you owe nothing.</p></div>
+    <div class="card step flat"><h3>Every number from county records</h3><p>Our values come from the county's own sales and assessment data, and we show our work.</p></div>
+    <div class="card step flat"><h3>A licensed professional on request</h3><p>Tick the box on the form and a licensed tax professional will contact you. Claim OS is a private company, not a government agency and not a law firm.</p></div>
+  </div>
+</section>
+
+<section class="block wrap" id="quotes" hidden style="padding-top:0">
+  <div class="head"><h2>What owners say</h2></div>
+  <div class="grid grid-3"></div>
+</section>
+
+<section class="block wrap faq" id="faq" style="padding-top:0">
+  <h2>Questions owners ask</h2>
+  <div class="grid" style="max-width:760px">
+    <details>
+      <summary>What does it cost?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+      <p>Nothing upfront. If your value goes down we keep a share of the first year's savings; the exact terms are in the agreement you sign before we file.</p>
+    </details>
+    <details>
+      <summary>How long does it take?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+      <p>The county sets the dates: petitions are heard in the months after filing closes. We email you at every step.</p>
+    </details>
+    <details>
+      <summary>What do you need from me?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+      <p>Your address, an email, and a signed agreement. Everything else comes from public records.</p>
+    </details>
+  </div>
+  <div class="pills"><a class="pill" href="/faq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>All questions</a></div>
+</section>
+
+<section class="band dark">
+  <div class="wrap" style="max-width:760px">
+    <h2>Check your address. It takes ten seconds.</h2>
+    <form class="bar" action="/check" method="get">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input class="address" name="address" type="text" placeholder="123 Main St" aria-label="Street address" autocomplete="street-address" required>
+      <input class="zip" name="zip" type="text" placeholder="ZIP" aria-label="ZIP" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" required>
+      <button class="btn" type="submit">Check my property</button>
+    </form>
+    <div class="row caption live" id="live" hidden>
+      <span><strong id="l-signups">—</strong> owners signed up so far</span>
+      <span><strong id="l-strong">—</strong> strong cases waiting for their owner</span>
+    </div>
+    <p class="caption" style="margin-top:16px">Claim OS is a private company, not a government agency.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <span class="label">Product</span>
+        <ul>
+          <li><a href="/check">Check my property</a></li>
+          <li><a href="/track">Track my claim</a></li>
+<li><a href="/workflow">Recorded workflow</a></li>
+<li><a href="/filing">Where and how to file</a></li>
+          <li><a href="/how-it-works">How it works</a></li>
+          <li><a href="/pricing">How we get paid</a></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label">Company</span>
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="mailto:claimos@agentmail.to">claimos@agentmail.to</a></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label">Legal</span>
+        <ul>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="foot-note">Claim OS is a private company and is not affiliated with any government agency, county property appraiser or value adjustment board. Claim OS is not a law firm and does not give legal advice. Estimates come from public county records and may be out of date; only the county decides your value, and nothing here is a promise of a lower bill.</p>
+    <p class="foot-copy">© 2026 Claim OS</p>
+  </div>
+</footer>
+
+<script src="/check.js"></script>
+<script>
+// Proof strip and live counters: real numbers from the database, or nothing at all (never a strip of zeros).
+const n = (v) => Number(v).toLocaleString('en-US');
+const fill = (s) => {
+  if (!s.strong) return;
+  document.getElementById('s-screened').textContent = n(s.screened);
+  document.getElementById('s-counties').textContent = n(s.counties);
+  document.getElementById('s-strong').textContent = n(s.strong);
+  document.getElementById('s-strong-sub').textContent = 'Of ' + n(s.candidates) + ' candidate cases, worth filing on the evidence';
+  document.getElementById('s-savings').textContent = s.savings >= 1e6 ? '$' + (s.savings / 1e6).toFixed(1) + 'M' : '$' + n(s.savings);
+  if (s.run_date) document.getElementById('s-run').textContent = 'From public county rolls, run ' + new Date(s.run_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + '.';
+  document.getElementById('stats').hidden = false;
+  document.getElementById('l-signups').textContent = n(s.signups);
+  document.getElementById('l-strong').textContent = n(s.strong);
+  document.getElementById('live').hidden = false;
+};
+fetch('/api/stats').then((r) => r.json()).then(fill).catch(() => {});
+
+// Testimonials render only once a real quote exists; none today, so the section stays hidden.
+const quotes = []; // { text, who }
+if (quotes.length) {
+  document.querySelector('#quotes .grid').replaceChildren(...quotes.map((q) => {
+    const el = document.createElement('div'); el.className = 'card step flat';
+    el.innerHTML = '<p></p><span class="label"></span>';
+    el.querySelector('p').textContent = q.text; el.querySelector('.label').textContent = q.who;
+    return el;
+  }));
+  document.getElementById('quotes').hidden = false;
+}
+</script>
+</body>
+</html>

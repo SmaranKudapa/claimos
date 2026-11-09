@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy — Claim OS</title>
+<meta name="description" content="What Claim OS stores about you: what you typed on the site and public county records about your parcel. What we never do with it, where it lives, and how to have it deleted.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+  /* Legal pages only. The hero keeps the home's shape; the floating card holds the plain-words summary instead of numbers. */
+  .legal .hero { padding-bottom: 72px; }
+  .legal .last { display: block; margin-top: 16px; }
+  .summary p { margin-top: 8px; font-size: 14px; line-height: 1.5; text-wrap: pretty; }
+  .legal-body { padding-bottom: 96px; }
+  .prose strong { font-weight: 500; }
+  .prose a, .summary a { text-decoration: underline; text-decoration-thickness: 1px; text-decoration-color: var(--gray); }
+  .prose a:hover, .summary a:hover { text-decoration-color: var(--ink); }
+  @media (max-width: 720px) { .legal-body { padding-bottom: 64px; } }
+</style>
+</head>
+<body class="legal">
+
+<div class="top">
+  <header class="nav wrap">
+    <a class="wordmark" href="/">Claim OS</a>
+    <nav class="nav-links" aria-label="Site">
+      <a href="/workflow">Workflow</a>
+      <a href="/how-it-works">How it works</a>
+      <a href="/pricing">How we get paid</a>
+      <a href="/faq">FAQ</a>
+      <a href="/about">About</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="pill" href="/track"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>Track my claim</a>
+      <a class="btn" href="/check">Check my property</a>
+    </div>
+    <details class="menu">
+      <summary>Menu</summary>
+      <nav aria-label="Site">
+        <a href="/check">Check my property</a>
+        <a href="/track">Track my claim</a>
+        <a href="/how-it-works">How it works</a>
+        <a href="/pricing">How we get paid</a>
+        <a href="/faq">FAQ</a>
+        <a href="/about">About</a>
+      </nav>
+    </details>
+  </header>
+
+  <section class="hero wrap">
+    <div>
+      <h1>Privacy</h1>
+      <p class="sub">What we keep about you, what we never do with it, and how to have it removed. Plain words, no small print.</p>
+      <p class="caption last">Last updated 7 Nov 2026</p>
+    </div>
+    <div class="float">
+      <aside class="card stat dual summary rise" aria-label="Privacy in short">
+        <div>
+          <span class="label">We store</span>
+          <p>What you type on this site and the public county record of your parcel. Nothing else.</p>
+        </div>
+        <div>
+          <span class="label">We never</span>
+          <p>Sell your data, share it for marketing, or contact you about anything but your claim.</p>
+        </div>
+        <div>
+          <span class="label">To delete it</span>
+          <p>Email <a href="mailto:claimos@agentmail.to">claimos@agentmail.to</a> from the address you signed up with. We confirm when it is gone.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<section class="wrap legal-body">
+  <div class="prose">
+    <h2>What we store</h2>
+    <p>Three kinds of information, and nothing else.</p>
+    <ul>
+      <li><strong>What you type here.</strong> The address and ZIP you check. If you sign up: your city, your email, your phone number if you give one, whether we may call you, whether you asked for a call with a licensed tax professional, and the box you tick to let us review the records.</li>
+      <li><strong>Public county records about the parcel.</strong> The owner of record and mailing address, the county's just and assessed values, recent nearby sales, and the ratios we compute from them. All of it comes from the county property appraiser's published roll and recorded sales, which anyone can look up.</li>
+      <li><strong>The emails we exchange.</strong> So the person or agent handling your claim can read the whole thread.</li>
+    </ul>
+    <p>This site sets no cookies and runs no analytics or advertising trackers. The web host keeps ordinary server logs (IP address, time, page) briefly, as any host does.</p>
+
+    <h2>What we never do</h2>
+    <ul>
+      <li>Sell your data, or share it with anyone for marketing.</li>
+      <li>Contact you about anything other than your claim. One claim, one email thread.</li>
+      <li>Call or text you unless you gave us your number and ticked "You may call me". We do not cold-call anyone.</li>
+      <li>Ask for your Social Security number, bank login or card details on this site. If your value goes down, we invoice by email under the agreement you signed.</li>
+    </ul>
+
+    <h2>Where it lives</h2>
+    <p>Claim OS is a private company, not a county office or government agency. We operate in Florida and the data is stored in the United States: the site and its database run on Vercel, and email goes through AgentMail. Software agents do the first pass on every record; a person reads every email before it is sent and approves every filing.</p>
+    <p>When we file your petition, the county receives your name, the parcel and the evidence packet. That is what a petition is, and nothing is filed before you sign.</p>
+
+    <h2>Delete or ask</h2>
+    <p>Email <a href="mailto:claimos@agentmail.to">claimos@agentmail.to</a> from the address you signed up with and say "delete". We remove what you typed and the emails we exchanged within 30 days and confirm when it is done. If a petition is already filed, we withdraw it first. Public county records stay public; we cannot delete those, but we stop using them for you.</p>
+    <p>Any other question about your data goes to the same address. We reply by email, and only call when you asked us to.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <span class="label">Product</span>
+        <ul>
+          <li><a href="/check">Check my property</a></li>
+          <li><a href="/track">Track my claim</a></li>
+<li><a href="/workflow">Recorded workflow</a></li>
+<li><a href="/filing">Where and how to file</a></li>
+          <li><a href="/how-it-works">How it works</a></li>
+          <li><a href="/pricing">How we get paid</a></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label">Company</span>
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="mailto:claimos@agentmail.to">claimos@agentmail.to</a></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label">Legal</span>
+        <ul>
+          <li><a href="/privacy" aria-current="page">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="foot-note">Claim OS is a private company and is not affiliated with any government agency, county property appraiser or value adjustment board. Claim OS is not a law firm and does not give legal advice. Estimates come from public county records and may be out of date; only the county decides your value, and nothing here is a promise of a lower bill.</p>
+    <p class="foot-copy">© 2026 Claim OS</p>
+  </div>
+</footer>
+
+</body>
+</html>
